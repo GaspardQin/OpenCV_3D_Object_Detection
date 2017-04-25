@@ -19,8 +19,8 @@ void main()
 
 	//利用法向量描边
 	
-    float silhouette = length(vNormal * vec3(0.0, 0.0, 1.0));
-    if (silhouette < 0.3) {
+   float silhouette = length(vNormal * vec3(0.0, 0.0, 1.0));
+    if (silhouette < 0.1) {
         silhouette = 0.0;
     }
     else {

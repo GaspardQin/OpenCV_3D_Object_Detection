@@ -13,7 +13,7 @@ int main() {
 	readEvent = CreateEvent(NULL, false, false, (LPTSTR)"readingEvent");
 	ResetEvent(sentEvent);
 	ResetEvent(readEvent);
-	SetEvent(readEvent);
+	
 	if ((!sentEvent) || (!readEvent))
 	{
 		std::cout << "Failed to CreateEvent !" << std::endl;

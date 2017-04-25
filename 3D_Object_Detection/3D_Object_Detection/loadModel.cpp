@@ -23,7 +23,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-
+	glfwWindowHint(GLFW_SAMPLES, 4);
 	// 创建窗口
 	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT,
 		"Loading model with AssImp", NULL, NULL);
@@ -90,7 +90,10 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	Shader shader("model.vertex", "model.frag");
 
 	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_MULTISAMPLE);
+	//glEnable(GL_LINE_SMOOTH);
+	
+	glEnable(GL_CULL_FACE);
 	//glStencilFunc(GL_NOTEQUAL, 1, -1);
 	//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 	//glLineWidth(3);
@@ -126,11 +129,25 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
 			1, GL_FALSE, glm::value_ptr(model));
 		// 这里填写场景绘制代码
+		//glHint(GL_LINE_SMOOTH, GL_NICEST);
 		objModel.draw(shader); // 绘制物体
 
 		glBindVertexArray(0);
 		glUseProgram(0);
+
+		//read pixels into opencv mat
+		//use fast 4-byte alignment (default anyway) if possible
+		//glPixelStorei(GL_PACK_ALIGNMENT, (temp.step & 3) ? 1 : 4);
+
+		//set length of one complete row in destination data (doesn't need to equal img.cols)
+		//glPixelStorei(GL_PACK_ROW_LENGTH, temp.step / temp.elemSize());
+		glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, readSrcImg.data);
+
 		glfwSwapBuffers(window); // 交换缓存
+
+
+
+
 
 		SetEvent(sentEvent);
 		

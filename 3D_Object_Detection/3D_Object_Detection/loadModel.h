@@ -35,7 +35,7 @@
 	//void set_this() { static_this = this;}
 	
 	// 定义程序常量
-	const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+	
 	// 用于相机交互参数
 	//GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
 	//bool firstMouseMove = true;

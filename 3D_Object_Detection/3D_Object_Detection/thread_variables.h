@@ -7,7 +7,10 @@
 extern HANDLE sentEvent;
 extern HANDLE readEvent;
 
-
+#include <opencv2\opencv.hpp>
+#include <opencv2\core\opengl.hpp>
+#include <opencv2\core\core.hpp>
+#include <opencv2\highgui\highgui.hpp>
 
 
 #include <GL/glew.h>
@@ -31,5 +34,6 @@ extern GLfloat deltaTime; // 当前帧和上一帧的时间差
 extern GLfloat lastFrame; // 上一帧时间
 extern Camera camera;
 extern GLfloat rotate_degree[3];
-
+const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+extern cv::Mat readSrcImg;
 #endif
