@@ -3,7 +3,7 @@
 #include "loadModel.h"
 GLfloat deltaTime = 0.0f; // 当前帧和上一帧的时间差
 GLfloat lastFrame = 0.0f; // 上一帧时间
-Camera camera = Camera(glm::vec3(0.0f, 1.0f, 3.0f));
+Camera camera = Camera(glm::vec3(0.0f, 1.0f, 5.0f));
 GLfloat rotate_degree[3] = { 0.0f };
 
 
@@ -87,7 +87,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		return 0;
 	}
 	// Section2 准备着色器程序
-	Shader shader("model.vertex", "model.frag");
+	Shader shader("model_normal.vertex", "model_normal.frag","model_normal.geom");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
@@ -102,6 +102,8 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	while (!glfwWindowShouldClose(window))
 	{
 		WaitForSingleObject(readEvent,INFINITE);
+
+
 		GLfloat currentFrame = (GLfloat)glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		//if (deltaTime < 1/20) continue;
@@ -122,14 +124,16 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 			1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"),
 			1, GL_FALSE, glm::value_ptr(view));
+		
 		glm::mat4 model = glm::mat4(1.0);
 		rotate_model(rotate_degree, model);
 		//model = glm::translate(model, glm::vec3(0.0f, -1.55f, -1.0f)); // 适当调整位置
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f)); // 适当缩小模型
+		model = glm::scale(model, glm::vec3(0.01f, 0.01f, 0.01f)); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
 			1, GL_FALSE, glm::value_ptr(model));
 		// 这里填写场景绘制代码
 		//glHint(GL_LINE_SMOOTH, GL_NICEST);
+		glLineWidth(5.0f);
 		objModel.draw(shader); // 绘制物体
 
 		glBindVertexArray(0);

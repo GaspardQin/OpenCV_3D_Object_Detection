@@ -163,6 +163,9 @@
   <ItemGroup>
     <None Include="model.frag" />
     <None Include="model.vertex" />
+    <None Include="model_normal.frag" />
+    <None Include="model_normal.geom" />
+    <None Include="model_normal.vertex" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="modelPath.txt" />

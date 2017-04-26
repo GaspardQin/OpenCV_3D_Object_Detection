@@ -36,4 +36,6 @@ extern Camera camera;
 extern GLfloat rotate_degree[3];
 const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
 extern cv::Mat readSrcImg;
+/////////////////////////////////////////////
+//透视矩阵需要随着相机修改
 #endif

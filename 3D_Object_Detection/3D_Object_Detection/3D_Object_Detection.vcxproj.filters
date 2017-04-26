@@ -58,6 +58,15 @@
     <None Include="model.vertex">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="model_normal.vertex">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="model_normal.geom">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="model_normal.frag">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="modelPath.txt">

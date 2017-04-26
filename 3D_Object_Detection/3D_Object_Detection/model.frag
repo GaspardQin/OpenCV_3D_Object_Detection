@@ -17,11 +17,11 @@ void main()
 	//color = texture(texture_diffuse0, TextCoord);
 	//color = vec4(1f,1f,1f,1f);
 
-	//利用法向量描边
+	//法向量边缘
 	
    float silhouette = length(vNormal * vec3(0.0, 0.0, 1.0));
     if (silhouette < 0.1) {
-        silhouette = 0.0;
+        silhouette = 0.5;
     }
     else {
         silhouette = 1.0;

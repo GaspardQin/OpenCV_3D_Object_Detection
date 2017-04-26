@@ -1,1 +1,1 @@
-./bench.obj
+./model/plug.stl

@@ -6,14 +6,15 @@ DWORD WINAPI cvThreadFun(LPVOID lpParmeter) {
 
 	SetEvent(readEvent); 
 	while (1) {
+		
 		WaitForSingleObject(sentEvent,INFINITE);
-		cv::flip(readSrcImg, readSrcImg, 0); //up side down the raw img obtein from OpenGL.
+		//cv::flip(readSrcImg, readSrcImg, 0); //up side down the raw img obtein from OpenGL.
 
-		cv::imshow("pic", readSrcImg);
+		//cv::imshow("pic", readSrcImg);
 		std::cout << "openCV processing" << std::endl;
-		waitKey();
+		//waitKey();
 
-
+		
 
 		SetEvent(readEvent);
 
