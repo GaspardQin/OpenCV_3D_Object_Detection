@@ -146,12 +146,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ImgProcess.cpp" />
     <ClCompile Include="loadModel.cpp" />
     <ClCompile Include="start.cpp" />
     <ClCompile Include="openCV.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
+    <ClInclude Include="ImgProcess.h" />
     <ClInclude Include="loadModel.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />

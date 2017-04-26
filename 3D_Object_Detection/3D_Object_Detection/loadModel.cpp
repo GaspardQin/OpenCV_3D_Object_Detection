@@ -3,11 +3,11 @@
 #include "loadModel.h"
 GLfloat deltaTime = 0.0f; // 当前帧和上一帧的时间差
 GLfloat lastFrame = 0.0f; // 上一帧时间
-Camera camera = Camera(glm::vec3(0.0f, 1.0f, 3.0f));
+Camera camera = Camera(glm::vec3(0.0f, 0.0f, 8.0f));
 GLfloat rotate_degree[3] = { 0.0f };
-
-
-
+bool firstMouseMove = true;
+GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
+glm::vec3 vec_scale = glm::vec3(0.05f, 0.05f, 0.05f);
 DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 {
 	
@@ -40,11 +40,11 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	// 注册窗口键盘事件回调函数
 	glfwSetKeyCallback(window, key_callback);
 	// 注册鼠标事件回调函数
-	//glfwSetCursorPosCallback(window, mouse_move_callback);
+	glfwSetCursorPosCallback(window, mouse_move_callback);
 	// 注册鼠标滚轮事件回调函数
-	//glfwSetScrollCallback(window, mouse_scroll_callback);
+	glfwSetScrollCallback(window, mouse_scroll_callback);
 	// 鼠标捕获 停留在程序内
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// 初始化GLEW 获取OpenGL函数
 	glewExperimental = GL_TRUE; // 让glew获取所有拓展函数
@@ -108,13 +108,13 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		lastFrame = currentFrame;
 		glfwPollEvents(); // 处理例如鼠标 键盘等事件
 		//do_movement(); // 根据用户操作情况 更新相机属性
-
+		print_camera_info();//print the camera info;
 		// 清除颜色缓冲区 重置为指定颜色
 		glClearColor(0.f, 0.0f, 0.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		
 		shader.use();
-
+		
 		glm::mat4 projection = glm::perspective(camera.mouse_zoom,
 			(GLfloat)(WINDOW_WIDTH) / WINDOW_HEIGHT, 1.0f, 1000.0f); // 投影矩阵
 		glm::mat4 view = camera.getViewMatrix(); // 视变换矩阵
@@ -125,22 +125,20 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		glm::mat4 model = glm::mat4(1.0);
 		rotate_model(rotate_degree, model);
 		//model = glm::translate(model, glm::vec3(0.0f, -1.55f, -1.0f)); // 适当调整位置
-		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f)); // 适当缩小模型
+		model = glm::scale(model,vec_scale); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
 			1, GL_FALSE, glm::value_ptr(model));
 		// 这里填写场景绘制代码
-		//glHint(GL_LINE_SMOOTH, GL_NICEST);
+		
 		objModel.draw(shader); // 绘制物体
-
+		
 		glBindVertexArray(0);
+		
 		glUseProgram(0);
+		//display_axis();
 
 		//read pixels into opencv mat
-		//use fast 4-byte alignment (default anyway) if possible
-		//glPixelStorei(GL_PACK_ALIGNMENT, (temp.step & 3) ? 1 : 4);
 
-		//set length of one complete row in destination data (doesn't need to equal img.cols)
-		//glPixelStorei(GL_PACK_ROW_LENGTH, temp.step / temp.elemSize());
 		glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, readSrcImg.data);
 
 		glfwSwapBuffers(window); // 交换缓存
@@ -168,6 +166,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		break;
 	case GLFW_KEY_D:camera.handleKeyPress(RIGHT, deltaTime);
 		break;
+	case GLFW_KEY_Q:camera.handleKeyPress(UP, deltaTime);
+		break;
+	case GLFW_KEY_Z:camera.handleKeyPress(DOWN, deltaTime);
+		break;
 	case GLFW_KEY_UP: add_rotate_degree(0, 1, 0);
 		break;
 	case GLFW_KEY_LEFT: add_rotate_degree(1, 0, 0);
@@ -189,7 +191,27 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		glfwSetWindowShouldClose(window, GL_TRUE); // 关闭窗口
 	}
 }
+void mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.handleMouseScroll(yoffset);
+}
+void mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouseMove) // 首次鼠标移动
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouseMove = false;
+	}
 
+	GLfloat xoffset = xpos - lastX;
+	GLfloat yoffset = lastY - ypos;
+
+	lastX = xpos;
+	lastY = ypos;
+
+	camera.handleMouseMove(xoffset, yoffset);
+}
 void rotate_model(GLfloat rotate_degree[], glm::mat4& mat_rotate) {
 	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree[0]), glm::vec3(1.0, 0.0, 0.0));
 	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree[1]), glm::vec3(0.0, 1.0, 0.0));
@@ -213,4 +235,26 @@ void add_rotate_degree(GLfloat x_add, GLfloat y_add, GLfloat z_add) {
 	rotate_degree[1] = rotate_degree[1] +y_add;
 	rotate_degree[2] = rotate_degree[2] +z_add;
 	
+}
+void print_camera_info() {
+	std::cout << "camera's info : " << std::endl;
+	std::cout << "	pos: x " << camera.position[0] << "  y  " << camera.position[1] << "  z  " << camera.position[2] << std::endl;
+	std::cout << "	up : x " << camera.up[0] << "  y  " << camera.up[1] << "  z  " << camera.up[2] << std::endl;
+	std::cout << "	yaw :" << camera.yawAngle << "  pitch:  " << camera.pitchAngle << "  roll:  " << camera.rollAngle << std::endl;
+
+
+}
+void display_axis() {
+	GLuint displayList = glGenLists(1);  //请求显示列表名称
+
+	glNewList(displayList, GL_COMPILE);   //创建显示列表
+
+	glBegin(GL_LINES);
+	glColor3f(1, 0, 0); glVertex3f(0, 0, 0); glVertex3f(10, 0, 0);
+	glColor3f(0, 1, 0); glVertex3f(0, 0, 0); glVertex3f(0, 10, 0);
+	glColor3f(0, 0, 1); glVertex3f(0, 0, 0); glVertex3f(0, 0, 10);
+	glEnd();
+
+	glEndList();
+	glCallList(displayList);
 }

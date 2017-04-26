@@ -10,17 +10,11 @@
 
 	// 键盘回调函数原型声明
 	// 鼠标移动回调函数原型声明
-	//void mouse_move_callback_imp(GLFWwindow* window, double xpos, double ypos);
+	void mouse_move_callback(GLFWwindow* window, double xpos, double ypos);
 	void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-	//void mouse_scroll_callback_imp(GLFWwindow* window, double xoffset, double yoffset);
-	/*static void mouse_move_callback(GLFWwindow* window, double xpos, double ypos) {
-		getInstance().mouse_move_callback_imp( window, xpos, ypos);
-	};
-	// 鼠标滚轮回调函数原型声明
-	static void mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-		getInstance().mouse_scroll_callback_imp(window, xoffset, yoffset);
-	};
-	*/
+	void mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+	
+
 	// 场景中移动
 	//void do_movement();
 	//bool creat_window();
@@ -31,6 +25,8 @@
 	GLfloat* get_rotate_degree();
 	void print_rotate_degree();
 	void add_rotate_degree(GLfloat x_add, GLfloat y_add, GLfloat z_add);
+	void print_camera_info();
+	void display_axis();
 	//static loadModel* static_this; //用于规避类内callback必须是static问题,只可以有一个loadModel实例
 	//void set_this() { static_this = this;}
 	

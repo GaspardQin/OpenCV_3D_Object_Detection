@@ -13,15 +13,17 @@ enum Camera_Movement {
 	FORWARD,
 	BACKWARD,
 	LEFT,
-	RIGHT
+	RIGHT,
+	UP,
+	DOWN,
 };
 // 定义预设常量
 const GLfloat YAW = 0.0f;
 const GLfloat PITCH = 0.0f;
 const GLfloat ROLL = 0.0f;
-const GLfloat SPEED = 3.0f;
+const GLfloat SPEED = 10.0f;
 const GLfloat MOUSE_SENSITIVTY = 0.05f;
-const GLfloat MOUSE_ZOOM = 45.0f;
+const GLfloat MOUSE_ZOOM = 26.99f;
 const float  MAX_PITCH_ANGLE = 89.9f; // 防止万向锁
 
 class Camera
@@ -60,6 +62,12 @@ public:
 		case RIGHT:
 			this->position += this->side * velocity;
 			break;
+		case UP:
+			this->position += glm::vec3(0.0, 1.0, 0.0)*velocity;
+			break;
+		case DOWN:
+			this->position -=glm::vec3(0.0, 1.0, 0.0)*velocity;
+			break;
 		default:
 			break;
 		}
@@ -80,10 +88,10 @@ public:
 	// 处理鼠标滚轮缩放 保持在[1.0, MOUSE_ZOOM]之间
 	void handleMouseScroll(GLfloat yoffset)
 	{
-		if (this->mouse_zoom >= 1.0f && this->mouse_zoom <= MOUSE_ZOOM)
+		if (this->mouse_zoom >= 0.5f && this->mouse_zoom <= MOUSE_ZOOM)
 			this->mouse_zoom -= this->mouse_sensitivity * yoffset;
-		if (this->mouse_zoom <= 1.0f)
-			this->mouse_zoom = 1.0f;
+		if (this->mouse_zoom <= 0.5f)
+			this->mouse_zoom = 0.5f;
 		if (this->mouse_zoom >= 45.0f)
 			this->mouse_zoom = 45.0f;
 	}
@@ -114,6 +122,7 @@ public:
 	}
 public:
 	glm::vec3 forward,up, side, viewUp, position; // 相机属性
+
 	GLfloat yawAngle, pitchAngle,rollAngle; // 欧拉角
 	GLfloat moveSpeed, mouse_sensitivity, mouse_zoom; // 相机选项
 };

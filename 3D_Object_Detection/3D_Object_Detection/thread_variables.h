@@ -14,6 +14,7 @@ extern HANDLE readEvent;
 
 
 #include <GL/glew.h>
+//#include <GL/freeglut.h>
 // 引入GLFW库
 #include <GLFW/glfw3.h>
 // 引入SOIL库

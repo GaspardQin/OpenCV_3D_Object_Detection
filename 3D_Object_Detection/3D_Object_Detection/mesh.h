@@ -111,6 +111,22 @@ public:
 	{
 		// 不要再这里释放VBO等空间 因为Mesh对象传递时 临时对象销毁后这里会清理VBO等空间
 	}
+	void draw_line(const Shader& shader) const// 绘制Mesh
+	{
+		if (VAOId == 0
+			|| VBOId == 0
+			|| EBOId == 0)
+		{
+			return;
+		}
+		shader.use();
+		glBindVertexArray(this->VAOId);
+		int diffuseCnt = 0, specularCnt = 0, texUnitCnt = 0;
+
+		glDrawElements(GL_LINE, this->indices.size(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		glUseProgram(0);
+	}
 private:
 	std::vector<Vertex> vertData;
 	std::vector<GLuint> indices;
