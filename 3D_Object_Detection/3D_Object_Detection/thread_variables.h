@@ -4,8 +4,10 @@
 
 #include "windows.h"
 #include <iostream>
-extern HANDLE sentEvent;
-extern HANDLE readEvent;
+//extern HANDLE sentImgEvent;
+extern HANDLE sentModelEvent;
+extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables.h中声明extern
+//extern HANDLE readImgEvent;
 
 #include <opencv2\opencv.hpp>
 #include <opencv2\core\opengl.hpp>
@@ -37,4 +39,5 @@ extern Camera camera;
 extern GLfloat rotate_degree[3];
 const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
 extern cv::Mat readSrcImg;
+extern GLfloat camera_z;
 #endif

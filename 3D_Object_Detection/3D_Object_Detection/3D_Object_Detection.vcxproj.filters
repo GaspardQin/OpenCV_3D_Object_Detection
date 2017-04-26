@@ -15,16 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="openCV.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="loadModel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="start.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ImgProcess.cpp">
+    <ClCompile Include="openCV.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -51,9 +48,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="openCV.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="ImgProcess.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

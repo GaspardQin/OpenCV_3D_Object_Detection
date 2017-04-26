@@ -3,7 +3,8 @@
 #include "loadModel.h"
 GLfloat deltaTime = 0.0f; // 当前帧和上一帧的时间差
 GLfloat lastFrame = 0.0f; // 上一帧时间
-Camera camera = Camera(glm::vec3(0.0f, 0.0f, 8.0f));
+GLfloat camera_z = 8.0f;
+Camera camera = Camera(glm::vec3(0.0f, 0.0f, camera_z));
 GLfloat rotate_degree[3] = { 0.0f };
 bool firstMouseMove = true;
 GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
@@ -40,11 +41,11 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	// 注册窗口键盘事件回调函数
 	glfwSetKeyCallback(window, key_callback);
 	// 注册鼠标事件回调函数
-	glfwSetCursorPosCallback(window, mouse_move_callback);
+	//glfwSetCursorPosCallback(window, mouse_move_callback);
 	// 注册鼠标滚轮事件回调函数
 	glfwSetScrollCallback(window, mouse_scroll_callback);
 	// 鼠标捕获 停留在程序内
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// 初始化GLEW 获取OpenGL函数
 	glewExperimental = GL_TRUE; // 让glew获取所有拓展函数
@@ -101,7 +102,9 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	// 开始游戏主循环
 	while (!glfwWindowShouldClose(window))
 	{
-		WaitForSingleObject(readEvent,INFINITE);
+//		WaitForSingleObject(readImgEvent,INFINITE);
+		WaitForSingleObject(readModelEvent, INFINITE);
+
 		GLfloat currentFrame = (GLfloat)glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		//if (deltaTime < 1/20) continue;
@@ -117,7 +120,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		
 		glm::mat4 projection = glm::perspective(camera.mouse_zoom,
 			(GLfloat)(WINDOW_WIDTH) / WINDOW_HEIGHT, 1.0f, 1000.0f); // 投影矩阵
-		glm::mat4 view = camera.getViewMatrix(); // 视变换矩阵
+		glm::mat4 view = camera.getViewMatrix(camera_z); // 视变换矩阵
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"),
 			1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"),
@@ -147,7 +150,8 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 
 
 
-		SetEvent(sentEvent);
+		SetEvent(sentModelEvent);
+		
 		
 	}
 	// 释放资源

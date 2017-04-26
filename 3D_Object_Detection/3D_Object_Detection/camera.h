@@ -44,6 +44,11 @@ public:
 	{
 		return glm::lookAt(this->position, this->position + this->forward, this->viewUp);
 	}
+	glm::mat4 getViewMatrix(GLfloat camera_z)
+	{
+		position[2] = camera_z;
+		return glm::lookAt(this->position, this->position + this->forward, this->viewUp);
+	}
 	// 处理键盘按键后方向移动
 	void handleKeyPress(Camera_Movement direction, GLfloat deltaTime)
 	{
