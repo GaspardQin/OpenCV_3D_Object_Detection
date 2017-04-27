@@ -30,7 +30,10 @@ int camBlockSize = 5;
 int camApproxPolyEps = 10;
 int camCannyThresholdL = 100;
 int camCannyThresholdH = 1000;
-int int_camera_z = 80;
+int int_camera_z = int(camera_z * 10);
+
+
+
 void camBinTrackbar(int, void*) {
 	int camBlockSizeHelp = camBlockSize * 2 + 3;
 	adaptiveThreshold(camSrcImg, camBinImg, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, camBlockSizeHelp, 0);
@@ -46,13 +49,6 @@ void camCannyTrackbar(int, void*)
 	imshow("cam_canny", camCannyImg);
 	imshow("cam_canny_dilate", camCannyImgDilate);
 
-	int minHessian = 400;//定义SURF中的hessian阈值特征点检测算子  
-	Ptr<Feature2D> detector = SURF::create(minHessian);//定义一个SurfFeatureDetector（SURF） 特征检测类对象  
-	std::vector<KeyPoint> keypoints_1;//vector模板类是能够存放任意类型的动态数组，能够增加和压缩数据 
-	detector->detect(camCannyImg, keypoints_1);
-	Mat img_keypoints_1;
-	drawKeypoints(camCannyImg, keypoints_1, img_keypoints_1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
-	imshow("SURF", img_keypoints_1);
 
 }
 void camContoursTrackbar(int, void*) {
@@ -107,7 +103,7 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	createTrackbar("GL_rotate_x", "GL_rotate", &x_model_degree, 360, openGLTrackbar);
 	createTrackbar("GL_rotate_y", "GL_rotate", &y_model_degree, 360, openGLTrackbar);
 	createTrackbar("GL_rotate_z", "GL_rotate", &z_model_degree, 360, openGLTrackbar);
-	createTrackbar("GL_z", "GL_rotate", &int_camera_z, 80, openGLTrackbar);
+	createTrackbar("GL_z", "GL_rotate", &int_camera_z, int(camera_z*10), openGLTrackbar);
 	//waitKey(0);
 
 
@@ -155,7 +151,9 @@ void canny_trackbar(int, void*)
 	//dilate(modelImg, modelCannyImg, getStructuringElement(MORPH_RECT, Size(3, 3), Point(0, 0)));
 	imshow("canny", modelCannyImg);
 	//imshow("canny_dilate", modelCannyImg);
+
 }
+	
 
 void contours_trackbar(int, void*) {
 	std::vector<std::vector<cv::Point> > contours;

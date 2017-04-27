@@ -3,12 +3,13 @@
 #include "loadModel.h"
 GLfloat deltaTime = 0.0f; // 当前帧和上一帧的时间差
 GLfloat lastFrame = 0.0f; // 上一帧时间
-GLfloat camera_z = 8.0f;
+GLfloat camera_z = 300.0f;
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, camera_z));
 GLfloat rotate_degree[3] = { 0.0f };
 bool firstMouseMove = true;
 GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
-glm::vec3 vec_scale = glm::vec3(0.05f, 0.05f, 0.05f);
+glm::vec3 vec_scale = glm::vec3(1.f, 1.f, 1.f);
+
 DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 {
 	
@@ -119,7 +120,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		shader.use();
 		
 		glm::mat4 projection = glm::perspective(camera.mouse_zoom,
-			(GLfloat)(WINDOW_WIDTH) / WINDOW_HEIGHT, 1.0f, 1000.0f); // 投影矩阵
+			(GLfloat)(WINDOW_WIDTH) / WINDOW_HEIGHT, 10.0f, 1000.0f); // 投影矩阵
 		glm::mat4 view = camera.getViewMatrix(camera_z); // 视变换矩阵
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"),
 			1, GL_FALSE, glm::value_ptr(projection));
