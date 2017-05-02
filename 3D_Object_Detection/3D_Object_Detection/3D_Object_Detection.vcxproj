@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="detectionMethod.cpp" />
     <ClCompile Include="loadModel.cpp" />
     <ClCompile Include="start.cpp" />
     <ClCompile Include="openCV.cpp" />
@@ -156,6 +157,8 @@
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="openCV.h" />
+    <ClInclude Include="particle.h" />
+    <ClInclude Include="PSO.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="thread_variables.h" />
     <ClInclude Include="texture.h" />

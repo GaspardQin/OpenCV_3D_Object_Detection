@@ -23,10 +23,10 @@ void main()
    //float silhouette = length(vNormal * vec3(0.0, 0.0, 1.0))*0.7 + 0.3;
 
 
-   vec2 xy;
-   xy[0] = Position[0];
-   xy[1] = Position[2];
-   float silhouette = vNormal[1]*0.5 + 0.3*Position[2]/20 + sin(length(xy)/3)*0.05 ;
+  // vec2 xy;
+   //xy[0] = Position[0];
+   //xy[1] = Position[2];
+   //float silhouette = vNormal[1]*0.5 + 0.3*Position[2]/20 + sin(length(xy)/3)*0.05 ;
    //color[0] = vNormal[1]*0.5;
    //color[1] = 0.3;
    //color[2] = sin(length(xy)/3)*0.2;
@@ -40,6 +40,7 @@ void main()
  //       silhouette = 1.0;
  //   }
 
-    color = vec4(silhouette, silhouette, silhouette, 1.0);
+    //color = vec4(silhouette, silhouette, silhouette, 1.0
+	color = vec4(vNormal[0]/50+0.5, vNormal[1]/10+Position[2]/100, 0.5+vNormal[2]/5, 1.0);
 
 }

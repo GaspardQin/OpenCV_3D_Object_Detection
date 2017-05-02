@@ -16,8 +16,8 @@ using namespace cv;
 cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3);//the raw img got from the screenshot of OpenGL;
 int BlockSizeHelp = 5 * 2 + 3;
 cv::Mat modelImg, modelCannyImg;
-int canny_threshold_l = 534;
-int canny_threshold_h = 1943;
+int canny_threshold_l = 615;
+int canny_threshold_h = 2030;
 int approxPoly_eps = 10;
 void canny_trackbar(int, void*);
 void contours_trackbar(int, void*);
@@ -147,7 +147,7 @@ void canny_trackbar(int, void*)
 {
 	//canny±ßÔµ¼ì²â  
 
-	Canny(readSrcImg, modelCannyImg, canny_threshold_l / 10.0, canny_threshold_h / 10.0);
+	Canny(readSrcImg, modelCannyImg, canny_threshold_l / 10.0, canny_threshold_h / 10.0, 3);
 	//dilate(modelImg, modelCannyImg, getStructuringElement(MORPH_RECT, Size(3, 3), Point(0, 0)));
 	imshow("canny", modelCannyImg);
 	//imshow("canny_dilate", modelCannyImg);

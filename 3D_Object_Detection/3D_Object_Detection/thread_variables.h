@@ -14,7 +14,6 @@ extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables
 #include <opencv2\core\core.hpp>
 #include <opencv2\highgui\highgui.hpp>
 
-
 #include <GL/glew.h>
 //#include <GL/freeglut.h>
 // 引入GLFW库
