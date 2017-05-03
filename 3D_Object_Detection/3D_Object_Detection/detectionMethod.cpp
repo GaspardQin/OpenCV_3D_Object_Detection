@@ -1,49 +1,5 @@
-//get initial Model Buffer function in this files
-#include "thread_variables.h"
 
-using namespace std;
-using namespace cv;
-class PosDetection {
-public:
-	std::vector<cv::Mat> model_ini_Canny_imgs;
-	double deg_estimated[3]; double pixel_pos_estimated[2]; double scale_ratio_estimated;
-	cv::Mat cam_canny_img, cam_src;
-	int min_index;
-	template<typename T> int findMinIndex(std::vector<T>& src);
-	template<typename T> int findMaxIndex(std::vector<T>& src);
-	template<typename T> int maxElement(T* src, int size);
-	void getInitialModelBuffer();
-	void initialization();
-	double huMatchFromCannyImg(int index);
-	void PosDetection::centerPosEstimation(Mat &model_img, Mat &cam_img);
-	void huCoarseDetection();
-	double curveEstimation(double x1,double y1, double x2,double y2, double x3, double y3);
-	void shi_TomasiMatchFromCannyImgs();
-	PosDetection(double camera_z_set_input, double precision_x_input, double precision_y_input, double precision_z_input, double x_l_input, double x_h_input, double y_l_input, double y_h_input, double z_l_input, double z_h_input) {
-		camera_z_set_input = camera_z_set;
-		precision_x_input = precision_x;
-		precision_y_input = precision_y;
-		precision_z_input = precision_z; 
-		x_l_input = x_l;
-		x_h_input = x_h;
-		y_l_input = y_l;
-		y_h_input = y_h;
-		z_l_input = z_l;
-		z_h_input = z_h;
-	}
-private:
-	double camera_z_set;
-	double precision_x;
-	double precision_y;
-	double precision_z;
-	double x_l;
-	double x_h;
-	double y_l;
-	double y_h;
-	double z_l;
-	double z_h;
-
-};
+#include "detectionMethod.h"
 template<typename T> int PosDetection::findMinIndex(std::vector<T>& src){
 	int i = 0,min_index;
 	T min = 0; T temp;
@@ -90,11 +46,11 @@ void PosDetection::getInitialModelBuffer() {
 	rotate_degree[2] = 0;
 	SetEvent(readModelEvent);
 	camera_z = camera_z_set;
-	double deg_x = x_l, deg_y = y_l , deg_z = z_l;
+	double deg_x = deg_x_l, deg_y = deg_y_l , deg_z = deg_z_l;
 	SetEvent(readModelEvent);
-	while (deg_x < x_h) {
-		while (deg_y < y_h) {
-			while (deg_z < z_h) {
+	while (deg_x < deg_x_h) {
+		while (deg_y < deg_y_h) {
+			while (deg_z < deg_z_h) {
 				WaitForSingleObject(sentModelEvent,INFINITE);
 				cv::flip(readSrcImg, readSrcImg, 0);
 				Canny(readSrcImg, model_canny_img_init, 500, 1000);
@@ -103,14 +59,14 @@ void PosDetection::getInitialModelBuffer() {
 
 
 
-				deg_z = +precision_z;
+				deg_z = +precision_deg_z;
 				SetEvent(readModelEvent);
 			}
 
-			deg_y = +precision_y;
+			deg_y = +precision_deg_y;
 		}
 
-		deg_x = +precision_x;
+		deg_x = +precision_deg_x;
 	}
 	
 	
@@ -127,7 +83,8 @@ void PosDetection::centerPosEstimation(Mat &model_img,Mat &cam_img){
 	findContours(cam_img, cam_contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 	findContours(model_img, model_contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
-	int i, cam_max_index, model_max_index; double cam_max_area = 0, double model_max_area = 0;double temp_area;
+	int i, cam_max_index, model_max_index; 
+	double cam_max_area = 0; double model_max_area = 0; double temp_area;
 	for (i = 0; i < cam_contours.size(); i++) {
 		temp_area = contourArea(cam_contours[i]);
 		if (cam_max_area < temp_area) {
@@ -188,12 +145,12 @@ void PosDetection::huCoarseDetection() {
 	min_index = findMinIndex(scores);
 	//寻找相邻计算点
 	double x_deg, y_deg, z_deg;
-	int num_steps_x = floor((x_h - x_l) / precision_x) + 1;
-	int num_steps_y = floor((y_h - y_l) / precision_y) + 1;
-	int num_steps_z = floor((z_h - z_l) / precision_z) + 1;
-	x_deg = floor(min_index /(num_steps_y*num_steps_z))*precision_x + x_l;
-	y_deg = (min_index  % int(num_steps_y*num_steps_z))/ num_steps_y * precision_y + y_l;
-	z_deg = (min_index % int(num_steps_z))*precision_z + z_l;
+	int num_steps_x = floor((deg_x_h - deg_x_l) / precision_deg_x) + 1;
+	int num_steps_y = floor((deg_y_h - deg_y_l) / precision_deg_y) + 1;
+	int num_steps_z = floor((deg_z_h - deg_z_l) / precision_deg_z) + 1;
+	x_deg = floor(min_index /(num_steps_y*num_steps_z))*precision_deg_x + deg_x_l;
+	y_deg = (min_index  % int(num_steps_y*num_steps_z))/ num_steps_y * precision_deg_y + deg_y_l;
+	z_deg = (min_index % int(num_steps_z))*precision_deg_z + deg_z_l;
 	int adj_index[6]; //x,y,z分别相邻的6点
 	//x
 		adj_index[0] = min_index - num_steps_y*num_steps_z;
@@ -205,111 +162,32 @@ void PosDetection::huCoarseDetection() {
 		adj_index[3] = min_index + 1;
 		adj_index[3] = min_index - 1;
 	if(maxElement(adj_index,6) >= model_ini_Canny_imgs.size()) {
-		std::cout << "x_h, y_h or z_h need to be bigger" << endl;
+		std::cout << "deg_x_h, deg_y_h or deg_z_h need to be bigger" << endl;
 	}
 	if ((min_index + num_steps_y) % (num_steps_z*num_steps_y) < 2 * num_steps_y && (min_index + 1) % num_steps_z < 2) {
-		std::cout << "x_l,y_l or z_l need to be smaller" << endl;
+		std::cout << "deg_x_l,deg_y_l or deg_z_l need to be smaller" << endl;
 	}
 	//用二次曲线估计最佳点
 	
 	//估计的大致姿态与位置以及缩放系数
-	deg_estimated[0] = curveEstimation(x_deg - precision_x, scores[adj_index[0]], x_deg, scores[min_index], x_deg + precision_x, scores[adj_index[1]]);
-	deg_estimated[1] = curveEstimation(y_deg - precision_y, scores[adj_index[2]], y_deg, scores[min_index], y_deg + precision_y, scores[adj_index[3]]);
-	deg_estimated[2] = curveEstimation(z_deg - precision_z, scores[adj_index[4]], z_deg, scores[min_index], z_deg + precision_z, scores[adj_index[5]]);
+	deg_estimated[0] = curveEstimation(x_deg - precision_deg_x, scores[adj_index[0]], x_deg, scores[min_index], x_deg + precision_deg_x, scores[adj_index[1]]);
+	deg_estimated[1] = curveEstimation(y_deg - precision_deg_y, scores[adj_index[2]], y_deg, scores[min_index], y_deg + precision_deg_y, scores[adj_index[3]]);
+	deg_estimated[2] = curveEstimation(z_deg - precision_deg_z, scores[adj_index[4]], z_deg, scores[min_index], z_deg + precision_deg_z, scores[adj_index[5]]);
 	centerPosEstimation(model_ini_Canny_imgs[min_index], cam_canny_img);
 
 }
 
-void PosDetection::shi_TomasiMatchFromCannyImgs() {
-	//粗定位方法2：边缘图像角点匹配
-
+void PosDetection::shi_TomasiDetection() {
+	//中精度定位：边缘图像角点匹配
+	
+	double output_best;
 	//需先调用huCoarseDetection()
-	int maxCorners = 30;    //角点个数的最大值  
-	/// Shi-Tomasi的参数设置  
-	vector<Point2f> cam_corners,model_corners;
-	double qualityLevel = 0.01;
-	double minDistance = 10;
-	int blockSize = 3;
-	bool useHarrisDetector = false; //不使用Harris检测算法  
-	double k = 0.04;
-
-	/// 深度拷贝原图像用于绘制角点  
-	//Mat srcCopy = src.clone();
-	/// 应用角点检测算法  
-	goodFeaturesToTrack(cam_canny_img, cam_corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
-	goodFeaturesToTrack(model_ini_Canny_imgs[min_index], model_corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
-	
-	
-	cv::Ptr <cv::HausdorffDistanceExtractor> hausdorff_ptr = cv::createHausdorffDistanceExtractor();
-	hausdorff_ptr->setRankProportion(0.6);
-	float distance = hausdorff_ptr->computeDistance(cam_corners, model_corners);
+	PSO PSOer(&cam_canny_img, deg_estimated, pixel_pos_estimated, scale_ratio_estimated, 30, 6);
     //微调位置，姿态，z距离，缩放系数使partial Hausdorff distance(系数0.6)最小（或者模板匹配），采用粒子群算法
-}
-
-class MatchPSO {
-public:
-	Mat* cam_img;
-	double* deg_estimated_before;
-	double* pixel_pos_estimated_before;
-	double scale_ratio_estimated_before;
-	
-	//角点参数设置
-	// Shi-Tomasi的参数设置  
-	vector<Point2f> cam_corners_PSO;
-	int maxCorners = 30;    //角点个数的最大值  
-	double qualityLevel = 0.01;
-	double minDistance = 10;
-	int blockSize = 3;
-	bool useHarrisDetector = false; //不使用Harris检测算法  
-	double k = 0.04;
-
-	cv::Ptr <cv::HausdorffDistanceExtractor> hausdorff_ptr = cv::createHausdorffDistanceExtractor();
-	
-
-	int dim = 6;//总共六维
-	MatchPSO(Mat *cam_img_input, double* deg_input, double *pixel_pos_input, double scale_ratio_estimated_before_input) {
-		cam_img = cam_img_input;
-		deg_estimated_before = deg_input;//3维
-		pixel_pos_estimated_before = pixel_pos_input;//2维
-		scale_ratio_estimated_before = scale_ratio_estimated_before_input;//1维
-		hausdorff_ptr->setRankProportion(0.6);
-	};
-	double hausdorffCost(double *var);//x是六维向量
-	void camCornerDect();
-	void getModelImg(double *var, Mat& model_canny_img);
-};
-void MatchPSO::camCornerDect() {
-	goodFeaturesToTrack(*cam_img, cam_corners_PSO, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
-}
-
-void MatchPSO::getModelImg(double *var, Mat& model_canny_img) {
-	rotate_degree[0] = deg_estimated_before[0] + var[0];
-	rotate_degree[1] = deg_estimated_before[1] + var[1];
-	rotate_degree[2] = deg_estimated_before[2] + var[2];
-	SetEvent(readModelEvent);
-	WaitForSingleObject(sentModelEvent,INFINITE);
-	cv::flip(readSrcImg, readSrcImg, 0);
-	Mat model_canny_img_pre;
-	Canny(readSrcImg, model_canny_img_pre, 500, 1000);
-	Mat warp_mat(2, 3, CV_32FC1);
-	warp_mat.at<double>(0,0) = scale_ratio_estimated_before+ var[5];
-	warp_mat.at<double>(0,1) = 0;
-	warp_mat.at<double>(1, 0) = scale_ratio_estimated_before + var[5];
-	warp_mat.at<double>(1, 1) = 0;
-	warp_mat.at<double>(0,2) = pixel_pos_estimated_before[0] + var[3];
-	warp_mat.at<double>(1,2) = pixel_pos_estimated_before[1] + var[4];
-	warpAffine(model_canny_img_pre, model_canny_img, warp_mat, model_canny_img_pre.size());
-}
-
-double MatchPSO::hausdorffCost(double *var) {
-	//粒子群cost函数
-	Mat model_canny_img;
-	vector<Point2f> model_corners_PSO;
-	getModelImg(var, model_canny_img);
-	goodFeaturesToTrack(model_canny_img, model_corners_PSO, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
-	
-	return (hausdorff_ptr->computeDistance(cam_corners_PSO, model_corners_PSO));
-	//微调位置，姿态，z距离，缩放系数使partial Hausdorff distance(系数0.6)最小（或者模板匹配），采用粒子群算法
+	PSOer.doPSO(var_best, output_best);
+	cout << "Best Rotation is: x:" << deg_estimated[0] + var_best[0] << ", y:" << deg_estimated[1] + var_best[1] << ", z:" << deg_estimated[2] + var_best[2] << endl;
+	cout << "Best Position is: x:" << pixel_pos_estimated[0] + var_best[3] << ", y:" << pixel_pos_estimated[1] + var_best[4] << endl;
+	cout << "Best Scale Ratio is: " << scale_ratio_estimated + var_best[5] << endl;
 }
 
 

@@ -32,6 +32,10 @@ extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables
 #include "texture.h"
 // 加载模型的类
 #include "model.h"
+#include <iostream>
+#include <cmath>
+#include <ctime>
+#include <cstdlib>
 extern GLfloat deltaTime; // 当前帧和上一帧的时间差
 extern GLfloat lastFrame; // 上一帧时间
 extern Camera camera;
