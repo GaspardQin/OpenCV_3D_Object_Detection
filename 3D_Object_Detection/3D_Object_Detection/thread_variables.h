@@ -39,8 +39,9 @@ extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables
 extern GLfloat deltaTime; // 当前帧和上一帧的时间差
 extern GLfloat lastFrame; // 上一帧时间
 extern Camera camera;
-extern GLfloat rotate_degree[3];
+extern GLfloat rotate_degree_set[3];
 const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
 extern cv::Mat readSrcImg;
 extern GLfloat camera_z;
+extern GLfloat pos_model_set[3];
 #endif

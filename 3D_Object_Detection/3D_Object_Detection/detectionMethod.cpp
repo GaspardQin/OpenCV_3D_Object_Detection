@@ -1,8 +1,67 @@
 
 #include "detectionMethod.h"
+void PosDetection::vecmatwrite(const string& filename, const vector<Mat>& matrices)
+{
+	ofstream fs(filename, fstream::binary);
+
+	for (size_t i = 0; i < matrices.size(); ++i)
+	{
+		const Mat& mat = matrices[i];
+
+		// Header
+		int type = mat.type();
+		int channels = mat.channels();
+		fs.write((char*)&mat.rows, sizeof(int));    // rows
+		fs.write((char*)&mat.cols, sizeof(int));    // cols
+		fs.write((char*)&type, sizeof(int));        // type
+		fs.write((char*)&channels, sizeof(int));    // channels
+
+													// Data
+		if (mat.isContinuous())
+		{
+			fs.write(mat.ptr<char>(0), (mat.dataend - mat.datastart));
+		}
+		else
+		{
+			int rowsz = CV_ELEM_SIZE(type) * mat.cols;
+			for (int r = 0; r < mat.rows; ++r)
+			{
+				fs.write(mat.ptr<char>(r), rowsz);
+			}
+		}
+	}
+}
+vector<Mat> PosDetection::vecmatread(const string& filename)
+{
+	vector<Mat> matrices;
+	ifstream fs(filename, fstream::binary);
+
+	// Get length of file
+	fs.seekg(0, fs.end);
+	int length = fs.tellg();
+	fs.seekg(0, fs.beg);
+
+	while (fs.tellg() < length)
+	{
+		// Header
+		int rows, cols, type, channels;
+		fs.read((char*)&rows, sizeof(int));         // rows
+		fs.read((char*)&cols, sizeof(int));         // cols
+		fs.read((char*)&type, sizeof(int));         // type
+		fs.read((char*)&channels, sizeof(int));     // channels
+
+													// Data
+		Mat mat(rows, cols, type);
+		fs.read((char*)mat.data, CV_ELEM_SIZE(type) * rows * cols);
+
+		matrices.push_back(mat);
+	}
+	return matrices;
+}
+
 template<typename T> int PosDetection::findMinIndex(std::vector<T>& src){
 	int i = 0,min_index;
-	T min = 0; T temp;
+	T min = 10000; T temp;
 	for (i = 0; i < src.size(); i++) {
 		if (min > src[i]) {
 			min = src[i];
@@ -35,47 +94,81 @@ template<typename T> int PosDetection::maxElement(T* src,int size) {
 	return max;
 
 }
+template<typename T> int PosDetection::minElement(T* src, int size) {
+	int i = 0;
+	T min = 100000;
+	for (i = 0; i < size; i++) {
+		if (min > src[i]) {
+			min = src[i];
+		}
+	}
+	return min;
+
+}
 double PosDetection::curveEstimation(double x1, double y1, double x2, double y2, double x3, double y3) {
+	//以三个点确定二次曲线最低点
 	return (-((x1*x1 - x2*x2)*(y1 - y3) - (x1*x1 - x3*x3)*(y1 - y2) / (2 * (x2 - x3))));
 }
-void PosDetection::getInitialModelBuffer() {
+void PosDetection::creatIniImgs() {
+	rotate_degree_set[0] = deg_x_l;
+	rotate_degree_set[1] = deg_y_l;
+	rotate_degree_set[2] = deg_z_l;
 	cv::Mat model_canny_img_init;
-	WaitForSingleObject(sentModelEvent, INFINITE);
-	rotate_degree[0] = 0;
-	rotate_degree[1] = 0;
-	rotate_degree[2] = 0;
+	//double deg_x = deg_x_l, deg_y = deg_y_l , deg_z = deg_z_l;
 	SetEvent(readModelEvent);
-	camera_z = camera_z_set;
-	double deg_x = deg_x_l, deg_y = deg_y_l , deg_z = deg_z_l;
+
+	//refresh
+	WaitForSingleObject(sentModelEvent,INFINITE);
 	SetEvent(readModelEvent);
-	while (deg_x < deg_x_h) {
-		while (deg_y < deg_y_h) {
-			while (deg_z < deg_z_h) {
-				WaitForSingleObject(sentModelEvent,INFINITE);
+	while (rotate_degree_set[0] < deg_x_h) {
+		rotate_degree_set[1] = deg_y_l;
+		while (rotate_degree_set[1] < deg_y_h) {
+			rotate_degree_set[2] = deg_z_l;
+			while (rotate_degree_set[2] < deg_z_h) {
+				WaitForSingleObject(sentModelEvent, INFINITE);
 				cv::flip(readSrcImg, readSrcImg, 0);
-				Canny(readSrcImg, model_canny_img_init, 500, 1000);
-				model_ini_Canny_imgs.push_back(model_canny_img_init);
+				Canny(readSrcImg, model_canny_img_init, 80, 200);
+				model_ini_Canny_imgs.push_back(model_canny_img_init.clone());
 				//read the inital model imgs into a vector(buffer);
 
-
-
-				deg_z = +precision_deg_z;
+				std::cout << "Creating modelImg"<< model_ini_Canny_imgs.size()<<" degx,degy,degz" << rotate_degree_set[0] << "  " << rotate_degree_set[1] << "  " << rotate_degree_set[2] << endl;
+				//imshow("test", model_canny_img_init);
+				//waitKey();
+				rotate_degree_set[2] += precision_deg_z;
 				SetEvent(readModelEvent);
 			}
 
-			deg_y = +precision_deg_y;
+			rotate_degree_set[1] += precision_deg_y;
 		}
 
-		deg_x = +precision_deg_x;
+		rotate_degree_set[0] += precision_deg_x;
 	}
-	
+	vecmatwrite("buffer.bin", model_ini_Canny_imgs);
+
+}
+void PosDetection::getInitialModelBuffer() {
+	cout << "Initializing..." << endl;
+	if (buffer_is_created == true) {
+		model_ini_Canny_imgs = vecmatread("buffer.bin");
+	}
+	else creatIniImgs();
 	
 }
 void PosDetection::initialization() {
+	cam_src = imread("./model/sample.jpg", CV_8UC1);
+	cam_src_color = imread("./model/sample.jpg");
 	getInitialModelBuffer();
-	Canny(cam_src, cam_canny_img, 500, 1000);
+	Canny(cam_src, cam_canny_img, 50, 200);
 
 	//粗定位
+}
+void PosDetection::debugShowContours(int canny_index,vector<vector<Point>> *cam_contours,int cam_index, vector<vector<Point>> *model_contours,int model_index) {
+	Mat back_ground = cam_src_color.clone();
+	back_ground.setTo(cv::Scalar(255, 255, 255));
+	drawContours(back_ground, *cam_contours, cam_index,Scalar(255,0,0));
+	drawContours(back_ground, *model_contours, model_index, Scalar(0, 0, 255));
+	imshow("debugShowContours", back_ground);
+	imshow("debugShowModelCanny", model_ini_Canny_imgs[canny_index]);
 }
 void PosDetection::centerPosEstimation(Mat &model_img,Mat &cam_img){
 	vector<Vec4i> hierarchy;
@@ -100,7 +193,7 @@ void PosDetection::centerPosEstimation(Mat &model_img,Mat &cam_img){
 		}
 	}
 	Moments mo; double pixel_pos_estimated[2];
-	mo = moments(cam_contours[i],true);
+	mo = moments(cam_contours[cam_max_index],true);
 	pixel_pos_estimated[0] = mo.m10 / mo.m00;
 	pixel_pos_estimated[1] = mo.m01 / mo.m00;
 	double scale_ratio_estimated = model_max_area / cam_max_area;
@@ -129,12 +222,18 @@ double PosDetection::huMatchFromCannyImg(int index) {
 			model_max_area = temp_area;
 		}
 	}
+	debugShowContours(index, &cam_contours, cam_max_index, &model_contours, model_max_index);
+	
 	
 	match_score = matchShapes(cam_contours[cam_max_index], model_contours[model_max_index], CV_CONTOURS_MATCH_I3,0);
 	//分数越低，越匹配。
+	cout << "match_score is " << match_score << endl;
+
+	waitKey(1000);
 	return match_score;
 }
 void PosDetection::huCoarseDetection() {
+	//不会用于本次应用，但保留该方法
 	//粗定位方法1：外轮廓HU姿态确定，仅确定姿态
 	//需注意HU矩有旋转不变矩！旋转角度不可太大，最好不能在该范围内有对称图案！
 	int i;
@@ -159,8 +258,11 @@ void PosDetection::huCoarseDetection() {
 		adj_index[2] = min_index - num_steps_z;
 		adj_index[3] = min_index + num_steps_z;
 	//z
-		adj_index[3] = min_index + 1;
-		adj_index[3] = min_index - 1;
+		adj_index[4] = min_index + 1;
+		adj_index[5] = min_index - 1;
+	if (minElement(adj_index, 6) < 0) {
+			std::cout << "deg_x_l, deg_y_l or deg_z_l need to be smaller" << endl;
+	}
 	if(maxElement(adj_index,6) >= model_ini_Canny_imgs.size()) {
 		std::cout << "deg_x_h, deg_y_h or deg_z_h need to be bigger" << endl;
 	}
@@ -170,24 +272,28 @@ void PosDetection::huCoarseDetection() {
 	//用二次曲线估计最佳点
 	
 	//估计的大致姿态与位置以及缩放系数
-	deg_estimated[0] = curveEstimation(x_deg - precision_deg_x, scores[adj_index[0]], x_deg, scores[min_index], x_deg + precision_deg_x, scores[adj_index[1]]);
-	deg_estimated[1] = curveEstimation(y_deg - precision_deg_y, scores[adj_index[2]], y_deg, scores[min_index], y_deg + precision_deg_y, scores[adj_index[3]]);
-	deg_estimated[2] = curveEstimation(z_deg - precision_deg_z, scores[adj_index[4]], z_deg, scores[min_index], z_deg + precision_deg_z, scores[adj_index[5]]);
+	rotate_degree_estimated[0] = curveEstimation(x_deg - precision_deg_x, scores[adj_index[0]], x_deg, scores[min_index], x_deg + precision_deg_x, scores[adj_index[1]]);
+	rotate_degree_estimated[1] = curveEstimation(y_deg - precision_deg_y, scores[adj_index[2]], y_deg, scores[min_index], y_deg + precision_deg_y, scores[adj_index[3]]);
+	rotate_degree_estimated[2] = curveEstimation(z_deg - precision_deg_z, scores[adj_index[4]], z_deg, scores[min_index], z_deg + precision_deg_z, scores[adj_index[5]]);
 	centerPosEstimation(model_ini_Canny_imgs[min_index], cam_canny_img);
 
 }
 
-void PosDetection::shi_TomasiDetection() {
-	//中精度定位：边缘图像角点匹配
+void PosDetection::shi_TomasiDetection(double* output_best) {
+	//应输入大小为6的数组以接受最佳匹配位置及姿态
+	//精精度定位：边缘图像角点匹配
 	
-	double output_best;
-	//需先调用huCoarseDetection()
-	PSO PSOer(&cam_canny_img, deg_estimated, pixel_pos_estimated, scale_ratio_estimated, 30, 6);
-    //微调位置，姿态，z距离，缩放系数使partial Hausdorff distance(系数0.6)最小（或者模板匹配），采用粒子群算法
-	PSOer.doPSO(var_best, output_best);
-	cout << "Best Rotation is: x:" << deg_estimated[0] + var_best[0] << ", y:" << deg_estimated[1] + var_best[1] << ", z:" << deg_estimated[2] + var_best[2] << endl;
-	cout << "Best Position is: x:" << pixel_pos_estimated[0] + var_best[3] << ", y:" << pixel_pos_estimated[1] + var_best[4] << endl;
-	cout << "Best Scale Ratio is: " << scale_ratio_estimated + var_best[5] << endl;
+	
+	//需先调用至少一种粗定位函数确保匹配模板和待匹配图像像素位置有重合
+	MatchSolver matchSolver;
+	matchSolver.setIniVar(pos_estimated[0], pos_estimated[1], pos_estimated[2], rotate_degree_estimated[0], rotate_degree_estimated[1], rotate_degree_estimated[2]);
+	matchSolver.solve(&cam_canny_img, output_best);
+		
+	
+    //微调位置，姿态使partial Hausdorff distance(系数0.6)最小（或者模板匹配），采用LM非线性最优化算法
+	cout << "Best Position is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:"<< output_best[2] << endl;
+	cout << "Best Rotation is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
+
 }
 
 

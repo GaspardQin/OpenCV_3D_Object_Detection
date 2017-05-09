@@ -21,19 +21,16 @@
     <ClCompile Include="start.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="detectionMethod.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="MatchPSO.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="openCV_Debug.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="OpenCV.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="PSO.cpp">
+    <ClCompile Include="MatchEdges.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MatchSolver.h">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="detectionMethodWithoutBuffer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -62,16 +59,10 @@
     <ClInclude Include="openCV.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="particle.h">
+    <ClInclude Include="MatchEdges.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="PSO.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="MatchPSO.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="detectionMethod.h">
+    <ClInclude Include="detectionMethodWithoutBuffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

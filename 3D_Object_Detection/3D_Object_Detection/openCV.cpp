@@ -1,26 +1,44 @@
 #include "openCV.h"
+cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3);//the raw img got from the screenshot of OpenGL;
+
+void creatSample() {
+	rotate_degree_set[0] = 20;
+	rotate_degree_set[1] = 10;
+	rotate_degree_set[2] = 5;
+	pos_model_set[0] = -50;
+	pos_model_set[1] = 20;
+	pos_model_set[2] = -178;
+	SetEvent(readModelEvent);
+	WaitForSingleObject(sentModelEvent, INFINITE);
+	imshow("creatSample", readSrcImg);
+	cv::flip(readSrcImg, readSrcImg, 0);
+	waitKey();
+	imwrite("./model/sample.jpg", readSrcImg);
+	SetEvent(readModelEvent);
+}
+
 DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
-	PosDetection pos_detector(100,5,5,5,-20,20,-20,20,-20,20);//粗定位旋转精度为5度，旋转范围为正负20度
-	pos_detector.initialization();
-
-	pos_detector.huCoarseDetection();//外边缘轮廓粗定位
 	
+	DetectionMethod pos_detector;
+	pos_detector.initialization();//读取sample.jpg作为cam得到的图像
 	
-	//visualization part
-	MatchPSO visualizer(&(pos_detector.cam_canny_img), pos_detector.deg_estimated, pos_detector.pixel_pos_estimated, pos_detector.scale_ratio_estimated);
-	Mat CoarseEstimation, shi_TomasiEstimation; 
-	double var_0[6] = { 0 };
-	visualizer.getModelImg(var_0, CoarseEstimation);
-	imshow("CoarseEstimation", CoarseEstimation);
+	//debug 手动输入粗定位位置，调试精定位方法
+	pos_detector.rotate_degree_estimated[0] = 16;
+	pos_detector.rotate_degree_estimated[1] = 13;
+	pos_detector.rotate_degree_estimated[2] = 6;
+	pos_detector.pos_estimated[0] = -30;
+	pos_detector.pos_estimated[1] = 10;
+	pos_detector.pos_estimated[2] = -160;
+
 	
+	//精定位
 
+	double output_best[6];
+	pos_detector.shi_TomasiDetection(output_best);//轮廓角点高精度定位
 
-	pos_detector.shi_TomasiDetection();//轮廓角点中精度定位
-
-	//visualization part
-	visualizer.getModelImg(pos_detector.var_best, shi_TomasiEstimation);
-	imshow("shi_TomasiEstimation", shi_TomasiEstimation);
-	imshow("cam_canny", pos_detector.cam_canny_img);
+	//可视化
+	pos_detector.debugShowMatch(output_best);
+	waitKey();
 	
 	return 0;
 }

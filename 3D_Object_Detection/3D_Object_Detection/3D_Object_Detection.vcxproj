@@ -74,6 +74,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)\includes\ceres-windows-master\ceres-solver\include;$(IncludePath)</IncludePath>
+    <ReferencePath>$(ProjectDir)\includes\ceres-windows-master\x64\Debug;$(ReferencePath)</ReferencePath>
+    <LibraryPath>$(ProjectDir)\includes\ceres-windows-master\x64\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -103,6 +106,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\includes\ceres-windows-master\ceres-solver\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -146,24 +150,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="detectionMethod.cpp" />
+    <ClCompile Include="detectionMethodWithoutBuffer.cpp" />
+    <ClCompile Include="MatchSolver.h" />
     <ClCompile Include="loadModel.cpp" />
-    <ClCompile Include="MatchPSO.cpp" />
+    <ClCompile Include="MatchEdges.cpp" />
     <ClCompile Include="OpenCV.cpp" />
-    <ClCompile Include="PSO.cpp" />
     <ClCompile Include="start.cpp" />
-    <ClCompile Include="openCV_Debug.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
-    <ClInclude Include="detectionMethod.h" />
+    <ClInclude Include="detectionMethodWithoutBuffer.h" />
     <ClInclude Include="loadModel.h" />
-    <ClInclude Include="MatchPSO.h" />
+    <ClInclude Include="MatchEdges.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="openCV.h" />
-    <ClInclude Include="particle.h" />
-    <ClInclude Include="PSO.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="thread_variables.h" />
     <ClInclude Include="texture.h" />

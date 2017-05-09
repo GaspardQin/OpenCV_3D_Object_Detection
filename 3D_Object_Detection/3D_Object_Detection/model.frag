@@ -20,7 +20,7 @@ void main()
 
 	//利用法向量描边
 	
-   //float silhouette = length(vNormal * vec3(0.0, 0.0, 1.0))*0.7 + 0.3;
+   float silhouette = length(vNormal * vec3(0.0, 0.0, 1.0))*0.7 + 0.3;
 
 
   // vec2 xy;
@@ -31,7 +31,7 @@ void main()
    //color[1] = 0.3;
    //color[2] = sin(length(xy)/3)*0.2;
    //color[3] = 1;
-   
+ 
   //  if (silhouette < 0.2) {
   //      silhouette = 0.2;
   //  }
@@ -40,7 +40,7 @@ void main()
  //       silhouette = 1.0;
  //   }
 
-    //color = vec4(silhouette, silhouette, silhouette, 1.0
-	color = vec4(vNormal[0]/50+0.5, vNormal[1]/10+Position[2]/100, 0.5+vNormal[2]/5, 1.0);
+    color = vec4(silhouette, silhouette, silhouette, 1.0);
+	//color = vec4(vNormal[0]/50+0.5, vNormal[1]/10+Position[2]/100, 0.5+vNormal[2]/5, 1.0);
 
 }

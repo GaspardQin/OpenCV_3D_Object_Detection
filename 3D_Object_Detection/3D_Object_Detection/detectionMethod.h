@@ -1,29 +1,35 @@
 #pragma once
 #include "thread_variables.h"
-#include "PSO.h"
+#include "MatchSolver.h"
 using namespace std;
 using namespace cv;
 class PosDetection {
 public:
 	std::vector<cv::Mat> model_ini_Canny_imgs;//存储预先生成的模型2D边缘图
-	double deg_estimated[3]; double pixel_pos_estimated[2]; double scale_ratio_estimated;
-	cv::Mat cam_canny_img, cam_src;
+	double rotate_degree_estimated[3]; double pixel_pos_estimated[2];
+	double pos_estimated[3];
+	cv::Mat cam_canny_img, cam_src, cam_src_color;
+	bool buffer_is_created = false;
 	int min_index;
 	double var_best[6]; //最佳微调量
 	template<typename T> int findMinIndex(std::vector<T>& src);
 	template<typename T> int findMaxIndex(std::vector<T>& src);
 	template<typename T> int maxElement(T* src, int size);
+	template<typename T> int minElement(T* src, int size);
 	void getInitialModelBuffer();
 	void initialization();
 	double huMatchFromCannyImg(int index);
-	void PosDetection::centerPosEstimation(Mat &model_img, Mat &cam_img);
+	void centerPosEstimation(Mat &model_img, Mat &cam_img);
 	void huCoarseDetection();
 	double curveEstimation(double x1, double y1, double x2, double y2, double x3, double y3);
-	void shi_TomasiDetection();
+	void shi_TomasiDetection(double* output_best);
+	void vecmatwrite(const string& filename, const vector<Mat>& matrices);
+	vector<Mat> PosDetection::vecmatread(const string& filename);
+	void creatIniImgs();
+	void debugShowContours(int canny_index, vector<vector<Point>> *cam_contours, int cam_index, vector<vector<Point>> *model_contours, int model_index);
 
 
-	PosDetection(double camera_z_set_input, double coarse_precision_x_deg_input, double coarse_precision_y_deg_input, double coarse_precision_z_deg_input, double x_deg_l_input, double x_deg_h_input, double y_deg_l_input, double y_deg_h_input, double z_deg_l_input, double z_deg_h_input) {
-		camera_z_set_input = camera_z_set;
+	PosDetection( double coarse_precision_x_deg_input, double coarse_precision_y_deg_input, double coarse_precision_z_deg_input, double x_deg_l_input, double x_deg_h_input, double y_deg_l_input, double y_deg_h_input, double z_deg_l_input, double z_deg_h_input) {
 		precision_deg_x = coarse_precision_x_deg_input;
 		precision_deg_y = coarse_precision_y_deg_input;
 		precision_deg_z = coarse_precision_z_deg_input;
@@ -35,7 +41,6 @@ public:
 		deg_z_h = z_deg_h_input;
 	}
 private:
-	double camera_z_set;
 	double precision_deg_x;
 	double precision_deg_y;
 	double precision_deg_z;

@@ -3,12 +3,13 @@
 #include "loadModel.h"
 GLfloat deltaTime = 0.0f; // 当前帧和上一帧的时间差
 GLfloat lastFrame = 0.0f; // 上一帧时间
-GLfloat camera_z = 300.0f;
-Camera camera = Camera(glm::vec3(0.0f, 0.0f, camera_z));
-GLfloat rotate_degree[3] = { 0.0f };
+GLfloat camera_z = 0.0f;
+GLfloat pos_model_set[3] = { 0.0f, 0.0f, -100.0f };
+Camera camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f));
+GLfloat rotate_degree_set[3] = { 0.0f };
 bool firstMouseMove = true;
 GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
-glm::vec3 vec_scale = glm::vec3(1.f, 1.f, 1.f);
+//glm::vec3 vec_scale = glm::vec3(1.f, 1.f, 1.f);
 
 DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 {
@@ -127,9 +128,9 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"),
 			1, GL_FALSE, glm::value_ptr(view));
 		glm::mat4 model = glm::mat4(1.0);
-		rotate_model(rotate_degree, model);
-		//model = glm::translate(model, glm::vec3(0.0f, -1.55f, -1.0f)); // 适当调整位置
-		model = glm::scale(model,vec_scale); // 适当缩小模型
+		rotate_model(rotate_degree_set, model);
+		model = glm::translate(model, glm::vec3(pos_model_set[0], pos_model_set[1], pos_model_set[2])); // 适当调整位置
+		//model = glm::scale(model,vec_scale); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
 			1, GL_FALSE, glm::value_ptr(model));
 		// 这里填写场景绘制代码
@@ -217,28 +218,28 @@ void mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
 
 	camera.handleMouseMove(xoffset, yoffset);
 }
-void rotate_model(GLfloat rotate_degree[], glm::mat4& mat_rotate) {
-	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree[0]), glm::vec3(1.0, 0.0, 0.0));
-	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree[1]), glm::vec3(0.0, 1.0, 0.0));
-	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree[2]), glm::vec3(0.0, 0.0, 1.0));
+void rotate_model(GLfloat rotate_degree_set[], glm::mat4& mat_rotate) {
+	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[0]), glm::vec3(1.0, 0.0, 0.0));
+	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[1]), glm::vec3(0.0, 1.0, 0.0));
+	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[2]), glm::vec3(0.0, 0.0, 1.0));
 
 }
 void set_rotate_degree(GLfloat x_degree, GLfloat y_degree, GLfloat z_degree) {
-	rotate_degree[0] = x_degree;
-	rotate_degree[1] = y_degree;
-	rotate_degree[2] = z_degree;
+	rotate_degree_set[0] = x_degree;
+	rotate_degree_set[1] = y_degree;
+	rotate_degree_set[2] = z_degree;
 }
 GLfloat* get_rotate_degree() {
-	GLfloat* rd = rotate_degree;
+	GLfloat* rd = rotate_degree_set;
 	return rd;
 }
 void print_rotate_degree() {
-	std::cout << "x_degree  " << rotate_degree[0] << "  y_degree  " << rotate_degree[1] << "  z_degree  " << rotate_degree[2] << std::endl;
+	std::cout << "x_degree  " << rotate_degree_set[0] << "  y_degree  " << rotate_degree_set[1] << "  z_degree  " << rotate_degree_set[2] << std::endl;
 }
 void add_rotate_degree(GLfloat x_add, GLfloat y_add, GLfloat z_add) {
-	rotate_degree[0] = rotate_degree[0] +x_add;
-	rotate_degree[1] = rotate_degree[1] +y_add;
-	rotate_degree[2] = rotate_degree[2] +z_add;
+	rotate_degree_set[0] = rotate_degree_set[0] +x_add;
+	rotate_degree_set[1] = rotate_degree_set[1] +y_add;
+	rotate_degree_set[2] = rotate_degree_set[2] +z_add;
 	
 }
 void print_camera_info() {
