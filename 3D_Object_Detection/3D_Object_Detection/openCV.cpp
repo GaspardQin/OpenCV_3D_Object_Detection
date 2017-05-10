@@ -18,7 +18,7 @@ void creatSample() {
 }
 
 DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
-	
+	creatSample();
 	DetectionMethod pos_detector;
 	pos_detector.initialization();//读取sample.jpg作为cam得到的图像
 	

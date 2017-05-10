@@ -22,7 +22,7 @@ void MatchEdges::getModelImg(const double *var, Mat& model_canny_img) const {
 	WaitForSingleObject(sentModelEvent, INFINITE);
 	cv::flip(readSrcImg, readSrcImg, 0);
 	Mat model_canny_img_pre;
-	Canny(readSrcImg, model_canny_img_pre, 50, 200);
+	Canny(readSrcImg, model_canny_img, 50, 200);
 }
 
 double MatchEdges::hausdorffDistance(const double *var) const {
