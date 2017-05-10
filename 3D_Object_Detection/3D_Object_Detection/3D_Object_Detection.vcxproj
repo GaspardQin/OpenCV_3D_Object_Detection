@@ -74,9 +74,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(ProjectDir)\includes\ceres-windows-master\ceres-solver\include;$(IncludePath)</IncludePath>
-    <ReferencePath>$(ProjectDir)\includes\ceres-windows-master\x64\Debug;$(ReferencePath)</ReferencePath>
-    <LibraryPath>$(ProjectDir)\includes\ceres-windows-master\x64\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Users\Gaspard\Documents\GitHub\OpenCV_3D_Object_Detection\3D_Object_Detection\3D_Object_Detection\includes\dlib-19.4\install\include;$(IncludePath)</IncludePath>
+    <ReferencePath>C:\Users\Gaspard\Documents\GitHub\OpenCV_3D_Object_Detection\3D_Object_Detection\3D_Object_Detection\includes\dlib-19.4\install\lib;$(ReferencePath)</ReferencePath>
+    <LibraryPath>C:\Users\Gaspard\Documents\GitHub\OpenCV_3D_Object_Detection\3D_Object_Detection\3D_Object_Detection\includes\dlib-19.4\install\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -106,11 +106,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)\includes\ceres-windows-master\ceres-solver\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Gaspard\Documents\GitHub\OpenCV_3D_Object_Detection\3D_Object_Detection\3D_Object_Detection\includes\dlib-19.4\install\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>dlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
