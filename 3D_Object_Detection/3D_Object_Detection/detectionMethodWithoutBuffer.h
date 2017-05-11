@@ -1,8 +1,9 @@
 #pragma once
 #include "thread_variables.h"
 #include "MatchSolver.h"
-using namespace std;
+
 using namespace cv;
+using namespace std;
 class DetectionMethod {
 public:
 	std::vector<cv::Mat> model_ini_Canny_imgs;//存储预先生成的模型2D边缘图
@@ -19,9 +20,9 @@ public:
 	void initialization();
 
 	void shi_TomasiDetection(double* output_best);
-	void debugShowContours(int canny_index, vector<vector<Point>> *cam_contours, int cam_index, vector<vector<Point>> *model_contours, int model_index);
+	void debugShowContours(int canny_index, std::vector<std::vector<Point>> *cam_contours, int cam_index, std::vector<std::vector<Point>> *model_contours, int model_index);
 	void debugShowMatch(double* var);
-	void drawPoints(Mat &img, vector<Point2f> points, const Scalar& color);
+	void drawPoints(Mat &img,std::vector<Point2f> points, const Scalar& color);
 
 	DetectionMethod() {};
 	

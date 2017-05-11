@@ -20,7 +20,7 @@ void MatchEdges::getModelImg(const double *var, Mat& model_canny_img) const {
 
 	SetEvent(readModelEvent);
 	WaitForSingleObject(sentModelEvent, INFINITE);
-	cv::flip(readSrcImg, readSrcImg, 0);
+	//cv::flip(readSrcImg, readSrcImg, 0);
 	Mat model_canny_img_pre;
 	Canny(readSrcImg, model_canny_img, 50, 200);
 }
@@ -31,7 +31,8 @@ double MatchEdges::hausdorffDistance(const double *var) const {
 	vector<Point2f> model_corners;
 	getModelImg(var, model_canny_img);
 	goodFeaturesToTrack(model_canny_img, model_corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
-
-	return (hausdorff_ptr->computeDistance(cam_corners, model_corners));
+	double dist = hausdorff_ptr->computeDistance(cam_corners, model_corners);
+	
+	return (dist);
 	//微调位置，姿态使partial Hausdorff distance(系数0.6)最小（或者模板匹配）
 }

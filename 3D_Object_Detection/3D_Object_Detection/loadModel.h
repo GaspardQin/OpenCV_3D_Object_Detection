@@ -25,7 +25,7 @@
 	GLfloat* get_rotate_degree();
 	void print_rotate_degree();
 	void add_rotate_degree(GLfloat x_add, GLfloat y_add, GLfloat z_add);
-	void print_camera_info();
+	void print_model_info();
 	void display_axis();
 	//static loadModel* static_this; //用于规避类内callback必须是static问题,只可以有一个loadModel实例
 	//void set_this() { static_this = this;}

@@ -113,7 +113,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		lastFrame = currentFrame;
 		glfwPollEvents(); // 处理例如鼠标 键盘等事件
 		//do_movement(); // 根据用户操作情况 更新相机属性
-		print_camera_info();//print the camera info;
+		print_model_info();//print the model info;
 		// 清除颜色缓冲区 重置为指定颜色
 		glClearColor(0.f, 0.0f, 0.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -145,7 +145,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		//read pixels into opencv mat
 
 		glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, readSrcImg.data);
-
+		cv::flip(readSrcImg, readSrcImg, 0);
 		glfwSwapBuffers(window); // 交换缓存
 
 
@@ -242,11 +242,10 @@ void add_rotate_degree(GLfloat x_add, GLfloat y_add, GLfloat z_add) {
 	rotate_degree_set[2] = rotate_degree_set[2] +z_add;
 	
 }
-void print_camera_info() {
-	std::cout << "camera's info : " << std::endl;
-	std::cout << "	pos: x " << camera.position[0] << "  y  " << camera.position[1] << "  z  " << camera.position[2] << std::endl;
-	std::cout << "	up : x " << camera.up[0] << "  y  " << camera.up[1] << "  z  " << camera.up[2] << std::endl;
-	std::cout << "	yaw :" << camera.yawAngle << "  pitch:  " << camera.pitchAngle << "  roll:  " << camera.rollAngle << std::endl;
+void print_model_info() {
+	std::cout << "model's info : " << std::endl;
+	std::cout << "	pos: x " << pos_model_set[0] << "  y  " << pos_model_set[1] << "  z  " << pos_model_set[2] << std::endl;
+	std::cout << "	rotate: x" << rotate_degree_set[0] << "  y  " << rotate_degree_set[1] << " z  " << rotate_degree_set[2] << std::endl;
 
 
 }

@@ -8,7 +8,7 @@ public:
 
 	//角点参数设置
 	// Shi-Tomasi的参数设置  
-	vector<Point2f> cam_corners;
+	std::vector<Point2f> cam_corners;
 	int maxCorners = 30;    //角点个数的最大值  
 	double qualityLevel = 0.01;
 	double minDistance = 10;
@@ -27,6 +27,6 @@ public:
 	};
 	double hausdorffDistance(const double *var) const;//x是六维向量
 	void camCornerDect();//提取轮廓角点，提高hausdorff计算速度
-	void modelCornerDect(double *var, vector<Point2f> &model_corners);
+	void modelCornerDect(double *var, std::vector<Point2f> &model_corners);
 	void getModelImg(const double *var, Mat& model_canny_img) const;
 };

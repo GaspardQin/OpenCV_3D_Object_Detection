@@ -55,7 +55,7 @@ void DetectionMethod::initialization() {
 	Canny(cam_src, cam_canny_img, 50, 200);
 
 }
-void DetectionMethod::debugShowContours(int canny_index,vector<vector<Point>> *cam_contours,int cam_index, vector<vector<Point>> *model_contours,int model_index) {
+void DetectionMethod::debugShowContours(int canny_index, std::vector<std::vector<Point>> *cam_contours,int cam_index, std::vector<std::vector<Point>> *model_contours,int model_index) {
 	Mat back_ground = cam_src_color.clone();
 	back_ground.setTo(cv::Scalar(255, 255, 255));
 	drawContours(back_ground, *cam_contours, cam_index,Scalar(255,0,0));
@@ -67,7 +67,7 @@ void DetectionMethod::debugShowMatch(double* var) {
 	// var 是位置、姿态参数，是一个大小为6的数组
 	Mat back_ground = cam_src_color.clone();
 	MatchEdges matchEdgesForShow(&cam_canny_img);
-	vector<Point2f> model_corners;
+	std::vector<Point2f> model_corners;
 	matchEdgesForShow.modelCornerDect(var, model_corners);
 	drawPoints(back_ground, matchEdgesForShow.cam_corners, Scalar(255, 0, 0));
 	drawPoints(back_ground, model_corners, Scalar(0, 255, 0));
@@ -81,14 +81,14 @@ void DetectionMethod::debugShowMatch(double* var) {
 		for (int j = 0; j < back_ground2.cols; j++)
 		{
 			if (model_canny_img_src.at<uchar>(i, j)>0) {
-				back_ground2.at<Vec3f>(i, j)[0] += 100; //Blue;
+				back_ground2.at<Vec3d>(i, j)[0] += 100; //Blue;
 			}
 		}
 	}
 	imshow("debugShowMatchImgs", back_ground2);
 }
 
-void DetectionMethod::drawPoints(Mat &img, vector<Point2f> points, const Scalar& color) {
+void DetectionMethod::drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color) {
 	int i;
 	for (i = 0; i < points.size(); i++) {
 		circle(img, points[i], 5, color);
@@ -101,7 +101,7 @@ void DetectionMethod::shi_TomasiDetection(double * output_best) {
 	//需先调用至少一种粗定位函数确保匹配模板和待匹配图像像素位置有重合
 	MatchSolver matchSolver(&cam_canny_img);
 	matchSolver.setIniVar(pos_estimated[0], pos_estimated[1], pos_estimated[2], rotate_degree_estimated[0], rotate_degree_estimated[1], rotate_degree_estimated[2]);
-	matchSolver.solve(&cam_canny_img, output_best);
+	matchSolver.solve(output_best);
 		
 	
     //微调位置，姿态使partial Hausdorff distance(系数0.6)最小（或者模板匹配），采用LM非线性最优化算法

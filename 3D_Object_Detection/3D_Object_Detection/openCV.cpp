@@ -11,7 +11,7 @@ void creatSample() {
 	SetEvent(readModelEvent);
 	WaitForSingleObject(sentModelEvent, INFINITE);
 	imshow("creatSample", readSrcImg);
-	cv::flip(readSrcImg, readSrcImg, 0);
+	//cv::flip(readSrcImg, readSrcImg, 0);
 	waitKey();
 	imwrite("./model/sample.jpg", readSrcImg);
 	SetEvent(readModelEvent);
