@@ -1,23 +1,19 @@
-//该类封装了 dlib 提供的非线性最优化方法
+//该类封装了 Eigen 提供的非线性最优化方法
 #pragma once
 #ifndef MATCH_SOLVER
 #define MATCH_SOLVER
-
+#include <Eigen/Dense>
+#include <unsupported/Eigen/NonLinearOptimization>
+#include <Eigen/Core>
 #include <MatchEdges.h>
-#define GLOG_NO_ABBREVIATED_SEVERITIES
-#include <dlib\optimization.h>
-using namespace dlib;
 
 
 class MatchSolver{
 public:
-	typedef matrix<double, 2, 1> input_vector;
-	typedef matrix<double, 6, 1> parameter_vector;
-	typedef matrix<double, 1, 1> output_vector;
-	//typedef dlib::matrix<double, 6, 1> column_vector;
-	//column_vector var;
-	parameter_vector var;
-	std::vector<std::pair<input_vector, double> > data_samples;
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+		Eigen::VectorXf var = Eigen::VectorXf::Zero(6);
+	
+
 	void setIniVar(double x, double y, double z, double x_deg, double y_deg, double z_deg) {
 		var(0) = x;
 		var(1) = y;
@@ -25,11 +21,6 @@ public:
 		var(3) = x_deg;
 		var(4) = y_deg;
 		var(5) = z_deg;
-		input_vector input_vector_false;
-		input_vector_false(0) = 1;
-		input_vector_false(1) = 1;
-		data_samples.push_back(pair<input_vector, double>(input_vector_false, 0));
-
 	};
 	MatchSolver(Mat * cam_img_input) { cam_img = cam_img_input; };
 	/*
@@ -153,93 +144,98 @@ public:
 	};
 	*/
 
-
-class residual :public MatchEdges {
+template<typename _Scalar, int NX = Eigen::Dynamic, int NY = Eigen::Dynamic>
+class Functor
+{
 public:
-	double operator() (const std::pair<input_vector, double>& data,
-		const parameter_vector& params) const {
-		double params_array[6];
-		params_array[0] = params(0);
-		params_array[1] = params(1);
-		params_array[2] = params(2);
-		params_array[3] = params(3);
-		params_array[4] = params(4);
-		params_array[5] = params(5);
-		double dist = hausdorffDistance(params_array);
-		cout << "Hausdorff_distance " << dist << endl;
-		return dist;
-	}
-	residual(Mat* cam_img_input) :MatchEdges(cam_img_input) {};
+	typedef _Scalar Scalar;
+	enum {
+		InputsAtCompileTime = NX,
+		ValuesAtCompileTime = NY
+	};
+	typedef Eigen::Matrix<Scalar, InputsAtCompileTime, 1> InputType;
+	typedef Eigen::Matrix<Scalar, ValuesAtCompileTime, 1> ValueType;
+	typedef Eigen::Matrix<Scalar, ValuesAtCompileTime, InputsAtCompileTime> JacobianType;
+
+	int m_inputs, m_values;
+
+	Functor() : m_inputs(InputsAtCompileTime), m_values(ValuesAtCompileTime) {}
+	Functor(int inputs, int values) : m_inputs(inputs), m_values(values) {}
+
+	int inputs() const { return m_inputs; }
+	int values() const { return m_values; }
 
 };
-class CostDerivative :public residual {
+
+class Residual :public MatchEdges, public Functor<double> {
 public:
-
 	double d_step;
-	CostDerivative(double d_step_input, Mat *cam_img_input) :residual(cam_img_input) {
-		d_step = d_step_input;
+	double Points=0;
+
+	int res(const Eigen::VectorXf &params, Eigen::VectorXf &fvec) const{
+		double params_array[6];
+		params_array[0] = params[0];
+		params_array[1] = params[1];
+		params_array[2] = params[2];
+		params_array[3] = params[3];
+		params_array[4] = params[4];
+		params_array[5] = params[5];
+		fvec(0) = hausdorffDistance(params_array);
+
+		return 0;
 	}
-	const parameter_vector operator() (
-		const std::pair<input_vector, double>& data,
-		const parameter_vector& params
-		) const {
-		parameter_vector der;//梯度向量
-		parameter_vector small_var;//微小变量
+	int operator() (const Eigen::VectorXf &params, Eigen::VectorXf &fvec) const {
 
-
-		small_var = d_step, 0, 0, 0, 0, 0;
-		der(0) = partDerCentre(params, small_var);
-
-		small_var = 0, d_step, 0, 0, 0, 0;
-		der(1) = partDerCentre(params, small_var);
-
-		small_var = 0, 0, d_step, 0, 0, 0;
-		der(2) = partDerCentre(params, small_var);
-
-		small_var = 0, 0, 0, d_step/10, 0, 0;
-		der(3) = partDerCentre(params, small_var);
-
-		small_var = 0, 0, 0, 0, d_step/10, 0;
-		der(4) = partDerCentre(params, small_var);
-
-		small_var = 0, 0, 0, 0, 0, d_step/10;
-		der(5) = partDerCentre(params, small_var);
+		res(params, fvec);
+		std::cout << "Hausdorff_distance " << fvec[0] << endl;
+		return 0;
+	}
+	int df(const Eigen::VectorXf &params, Eigen::MatrixXf &fjac) const
+	{
+		for (int i = 0; i < 6; i++) {
+			fjac(i,0) = partDerCentre(params,i);
+		}
 		
-		return der;
+		return 0;
 	}
-	double partDerCentre(const parameter_vector& params, const parameter_vector& d_params)const {
+	double partDerCentre(const Eigen::VectorXf& params,int i_th)const {
 		//利用centre法则求解偏导，d_params代表移动的某方向正小量，例如(0,0,0,0,0,0.01)
 		double params_array_l[6], params_array_r[6];
+		for (int i = 0; i < 6; i++) {
+			if (i == i_th) {
+				params_array_l[i] = params[i];
+				params_array_r[i] = params[i];
+			}
+			else {
+				params_array_l[i] = params[i] - d_step;
+				params_array_r[i] = params[i]+ d_step;
+			}
+		}
 
-		params_array_l[0] = params(0) - d_params(0);
-		params_array_l[1] = params(1) - d_params(1);
-		params_array_l[2] = params(2) - d_params(2);
-		params_array_l[3] = params(3) - d_params(3);
-		params_array_l[4] = params(4) - d_params(4);
-		params_array_l[5] = params(5) - d_params(5);
-
-		params_array_r[0] = params(0) + d_params(0);
-		params_array_r[1] = params(1) + d_params(1);
-		params_array_r[2] = params(2) + d_params(2);
-		params_array_r[3] = params(3) + d_params(3);
-		params_array_r[4] = params(4) + d_params(4);
-		params_array_r[5] = params(5) + d_params(5);
-		double d = (hausdorffDistance(params_array_r) - hausdorffDistance(params_array_l)) / length(d_params) / 2;
+		double d = (hausdorffDistance(params_array_r) - hausdorffDistance(params_array_l)) / (d_step*2);
 		cout << "'der " << d << endl;
 		return (d);
 	}
+
+	int inputs() const { return 6; } //六个参数
+	int values() const { return 1; } //数据个数
+	Residual(Mat* cam_img_input, double d_step_input) :MatchEdges(cam_img_input) { d_step = d_step_input; };
+	
 };
  void solve(double* final_result) {
-	 parameter_vector var_ = var;
-	 dlib::solve_least_squares(objective_delta_stop_strategy(1e-1).be_verbose(),
-		 residual(cam_img),
-		 CostDerivative(0.5,cam_img),
-		 data_samples,
-		 var_);
-	 cout << "test_function solution:\n" << var_ << endl;
 
 
-	 std::cout << "The final position and rotation are:  x:" << var_(0) << " y: " << var_(1) << " z: " << var_(2) << " x_deg:" << var_(3) << " y_deg:" << var_(4) << " z_deg:" << var_(5) << std::endl;
+	 Residual residual(cam_img,0.1);
+	// Eigen::NumericalDiff<Residual> numDiff(residual);
+	 Eigen::LevenbergMarquardt<Residual, float> lm(residual);
+	 Eigen::LevenbergMarquardtSpace::Status status = lm.minimize(var);
+	 std::cout << status << endl;
+	 std::cout << lm.iter << std::endl;
+
+	 std::cout << "var that minimizes the function: " << var << std::endl;
+	
+
+	 std::cout << "The final position and rotation are:  x:" << var(0) << " y: " << var(1) << " z: " << var(2) << " x_deg:" << var(3) << " y_deg:" << var(4) << " z_deg:" << var(5) << std::endl;
 
 	 final_result[0] = var(0);
 	 final_result[1] = var(1);
