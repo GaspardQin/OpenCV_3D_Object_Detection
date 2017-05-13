@@ -151,7 +151,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 
 
 
-
+		ResetEvent(readModelEvent);
 		SetEvent(sentModelEvent);
 		
 		

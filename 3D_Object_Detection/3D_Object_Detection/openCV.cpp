@@ -5,7 +5,7 @@ void creatSample() {
 	rotate_degree_set[0] = 20;
 	rotate_degree_set[1] = 10;
 	rotate_degree_set[2] = 5;
-	pos_model_set[0] = -50;
+	pos_model_set[0] = -10;
 	pos_model_set[1] = 20;
 	pos_model_set[2] = -178;
 	SetEvent(readModelEvent);
@@ -24,7 +24,7 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	
 	//debug 手动输入粗定位位置，调试精定位方法
 	pos_detector.rotate_degree_estimated[0] = 16;
-	pos_detector.rotate_degree_estimated[1] = 13;
+	pos_detector.rotate_degree_estimated[1] = 15;
 	pos_detector.rotate_degree_estimated[2] = 6;
 	pos_detector.pos_estimated[0] = -30;
 	pos_detector.pos_estimated[1] = 10;

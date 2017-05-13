@@ -66,14 +66,14 @@ void DetectionMethod::debugShowContours(int canny_index, std::vector<std::vector
 void DetectionMethod::debugShowMatch(double* var) {
 	// var 是位置、姿态参数，是一个大小为6的数组
 	Mat back_ground = cam_src_color.clone();
-	MatchEdges matchEdgesForShow(&cam_canny_img);
+	MatchEdges matchEdgesForShow(cam_canny_img);
 	std::vector<Point2f> model_corners;
 	matchEdgesForShow.modelCornerDect(var, model_corners);
 	drawPoints(back_ground, matchEdgesForShow.cam_corners, Scalar(255, 0, 0));
 	drawPoints(back_ground, model_corners, Scalar(0, 255, 0));
 	imshow("debugShowMatchPoints", back_ground);
 	
-	Mat back_ground2 = cam_src.clone();
+	Mat back_ground2 = cam_src_color.clone();
 	Mat model_canny_img_src;
 	matchEdgesForShow.getModelImg(var, model_canny_img_src);
 	for (int i = 0; i < back_ground2.rows; i++)
@@ -81,7 +81,9 @@ void DetectionMethod::debugShowMatch(double* var) {
 		for (int j = 0; j < back_ground2.cols; j++)
 		{
 			if (model_canny_img_src.at<uchar>(i, j)>0) {
-				back_ground2.at<Vec3d>(i, j)[0] += 100; //Blue;
+				back_ground2.at<Vec3b>(i, j)[0] = 200; //Blue;
+				back_ground2.at<Vec3b>(i, j)[1] = 100; //g;
+				back_ground2.at<Vec3b>(i, j)[2] = 0; //r;
 			}
 		}
 	}
@@ -99,7 +101,7 @@ void DetectionMethod::shi_TomasiDetection(double * output_best) {
 	//高精度定位：边缘图像角点匹配
 	
 	//需先调用至少一种粗定位函数确保匹配模板和待匹配图像像素位置有重合
-	MatchSolver matchSolver(&cam_canny_img);
+	MatchSolver matchSolver(cam_canny_img);
 	matchSolver.setIniVar(pos_estimated[0], pos_estimated[1], pos_estimated[2], rotate_degree_estimated[0], rotate_degree_estimated[1], rotate_degree_estimated[2]);
 	matchSolver.solve(output_best);
 		
