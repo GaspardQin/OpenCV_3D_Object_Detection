@@ -153,6 +153,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="detectionMethodWithoutBuffer.cpp" />
+    <ClCompile Include="LM.cpp" />
     <ClCompile Include="MatchSolver.h" />
     <ClCompile Include="loadModel.cpp" />
     <ClCompile Include="MatchEdges.cpp" />

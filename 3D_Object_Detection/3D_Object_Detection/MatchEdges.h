@@ -22,8 +22,8 @@ public:
 	int dim = 6;//×Ü¹²ÁùÎ¬
 	MatchEdges(const Mat &cam_img_input) {
 		cam_img = cam_img_input;
-		hausdorff_ptr->setRankProportion(0.8);
-		hausdorff_ptr->setDistanceFlag(NORM_L1);
+		hausdorff_ptr->setRankProportion(1);
+		hausdorff_ptr->setDistanceFlag(NORM_L2);
 		camCornerDect();
 		camAllPoints();
 	};
@@ -35,4 +35,5 @@ public:
 	void getAllPointsFromCanny(Mat& model_canny_img, std::vector<Point2i>& model_all_points) const;
 	void camAllPoints();
 	std::vector<Point2i> cam_all_points;
+	double MatchEdges::hausdorffDistanceManuel(const std::vector<Point2f> &cam_corners, const std::vector<Point2f> &model_corners, double k) const;
 };
