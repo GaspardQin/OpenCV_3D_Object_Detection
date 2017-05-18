@@ -24,6 +24,9 @@ extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables
 #include <GLM/glm.hpp>
 #include <GLM/gtc/matrix_transform.hpp>
 #include <GLM/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp> 
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/euler_angles.hpp>
 // 包含着色器加载库
 #include "shader.h"
 // 包含相机控制辅助类
@@ -44,4 +47,7 @@ const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
 extern cv::Mat readSrcImg;
 extern GLfloat camera_z;
 extern GLfloat pos_model_set[3];
+extern glm::mat4 projection;
+extern glm::mat4 view;
+extern glm::mat4 M_model;
 #endif

@@ -1,4 +1,6 @@
 #include "dlib\optimization.h"
+#include <stdlib.h>     /* srand, rand */
+#include <time.h>       /* time */
 //using namespace dlib;
 
 typedef dlib::matrix<double, 6, 1> parameter_vector;
@@ -25,17 +27,20 @@ public:
 	
 	}
 	bool LM_solver(parameter_vector &params_final,double &epsilon_final) {
-		int max_iteral = 50;
+		int max_iteral = 500000;
 		int i=0;
 		double epsilon_new=100000;
 		jac_vector jac;
 		parameter_delta_vector delta;
 		epsilon = fun->calculateFactor(params);
 		jac = fun_jac->calculateDer(params);
+		double T = 100000;
+		double T_rho = 2;
 		while (i < max_iteral && epsilon_new > epsilon_thresh) {
 			
-			delta = (dlib::inv(dlib::trans(jac)* jac
-				+ lambda * dlib::identity_matrix<double>(6))*dlib::trans(jac)*epsilon)*epsilon;//改良
+			delta = dlib::inv(dlib::trans(jac)* jac
+				+ lambda * dlib::identity_matrix<double>(6))*dlib::trans(jac)*epsilon;//改良
+			std::cout << "delta " << delta << std::endl;
 			epsilon_new = fun->calculateFactor(params - delta);
 			if (epsilon_new < epsilon) {
 				epsilon = epsilon_new;
@@ -44,8 +49,29 @@ public:
 				jac = fun_jac->calculateDer(params);
 			}
 			else {
-				lambda *= rho;
+				if (lambda > 256) {
+					srand((unsigned)time(NULL));
+					if (exp((epsilon - epsilon_new) / T) > rand() / (RAND_MAX + 1)) {
+						params = params - delta;
+						jac = fun_jac->calculateDer(params);
+						lambda = 0.25;
+						epsilon = epsilon_new;
+						T = 2;
+					}
+					
 
+					if (lambda > 10000) {
+						//此时已陷入局部最小值,或是jac有误差，应使其跳出
+						epsilon = epsilon_new;
+						params = params - delta;
+						jac = fun_jac->calculateDerPrecise(params);
+						lambda = 0.5;
+
+					}
+				}
+				else {
+					lambda *= rho;
+				}
 			}
 			std::cout << "rho: " << lambda << endl;
 			i++;

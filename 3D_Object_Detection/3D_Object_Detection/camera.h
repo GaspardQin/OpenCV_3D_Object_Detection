@@ -29,7 +29,7 @@ const float  MAX_PITCH_ANGLE = 89.9f; // 防止万向锁
 class Camera
 {
 public:
-	Camera(glm::vec3 pos = glm::vec3(0.0, 0.0, 3.0),
+	Camera(glm::vec3 pos = glm::vec3(0.0, 0.0, 0.0),
 		glm::vec3 up = glm::vec3(0.0, 1.0, 0.0),
 		GLfloat yaw = YAW, GLfloat pitch = PITCH, GLfloat roll = ROLL) 
 		:position(pos), forward(0.0, 0.0, -1.0), viewUp(up),
@@ -42,11 +42,14 @@ public:
 	// 获取视变换矩阵
 	glm::mat4 getViewMatrix()
 	{
+		position = glm::vec3(0.0, 0.0, 0.0);
 		return glm::lookAt(this->position, this->position + this->forward, this->viewUp);
 	}
-	glm::mat4 getViewMatrix(GLfloat camera_z)
+	glm::mat4 getViewMatrix(GLfloat* pos_model_set)
 	{
-		position[2] = camera_z;
+		position[0] = -pos_model_set[0];
+		position[1] = -pos_model_set[1];
+		position[2] = -pos_model_set[2];
 		return glm::lookAt(this->position, this->position + this->forward, this->viewUp);
 	}
 	// 处理键盘按键后方向移动

@@ -39,9 +39,15 @@ public:
 			cam_img = cam_img_input;
 			cam_src_color = imread("./model/sample.jpg");
 		}
-		double calculateFactor (
+
+		double operator ()(
 			const column_vector& params
 			) const {
+			return calculateFactor(params);
+		};
+		double calculateFactor(
+			const column_vector& params
+			)const {
 			double params_array[6];
 			params_array[0] = params(0);
 			params_array[1] = params(1);
@@ -70,13 +76,13 @@ public:
 			
 			Mat back_ground = cam_src_color.clone();
 			MatchEdges matchEdgesForShow(cam_img);
-//
-//			std::vector<Point2f> model_corners;
-	//		matchEdgesForShow.modelCornerDect(var, model_corners);
-//			drawPoints(back_ground, matchEdgesForShow.cam_corners, Scalar(255, 0, 0));
-	//		drawPoints(back_ground, model_corners, Scalar(0, 255, 0));
-	//		imshow("debugShowMatchPoints", back_ground);
-//
+
+			std::vector<Point2f> model_corners;
+			matchEdgesForShow.modelCornerDect(var, model_corners);
+			drawPoints(back_ground, matchEdgesForShow.cam_corners, Scalar(255, 0, 0));
+			drawPoints(back_ground, model_corners, Scalar(0, 255, 0));
+			imshow("debugShowMatchPoints", back_ground);
+
 			Mat back_ground2 = cam_src_color.clone();
 			Mat model_canny_img_src;
 			matchEdgesForShow.getModelImg(var, model_canny_img_src);
@@ -94,6 +100,33 @@ public:
 			imshow("debugShowMatchImgs", back_ground2);
 		}
 	};
+	class CostFactorPrecise :public CostFactor {
+	public:
+		CostFactorPrecise(Mat &cam_img_input) :CostFactor(cam_img_input) {		};
+		double operator ()(
+			const column_vector& params
+			) const {
+			return calculateFactor(params);
+		};
+		double calculateFactor(
+			const column_vector& params
+		)const {
+			double params_array[6];
+			params_array[0] = params(0);
+			params_array[1] = params(1);
+			params_array[2] = params(2);
+			params_array[3] = params(3);
+			params_array[4] = params(4);
+			params_array[5] = params(5);
+			double dist = RANSACfilterHaursdoffDistance(params_array);
+			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << params(3) << " y_deg: " << params(4) << " z_deg: " << params(5) << endl;
+			cout << "hausdorffDistance iteral " << dist << endl;
+			debugShowMatch(params_array);
+			waitKey(10);
+			return dist;
+		}
+	};
+
 	class CostDerivative :public CostFactor {
 	public:
 
@@ -103,33 +136,66 @@ public:
 			d_step_deg = d_step_deg_input;
 
 		}
+		const row_vector operator()(
+			const column_vector& params
+			)  const {
+			return calculateDer(params);
+		};
 		const row_vector calculateDer (
 			const column_vector& params
-			) const {
+			)  const {
 			row_vector der;//梯度向量
 			column_vector small_var;//微小变量
 			
 			
 			small_var = d_step_pos, 0, 0, 0, 0, 0;
-			der(0) = partDerForward(params, small_var);
+			der(0) = partDerCentre(params, small_var);
 
 			small_var = 0, d_step_pos, 0, 0, 0, 0;
-			der(1) = partDerForward(params, small_var);
+			der(1) = partDerCentre(params, small_var);
 
-			small_var = 0, 0, d_step_pos, 0, 0, 0;
-			der(2) = partDerForward(params, small_var);
+			small_var = 0, 0, 2*d_step_pos, 0, 0, 0;
+			der(2) = partDerCentre(params, small_var)*5;//z轴导数过小
 
 			small_var = 0, 0, 0, d_step_deg, 0, 0;
-			der(3) = partDerForward(params, small_var);
+			der(3) = partDerCentre(params, small_var);
 
 			small_var = 0, 0, 0, 0, d_step_deg, 0;
-			der(4) = partDerForward(params, small_var);
+			der(4) = partDerCentre(params, small_var);
 
 			small_var = 0, 0, 0, 0, 0, d_step_deg;
-			der(5) = partDerForward(params, small_var);
+			der(5) = partDerCentre(params, small_var);
 			cout << "der: x: " << der(0) << " y: " << der(1) << " z: " << der(2) << " x_deg: " << der(3) << " y_deg: " << der(4) << " z_deg: " << der(5) << endl;
 			return der;
 		}
+		const row_vector calculateDerPrecise(
+			const column_vector& params
+		)  const {
+			row_vector der;//梯度向量
+			column_vector small_var;//微小变量
+		
+
+			small_var = d_step_pos/10, 0, 0, 0, 0, 0;
+			der(0) = partDerCentre(params, small_var);
+
+			small_var = 0, d_step_pos/10, 0, 0, 0, 0;
+			der(1) = partDerCentre(params, small_var);
+
+			small_var = 0, 0, d_step_pos/10, 0, 0, 0;
+			der(2) = partDerCentre(params, small_var);
+
+			small_var = 0, 0, 0, d_step_deg/10, 0, 0;
+			der(3) = partDerCentre(params, small_var);
+
+			small_var = 0, 0, 0, 0, d_step_deg/10, 0;
+			der(4) = partDerCentre(params, small_var);
+
+			small_var = 0, 0, 0, 0, 0, d_step_deg/10;
+			der(5) = partDerCentre(params, small_var);
+			cout << "der: x: " << der(0) << " y: " << der(1) << " z: " << der(2) << " x_deg: " << der(3) << " y_deg: " << der(4) << " z_deg: " << der(5) << endl;
+			return der;
+		}
+	
 		double partDerCentre (const column_vector& params, const column_vector& d_params)const {
 			//利用centre法则求解偏导，d_params代表移动的某方向正小量，例如(0,0,0,0,0,0.01)
 			double params_array_l[6], params_array_r[6];
@@ -147,7 +213,13 @@ public:
 			params_array_r[3] = params(3) + d_params(3);
 			params_array_r[4] = params(4) + d_params(4);
 			params_array_r[5] = params(5) + d_params(5);
-			return ((hausdorffDistance(params_array_r) - hausdorffDistance(params_array_l)) / length(d_params)/2);
+			double d_r = hausdorffDistance(params_array_r);
+			double d_l = hausdorffDistance(params_array_l);
+			double d = (d_r - d_l) / length(d_params)/2;
+			while (d< 0.0001 && d>-0.0001) {
+				d = partDerCentre(params, 2 * d_params); //防止导数为0，无法计算LM的情况
+			}
+			return d;
 		}
 		double partDerForward(const parameter_vector& params, const parameter_vector& d_params)const {
 			//利用centre法则求解偏导，d_params代表移动的某方向正小量，例如(0,0,0,0,0,0.01)
@@ -169,6 +241,9 @@ public:
 			double d_r = hausdorffDistance(params_array_r);
 			double d_l = hausdorffDistance(params_array_l);
 			double d = (d_r - d_l) / length(d_params);
+			while (d< 0.0001 && d>-0.0001) {
+				d = partDerForward(params, 2 * d_params); //防止导数为0，无法计算LM的情况
+			}
 			cout << "'der " << d << endl;
 			return (d);
 		}
@@ -184,24 +259,56 @@ public:
 		// of (1,1).
 		//
 		
-	//	column_vector lower_bound, up_bound;
-	//	lower_bound = -250, -250, -200, -30, -30, -30;
-	//	up_bound = 250, 250, 200, 30,30, 30;
-	//	find_min_bobyqa(CostFactor(cam_img),
-	//		var,
-	//		25,    // number of interpolation points
-	//		lower_bound,  // lower bound constraint
-	//		up_bound,   // upper bound constraint
-	//		20,    // initial trust region radius
-	//		1e-3,  // stopping trust region radius
-	//		100    // max number of objective function evaluations
-	//	);
+
 		CostFactor cost_factor(cam_img);
-		CostDerivative cost_der(1, 0.1, cam_img);
-		LM<CostFactor, CostDerivative> lm(cost_factor, cost_der,var,1,2,1e-7);
+		// cost_der(0.1, 0.05, cam_img);
+		//LM<CostFactor, CostDerivative> lm(cost_factor, cost_der,var,0.00025,5,1e-7);
 		double epsilon_final; bool flag;
-		flag = lm.LM_solver(var, epsilon_final);
-		if (flag == false) {
+		//flag = lm.LM_solver(var, epsilon_final);
+		
+		flag = true;
+			column_vector lower_bound, up_bound;
+			lower_bound = var(0) -15, var(1)-15, var(2)-10, var(3) -10, var(4) -10, var(5) -10;
+
+			up_bound = var(0) + 15, var(1) + 15, var(2) + 10, var(3) + 10, var(4) + 10, var(5) + 10;
+		find_min_bobyqa(cost_factor,
+				var,
+				15,    // number of interpolation points
+				lower_bound,  // lower bound constraint
+				up_bound,   // upper bound constraint
+				9,    // initial trust region radius
+				6,  // stopping trust region radius
+				300    // max number of objective function evaluations
+			);
+
+		find_min_bobyqa(CostFactorPrecise(cam_img),
+			var,
+			15,    // number of interpolation points
+			lower_bound,  // lower bound constraint
+			up_bound,   // upper bound constraint
+			6,    // initial trust region radius
+			1,  // stopping trust region radius
+			300    // max number of objective function evaluations
+		);
+		double var_double[6];
+		var_double[0] = var(0);
+		var_double[1] = var(1);
+		var_double[2] = var(2);
+		var_double[3] = var(3);
+		var_double[4] = var(4);
+		var_double[5] = var(5);
+
+		cost_factor.RANSACfilter(var_double);
+		
+		var(0) = var_double[0];
+		var(1) = var_double[1];
+		var(2) = var_double[2];
+		var(3) = var_double[3];
+		var(4) = var_double[4];
+		var(5) = var_double[5];
+		cost_factor.calculateFactor(var);
+
+		if (flag == false) {var(0) = var_double[0];
 			cout << "Optimization failed." << endl;
 		}
 		cout << "test_function solution:\n" << var << endl;

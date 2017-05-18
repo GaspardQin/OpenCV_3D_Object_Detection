@@ -10,7 +10,9 @@ GLfloat rotate_degree_set[3] = { 0.0f };
 bool firstMouseMove = true;
 GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
 //glm::vec3 vec_scale = glm::vec3(1.f, 1.f, 1.f);
-
+glm::mat4 projection;
+glm::mat4 view;
+glm::mat4 M_model;
 DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 {
 	
@@ -102,6 +104,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	//glLineWidth(3);
 	//glPolygonMode(GL_FRONT, GL_LINE);
 	// 开始游戏主循环
+
 	while (!glfwWindowShouldClose(window))
 	{
 //		WaitForSingleObject(readImgEvent,INFINITE);
@@ -120,16 +123,17 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		
 		shader.use();
 		
-		glm::mat4 projection = glm::perspective(camera.mouse_zoom,
+		projection = glm::perspective(camera.mouse_zoom,
 			(GLfloat)(WINDOW_WIDTH) / WINDOW_HEIGHT, 10.0f, 1000.0f); // 投影矩阵
-		glm::mat4 view = camera.getViewMatrix(camera_z); // 视变换矩阵
+		view = camera.getViewMatrix(); // 视变换矩阵
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"),
 			1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"),
 			1, GL_FALSE, glm::value_ptr(view));
 		glm::mat4 model = glm::mat4(1.0);
-		rotate_model(rotate_degree_set, model);
-		model = glm::translate(model, glm::vec3(pos_model_set[0], pos_model_set[1], pos_model_set[2])); // 适当调整位置
+		model = glm::translate(model, glm::vec3(pos_model_set[0], pos_model_set[1], pos_model_set[2])); // 再调整位置
+		rotate_model(rotate_degree_set, model); //先旋转
+		M_model = model;
 		//model = glm::scale(model,vec_scale); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
 			1, GL_FALSE, glm::value_ptr(model));
@@ -219,9 +223,13 @@ void mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
 	camera.handleMouseMove(xoffset, yoffset);
 }
 void rotate_model(GLfloat rotate_degree_set[], glm::mat4& mat_rotate) {
-	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[0]), glm::vec3(1.0, 0.0, 0.0));
-	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[1]), glm::vec3(0.0, 1.0, 0.0));
-	mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[2]), glm::vec3(0.0, 0.0, 1.0));
+	glm::mat4 only_rotate;
+	only_rotate = glm::eulerAngleYXZ(glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[2]));//yawPitchRoll顺序
+	mat_rotate = mat_rotate*only_rotate;
+																																				 //mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[2]), glm::vec3(0.0, 0.0, 1.0));//按照矩阵乘法，先乘的，即在左边的，后生效
+	//mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[1]), glm::vec3(0.0, 1.0, 0.0));
+	//mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[0]), glm::vec3(1.0, 0.0, 0.0));
+
 
 }
 void set_rotate_degree(GLfloat x_degree, GLfloat y_degree, GLfloat z_degree) {

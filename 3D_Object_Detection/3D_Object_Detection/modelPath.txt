@@ -1,1 +1,1 @@
-./model/plug_with_bottom.stl
+./model/plug_with_bottom.STL
