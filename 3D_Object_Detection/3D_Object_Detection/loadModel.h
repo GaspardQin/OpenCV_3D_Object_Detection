@@ -21,7 +21,8 @@
 	//bool creat_window();
 
 	DWORD WINAPI glThreadFun(LPVOID lpParmeter);
-	void rotate_model(GLfloat rotate_degree_set[], glm::mat4& mat_rotate);
+	void rotate_model(float rotate_degree_set[], glm::mat4& mat_rotate);
+	void rotate_model(glm::quat quat_set, glm::mat4& mat_rotate);
 	void set_rotate_degree(GLfloat x, GLfloat y, GLfloat z);
 	GLfloat* get_rotate_degree();
 	void print_rotate_degree();

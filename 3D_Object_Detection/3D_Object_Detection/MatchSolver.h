@@ -8,7 +8,7 @@
 #include <dlib\optimization.h>
 //using namespace dlib;
 
-
+static double rho_quat = 500;//四元数在最优化时放大的系数，在具体计算时应缩小相同系数
 class MatchSolver{
 public:
 	//typedef matrix<double, 2, 1> input_vector;
@@ -17,15 +17,16 @@ public:
 	typedef dlib::matrix<double, 6, 1> column_vector;
 	typedef dlib::matrix<double, 1, 6> row_vector;
 	column_vector var;
+	
 	//parameter_vector var;
 	//std::vector<std::pair<input_vector, double> > data_samples;
-	void setIniVar(double x, double y, double z, double x_deg, double y_deg, double z_deg) {
+	void setIniVar(double x, double y, double z, double quat_x, double quat_y, double quat_z) {
 		var(0) = x;
 		var(1) = y;
 		var(2) = z;
-		var(3) = x_deg;
-		var(4) = y_deg;
-		var(5) = z_deg;
+		var(3) = quat_x;
+		var(4) = quat_y;
+		var(5) = quat_z;
 	};
 	MatchSolver(Mat & cam_img_input) { cam_img = cam_img_input; };
 	
@@ -43,8 +44,35 @@ public:
 		double operator ()(
 			const column_vector& params
 			) const {
-			return calculateFactor(params);
+			return calculateDTfactor(params);
 		};
+
+		double calculateDTfactor(
+			const column_vector& params
+		)const {
+			double params_array[6];
+			params_array[0] = params(0);
+			params_array[1] = params(1);
+			params_array[2] = params(2);
+			params_array[3] = params(3) / rho_quat;
+			params_array[4] = params(4) / rho_quat;
+			params_array[5] = params(5) / rho_quat;
+			double dist = DTmatch(params_array,0.3,0.8);
+
+
+			glm::quat q;
+			q.x = params_array[3];
+			q.y = params_array[4];
+			q.z = params_array[5];
+			q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
+			glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+
+			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
+			cout << "DT score iteral " << dist << endl;
+			debugShowMatch(params_array);
+			waitKey(10);
+			return dist;
+		}
 		double calculateFactor(
 			const column_vector& params
 			)const {
@@ -52,11 +80,19 @@ public:
 			params_array[0] = params(0);
 			params_array[1] = params(1);
 			params_array[2] = params(2);
-			params_array[3] = params(3);
-			params_array[4] = params(4);
-			params_array[5] = params(5);
+			params_array[3] = params(3)/ rho_quat;
+			params_array[4] = params(4)/ rho_quat;
+			params_array[5] = params(5)/ rho_quat;
 			double dist = hausdorffDistance(params_array);
-			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << params(3) << " y_deg: " << params(4) << " z_deg: " << params(5) << endl;
+
+			glm::quat q;
+			q.x = params_array[3];
+			q.y = params_array[4];
+			q.z = params_array[5];
+			q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
+			glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+
+			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler[0]<< " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
 			cout << "hausdorffDistance iteral " << dist << endl;
 			debugShowMatch(params_array);
 			waitKey(10);
@@ -77,11 +113,11 @@ public:
 			Mat back_ground = cam_src_color.clone();
 			MatchEdges matchEdgesForShow(cam_img);
 
-			std::vector<Point2f> model_corners;
-			matchEdgesForShow.modelCornerDect(var, model_corners);
-			drawPoints(back_ground, matchEdgesForShow.cam_corners, Scalar(255, 0, 0));
-			drawPoints(back_ground, model_corners, Scalar(0, 255, 0));
-			imshow("debugShowMatchPoints", back_ground);
+		//	std::vector<Point2f> model_corners;
+			//matchEdgesForShow.modelCornerDect(var, model_corners);
+			//drawPoints(back_ground, matchEdgesForShow.cam_corners, Scalar(255, 0, 0));
+			//drawPoints(back_ground, model_corners, Scalar(0, 255, 0));
+			//imshow("debugShowMatchPoints", back_ground);
 
 			Mat back_ground2 = cam_src_color.clone();
 			Mat model_canny_img_src;
@@ -100,6 +136,80 @@ public:
 			imshow("debugShowMatchImgs", back_ground2);
 		}
 	};
+	class  CostFactorPyramid1 :public CostFactor {
+	public:
+		CostFactorPyramid1(const Mat &cam_img_input) : CostFactor(cam_img_input) {
+		}
+		double operator ()(
+			const column_vector& params
+			) const {
+			return calculateDTfactorPyramid1(params);
+		};
+
+		double calculateDTfactorPyramid1(
+			const column_vector& params
+		)const {
+			double params_array[6];
+			params_array[0] = params(0);
+			params_array[1] = params(1);
+			params_array[2] = params(2);
+			params_array[3] = params(3) / rho_quat;
+			params_array[4] = params(4) / rho_quat;
+			params_array[5] = params(5) / rho_quat;
+			double dist = DTmatchPyramid1(params_array, 0.3, 0.8);
+
+
+			glm::quat q;
+			q.x = params_array[3];
+			q.y = params_array[4];
+			q.z = params_array[5];
+			q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
+			glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+
+			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
+			cout << "DTpyramid1 score iteral " << dist << endl;
+			debugShowMatch(params_array);
+			waitKey(10);
+			return dist;
+		}
+	};
+	class  CostFactorPyramid2 :public CostFactor {
+	public:
+		CostFactorPyramid2(const Mat &cam_img_input) : CostFactor(cam_img_input) {
+		}
+		double operator ()(
+			const column_vector& params
+			) const {
+			return calculateDTfactorPyramid2(params);
+		};
+
+		double calculateDTfactorPyramid2(
+			const column_vector& params
+		)const {
+			double params_array[6];
+			params_array[0] = params(0);
+			params_array[1] = params(1);
+			params_array[2] = params(2);
+			params_array[3] = params(3) / rho_quat;
+			params_array[4] = params(4) / rho_quat;
+			params_array[5] = params(5) / rho_quat;
+			double dist = DTmatchPyramid2(params_array, 0.3, 0.8);
+
+
+			glm::quat q;
+			q.x = params_array[3];
+			q.y = params_array[4];
+			q.z = params_array[5];
+			q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
+			glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+
+			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
+			cout << "DTpyramid2 score iteral " << dist << endl;
+			debugShowMatch(params_array);
+			waitKey(10);
+			return dist;
+		}
+	};
 	class CostFactorPrecise :public CostFactor {
 	public:
 		CostFactorPrecise(Mat &cam_img_input) :CostFactor(cam_img_input) {		};
@@ -115,12 +225,12 @@ public:
 			params_array[0] = params(0);
 			params_array[1] = params(1);
 			params_array[2] = params(2);
-			params_array[3] = params(3);
-			params_array[4] = params(4);
-			params_array[5] = params(5);
-			double dist = RANSACfilterHaursdoffDistance(params_array);
+			params_array[3] = params(3)/ rho_quat;
+			params_array[4] = params(4)/ rho_quat;
+			params_array[5] = params(5)/ rho_quat;
+			double dist = RANSACfilterDistance(params_array);
 			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << params(3) << " y_deg: " << params(4) << " z_deg: " << params(5) << endl;
-			cout << "hausdorffDistance iteral " << dist << endl;
+			cout << "RANSACDistance iteral " << dist << endl;
 			debugShowMatch(params_array);
 			waitKey(10);
 			return dist;
@@ -261,35 +371,13 @@ public:
 		
 
 		CostFactor cost_factor(cam_img);
+
+		CostFactorPyramid1 cost_factor_pyramid1(cam_img);
+		CostFactorPyramid2 cost_factor_pyramid2(cam_img);
 		// cost_der(0.1, 0.05, cam_img);
 		//LM<CostFactor, CostDerivative> lm(cost_factor, cost_der,var,0.00025,5,1e-7);
 		double epsilon_final; bool flag;
 		//flag = lm.LM_solver(var, epsilon_final);
-		
-		flag = true;
-			column_vector lower_bound, up_bound;
-			lower_bound = var(0) -15, var(1)-15, var(2)-10, var(3) -10, var(4) -10, var(5) -10;
-
-			up_bound = var(0) + 15, var(1) + 15, var(2) + 10, var(3) + 10, var(4) + 10, var(5) + 10;
-		find_min_bobyqa(cost_factor,
-				var,
-				15,    // number of interpolation points
-				lower_bound,  // lower bound constraint
-				up_bound,   // upper bound constraint
-				9,    // initial trust region radius
-				6,  // stopping trust region radius
-				300    // max number of objective function evaluations
-			);
-
-		find_min_bobyqa(CostFactorPrecise(cam_img),
-			var,
-			15,    // number of interpolation points
-			lower_bound,  // lower bound constraint
-			up_bound,   // upper bound constraint
-			6,    // initial trust region radius
-			1,  // stopping trust region radius
-			300    // max number of objective function evaluations
-		);
 		double var_double[6];
 		var_double[0] = var(0);
 		var_double[1] = var(1);
@@ -298,16 +386,73 @@ public:
 		var_double[4] = var(4);
 		var_double[5] = var(5);
 
-		cost_factor.RANSACfilter(var_double);
-		
+	//	cost_factor.RANSACfilter(var_double);
+
 		var(0) = var_double[0];
 		var(1) = var_double[1];
 		var(2) = var_double[2];
 		var(3) = var_double[3];
 		var(4) = var_double[4];
 		var(5) = var_double[5];
-		cost_factor.calculateFactor(var);
 
+
+		var(3) *= rho_quat;
+		var(4) *= rho_quat;
+		var(5) *= rho_quat;
+		flag = true;
+			column_vector lower_bound, up_bound;
+			lower_bound = var(0) -20, var(1)-20, var(2)-15, std::min(var(3)-50,-1.0*rho_quat), std::min(var(4) -50,-1.0*rho_quat), std::min(var(5) -50,-1.0*rho_quat);
+
+			up_bound = var(0) + 20, var(1) + 20, var(2) + 15, std::max(var(3) + 50, 1.0*rho_quat), std::max(var(4) + 50, 1.0*rho_quat), std::max(var(5) + 50, 1.0*rho_quat);
+		find_min_bobyqa(cost_factor_pyramid2,
+				var,
+				15,    // number of interpolation points
+				lower_bound,  // lower bound constraint
+				up_bound,   // upper bound constraint
+				9,    // initial trust region radius
+				0.001,  // stopping trust region radius
+				5000    // max number of objective function evaluations
+			);
+		while (cost_factor_pyramid2(var) > 0.1) {
+			find_min_bobyqa(cost_factor_pyramid2,
+				var,
+				15,    // number of interpolation points
+				lower_bound,  // lower bound constraint
+				up_bound,   // upper bound constraint
+				9,    // initial trust region radius
+				0.001,  // stopping trust region radius
+				5000    // max number of objective function evaluations
+			);
+		}
+		/*
+		column_vector lower_bound_precise, up_bound_precise;
+		lower_bound_precise = var(0) - 5, var(1) - 5, var(2) - 5, std::min(var(3) - 10, -1.0), std::min(var(4) - 10, -1.0*rho_quat), std::min(var(5) - 10, -1.0*rho_quat);
+
+		up_bound_precise = var(0) + 5, var(1) + 5, var(2) + 5, std::max(var(3) + 10, 1.0*rho_quat), std::max(var(4) + 10, 1.0*rho_quat), std::max(var(5) + 10, 1.0*rho_quat);
+
+		find_min_bobyqa(CostFactorPrecise(cam_img),
+			var,
+			9,    // number of interpolation points
+			lower_bound_precise,  // lower bound constraint
+			up_bound_precise,   // upper bound constraint
+			4,    // initial trust region radius
+			0.001,  // stopping trust region radius
+			300    // max number of objective function evaluations
+		);
+		var(3) /= rho_quat;
+		var(4) /= rho_quat;
+		var(5) /= rho_quat;
+		//double var_double[6];
+		var_double[0] = var(0);
+		var_double[1] = var(1);
+		var_double[2] = var(2);
+		var_double[3] = var(3);
+		var_double[4] = var(4);
+		var_double[5] = var(5);
+
+
+	//	cost_factor.calculateFactor(var);
+	*/
 		if (flag == false) {var(0) = var_double[0];
 			cout << "Optimization failed." << endl;
 		}
@@ -319,11 +464,12 @@ public:
 		final_result[0] = var(0);
 		final_result[1] = var(1);
 		final_result[2] = var(2);
-		final_result[3] = var(3);
-		final_result[4] = var(4);
-		final_result[5] = var(5);
+		final_result[3] = var(3)/ rho_quat;
+		final_result[4] = var(4)/ rho_quat;
+		final_result[5] = var(5)/ rho_quat;
 	};
 
+	
 
 /*
 class residual :public MatchEdges {

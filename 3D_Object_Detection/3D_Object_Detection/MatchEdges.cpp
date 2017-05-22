@@ -2,29 +2,36 @@
 #include "MatchEdges.h"
 using namespace std;
 using namespace cv;
-void MatchEdges::camCornerDect() {
+void MatchEdges::CornerDect(Mat cam_img,std::vector<Point2f>& cam_corners) const{
 	goodFeaturesToTrack(cam_img, cam_corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
 	// 角点位置精准化参数  
 	Size winSize = Size(5, 5);
 	Size zeroZone = Size(-1, -1);
 	TermCriteria criteria = TermCriteria(
 		CV_TERMCRIT_EPS + CV_TERMCRIT_ITER,
-		40, //maxCount=40  
-		0.001);  //epsilon=0.001  
+		100, //maxCount=40  
+		0.00001);  //epsilon=0.00001  
 				 /// 计算精准化后的角点位置  
 	cornerSubPix(cam_img, cam_corners, winSize, zeroZone, criteria);
 
 }
 void MatchEdges::modelCornerDect(const double *var, vector<Point2f> &model_corners)const {
 	Mat model_canny_img;
+	double debug_var[6];
+	debug_var[0] = var[0];
+	debug_var[1] = var[1];
+	debug_var[2] = var[2];
+	debug_var[3] = var[3];
+	debug_var[4] = var[4];
+	debug_var[5] = var[5];
 	getModelImg(var, model_canny_img);
 	goodFeaturesToTrack(model_canny_img, model_corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
 	Size winSize = Size(5, 5);
 	Size zeroZone = Size(-1, -1);
 	TermCriteria criteria = TermCriteria(
 		CV_TERMCRIT_EPS + CV_TERMCRIT_ITER,
-		40, //maxCount=40  
-		0.001);  //epsilon=0.001  
+		100, //maxCount=40  
+		0.00001);  //epsilon=0.00001  
 				 /// 计算精准化后的角点位置  
 	cornerSubPix(model_canny_img, model_corners, winSize, zeroZone, criteria);
 }
@@ -32,10 +39,13 @@ void MatchEdges::getModelImg(const double *var, Mat& model_canny_img) const {
 	pos_model_set[0] = var[0];
 	pos_model_set[1] = var[1];
 	pos_model_set[2] = var[2]; //z为负值
-	rotate_degree_set[0] = var[3];
-	rotate_degree_set[1] = var[4];
-	rotate_degree_set[2] = var[5];
-
+	//rotate_degree_set[0] = var[3];
+	//rotate_degree_set[1] = var[4];
+	//rotate_degree_set[2] = var[5];
+	quat_set[0] = var[3];
+	quat_set[1] = var[4];
+	quat_set[2] = var[5];
+	quat_set[3] = sqrt(1 - quat_set[0] * quat_set[0] - quat_set[1] * quat_set[1] - quat_set[2]* quat_set[2]);
 	ResetEvent(sentModelEvent);
 	SetEvent(readModelEvent);
 	
@@ -52,7 +62,15 @@ double MatchEdges::hausdorffDistance(const double *var)const {
 	getModelImg(var, model_canny_img);
 	goodFeaturesToTrack(model_canny_img, model_corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
 	//double dist = hausdorff_ptr->computeDistance(cam_corners, model_corners);
-	
+	Size winSize = Size(5, 5);
+	Size zeroZone = Size(-1, -1);
+	TermCriteria criteria = TermCriteria(
+		CV_TERMCRIT_EPS + CV_TERMCRIT_ITER,
+		100, //maxCount=40  
+		0.00001);  //epsilon=0.00001  
+				   /// 计算精准化后的角点位置  
+	cornerSubPix(model_canny_img, model_corners, winSize, zeroZone, criteria);
+
 	double dist = hausdorffDistanceManuelSum(cam_corners, model_corners, 0.4,0.8);
 	return (dist);
 	//微调位置，姿态使partial Hausdorff distance(系数0.6)最小（或者模板匹配）
@@ -63,7 +81,14 @@ double MatchEdges::hausdorffDistance(const double *var, std::vector<Point2f> &ca
 	vector<Point2f> model_corners;
 	getModelImg(var, model_canny_img);
 	goodFeaturesToTrack(model_canny_img, model_corners, maxCorners, qualityLevel, minDistance, Mat(), blockSize, useHarrisDetector, k); //未选择感兴趣区域  
-																																		//double dist = hausdorff_ptr->computeDistance(cam_corners, model_corners);
+	Size winSize = Size(5, 5);
+	Size zeroZone = Size(-1, -1);
+	TermCriteria criteria = TermCriteria(
+		CV_TERMCRIT_EPS + CV_TERMCRIT_ITER,
+		100, //maxCount=40  
+		0.00001);  //epsilon=0.00001  
+				   /// 计算精准化后的角点位置  
+	cornerSubPix(model_canny_img, model_corners, winSize, zeroZone, criteria);																																	//double dist = hausdorff_ptr->computeDistance(cam_corners, model_corners);
 
 	
 	double dist = hausdorffDistanceManuelSum(cam_corners, model_corners, cam_corners_nearest, 0.4, 0.8);
@@ -210,7 +235,7 @@ void MatchEdges::RANSACfilter(double * var) {
 	modelCornerDect(var,model_corners);
 	hausdorffDistance(var, cam_corners_nearest);
 	Mat mask; Mat H;
-	H = findHomography(model_corners, cam_corners_nearest, CV_RANSAC,3, mask);
+	H = findHomography(model_corners, cam_corners_nearest, CV_LMEDS,3, mask);
 	
 	vector<Point2f> correct_match_cam,correct_match_model;
 	vector<Point2f> wrong_match_model, wrong_match_cam;
@@ -244,7 +269,7 @@ void MatchEdges::RANSACfilter(double * var) {
 
 
 	//可用的点对匹配完毕，重新ransac计算变换矩阵
-	H = findHomography(correct_match_model, correct_match_cam, CV_RANSAC, 1, mask);
+	H = findHomography(correct_match_model, correct_match_cam, CV_LMEDS, 1, mask);
 	debugShowMatch(correct_match_model, correct_match_cam);
 	waitKey();
 	glm::mat4 H_glm;
@@ -281,12 +306,12 @@ void MatchEdges::RANSACfilter(double * var) {
 
 
 }
-double MatchEdges::RANSACfilterHaursdoffDistance(double * var) const {
+double MatchEdges::RANSACfilterDistance(double * var) const {
 	std::vector<Point2f> model_corners, cam_corners_nearest;
 	modelCornerDect(var, model_corners);
 	hausdorffDistance(var, cam_corners_nearest);
 	Mat mask; Mat H;
-	H = findHomography(model_corners, cam_corners_nearest, CV_RANSAC, 3, mask);
+	H = findHomography(model_corners, cam_corners_nearest, CV_RANSAC, 5, mask);
 
 	vector<Point2f> correct_match_cam, correct_match_model;
 	vector<Point2f> wrong_match_model, wrong_match_cam;
@@ -308,17 +333,48 @@ double MatchEdges::RANSACfilterHaursdoffDistance(double * var) const {
 	for (int i = 0; i < wrong_match_model.size(); i++) {
 
 		for (int j = 0; j < wrong_match_cam.size(); j++) {
-			if ((abs(warp_w_model[i].x - wrong_match_cam[j].x) < 2) && (abs(warp_w_model[i].y - wrong_match_cam[j].y) < 2)) {
+			if ((abs(warp_w_model[i].x - wrong_match_cam[j].x) < 1.5) && (abs(warp_w_model[i].y - wrong_match_cam[j].y) < 1.5)) {
 				correct_match_cam.push_back(wrong_match_cam[j]);
 				correct_match_model.push_back(wrong_match_model[i]);
-				wrong_match_cam.erase(wrong_match_cam.begin() + j);
-				wrong_match_model.erase(wrong_match_model.begin() + i);
+				//wrong_match_cam.erase(wrong_match_cam.begin() + j);
+				//wrong_match_model.erase(wrong_match_model.begin() + i);
 			}
 		}
 	}
 
-	return hausdorffDistanceManuelSum(correct_match_model, correct_match_cam, 0.1, 0.9);
-
+	//可用的点对匹配完毕，重新ransac计算变换矩阵
+	H = findHomography(correct_match_model, correct_match_cam, CV_LMEDS, 2, mask);
+	debugShowMatch(correct_match_model, correct_match_cam);
+	waitKey(10);
+	/*
+	double max_dist = 0;
+	double temp_dist;
+	for (int i = 0; i < correct_match_cam.size(); i++) {
+		temp_dist = sqrt((correct_match_cam[i].x - correct_match_model[i].x)*(correct_match_cam[i].x - correct_match_model[i].x) + (correct_match_cam[i].y - correct_match_model[i].y)*(correct_match_cam[i].y - correct_match_model[i].y));
+		if (max_dist < temp_dist) {
+			max_dist = temp_dist;
+		}
+	}
+	return max_dist;
+	*/
+	/*
+	double sum_dist=0;
+	for (int i = 0; i < correct_match_cam.size(); i++) {
+		sum_dist += sqrt((correct_match_cam[i].x - correct_match_model[i].x)*(correct_match_cam[i].x - correct_match_model[i].x) + (correct_match_cam[i].y - correct_match_model[i].y)*(correct_match_cam[i].y - correct_match_model[i].y));
+	}
+	return sum_dist/ correct_match_cam.size();
+	*/
+	double sum = 0;
+	Mat Id = Mat::eye(3, 3,CV_64FC1);
+	H = H - Id;
+//	subtract(H, Mat::eye(3, 3,CV_32F), H);
+	//H = H - Mat::eye(3, 3, CV_32F);
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			sum += H.at<double>(i, j)*H.at<double>(i, j);
+		}
+	}
+	return sum;
 }
 const void MatchEdges::drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color)const {
 	int i;
@@ -341,4 +397,65 @@ const void MatchEdges::debugShowMatch(std::vector<Point2f> model_corners, std::v
 	//drawPoints(back_ground, cam_corners, Scalar(50, 200, 50));
 	imshow("debugShowMatchPoints_RANSAC", back_ground);
 	
+}
+double MatchEdges::hausdorffDistancePyramid2(const double *var)const {
+	//待优化能量函数
+	Mat model_canny_img; Mat model_canny_pyramid_2;
+	vector<Point2f> model_corners_pyramid_2;
+	getModelImg(var, model_canny_img);
+	binaryZoomOut(model_canny_img, model_canny_pyramid_2, 0.25);
+	//pyrDown(model_canny_img, model_canny_pyramid_2);
+	//pyrDown(model_canny_pyramid_2, model_canny_pyramid_2);
+
+	//CornerDect(model_canny_pyramid_2, model_corners_pyramid_2);
+
+	double dist = hausdorffDistanceManuelSum(cam_corners_pyramid_2, model_canny_pyramid_2, 0.4, 0.8);
+	return (dist);
+	
+}
+double MatchEdges::DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, double k_u) const {
+	//DistanceTransform Match
+	vector<double> dist;
+	for (int i = 0; i < model_canny_img.size().height; i++) {
+		for (int j = 0; j < model_canny_img.size().width; j++) {
+			if (model_canny_img.at<uchar>(i,j) > 0){
+				dist.push_back(cam_DT.at<float>(i,j));
+			}
+		}
+	}
+	sort(dist.begin(), dist.end());
+	double sum = 0;
+	for (int i = floor(k_u*dist.size()) - 1; i > floor(k_l*dist.size()); i--) {
+		sum += dist[i];
+	}
+	std::cout << "max distance :" << dist[floor(k_u*dist.size()) - 1] << std::endl;
+	return sum;
+}
+void MatchEdges::DT(Mat cam_img_, Mat &cam_DT_) const {
+	bitwise_not(cam_img_, cam_img_);
+	distanceTransform(cam_img_,cam_DT_, CV_DIST_L1, 3, CV_32F);
+}
+double MatchEdges::DTmatch(double* var, double k_l, double k_u) const {
+	Mat model_canny_img;
+	getModelImg(var, model_canny_img);
+	return DTmatchHelp(cam_DT, model_canny_img, k_l, k_u);
+}
+double MatchEdges::DTmatchPyramid1(double* var, double k_l, double k_u) const {
+	Mat model_canny_img;
+	getModelImg(var, model_canny_img);
+	//pyrDown(model_canny_img, model_canny_img);
+	binaryZoomOut(model_canny_img, model_canny_img, 0.5);
+	return DTmatchHelp(cam_DT_pyramid_1, model_canny_img, k_l, k_u);
+}
+double MatchEdges::DTmatchPyramid2(double* var, double k_l, double k_u) const {
+	Mat model_canny_img;
+	getModelImg(var, model_canny_img);
+	//pyrDown(model_canny_img, model_canny_img);
+	//pyrDown(model_canny_img, model_canny_img);
+	binaryZoomOut(model_canny_img, model_canny_img, 0.25);
+	return DTmatchHelp(cam_DT_pyramid_2, model_canny_img, k_l, k_u);
+}
+void MatchEdges::binaryZoomOut(Mat input_img, Mat &output_img, double f)const {
+	resize(input_img, output_img, Size(0, 0), f, f, INTER_AREA);
+	threshold(output_img, output_img, 20, 255, THRESH_BINARY);
 }

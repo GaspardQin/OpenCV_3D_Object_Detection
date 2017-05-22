@@ -102,7 +102,7 @@ void DetectionMethod::shi_TomasiDetection(double * output_best) {
 	
 	//需先调用至少一种粗定位函数确保匹配模板和待匹配图像像素位置有重合
 	MatchSolver matchSolver(cam_canny_img);
-	matchSolver.setIniVar(pos_estimated[0], pos_estimated[1], pos_estimated[2], rotate_degree_estimated[0], rotate_degree_estimated[1], rotate_degree_estimated[2]);
+	matchSolver.setIniVar(pos_estimated[0], pos_estimated[1], pos_estimated[2], quat_estimated[0], quat_estimated[1], quat_estimated[2]);
 	matchSolver.solve(output_best);
 		
 	

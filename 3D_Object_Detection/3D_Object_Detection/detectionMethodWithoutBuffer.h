@@ -7,8 +7,8 @@ using namespace std;
 class DetectionMethod {
 public:
 	std::vector<cv::Mat> model_ini_Canny_imgs;//存储预先生成的模型2D边缘图
-	double rotate_degree_estimated[3]; double pixel_pos_estimated[2];
-	double pos_estimated[3];
+	double pixel_pos_estimated[2];
+	double pos_estimated[3]; double quat_estimated[3];
 	cv::Mat cam_canny_img, cam_src, cam_src_color;
 	bool buffer_is_created = false;
 	int min_index;

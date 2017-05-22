@@ -6,7 +6,8 @@ GLfloat lastFrame = 0.0f; // 上一帧时间
 GLfloat camera_z = 0.0f;
 GLfloat pos_model_set[3] = { 0.0f, 0.0f, -100.0f };
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f));
-GLfloat rotate_degree_set[3] = { 0.0f };
+float rotate_degree_set[3] = { 0.0f };
+glm::quat quat_set = glm::quat(glm::vec3(0,0,0));
 bool firstMouseMove = true;
 GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
 //glm::vec3 vec_scale = glm::vec3(1.f, 1.f, 1.f);
@@ -132,7 +133,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 			1, GL_FALSE, glm::value_ptr(view));
 		glm::mat4 model = glm::mat4(1.0);
 		model = glm::translate(model, glm::vec3(pos_model_set[0], pos_model_set[1], pos_model_set[2])); // 再调整位置
-		rotate_model(rotate_degree_set, model); //先旋转
+		rotate_model(quat_set, model); //先旋转
 		M_model = model;
 		//model = glm::scale(model,vec_scale); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
@@ -222,16 +223,28 @@ void mouse_move_callback(GLFWwindow* window, double xpos, double ypos)
 
 	camera.handleMouseMove(xoffset, yoffset);
 }
-void rotate_model(GLfloat rotate_degree_set[], glm::mat4& mat_rotate) {
+
+void rotate_model(glm::quat quat_set, glm::mat4& mat_rotate) {
+	glm::mat4 only_rotate;
+	only_rotate = glm:: mat4_cast(quat_set);
+	//only_rotate = glm::eulerAngleYXZ(glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[2]));//yawPitchRoll顺序
+	mat_rotate = mat_rotate*only_rotate;
+
+
+
+}
+
+void rotate_model(float rotate_degree_set[], glm::mat4& mat_rotate) {
 	glm::mat4 only_rotate;
 	only_rotate = glm::eulerAngleYXZ(glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[2]));//yawPitchRoll顺序
 	mat_rotate = mat_rotate*only_rotate;
-																																				 //mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[2]), glm::vec3(0.0, 0.0, 1.0));//按照矩阵乘法，先乘的，即在左边的，后生效
+	//mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[2]), glm::vec3(0.0, 0.0, 1.0));//按照矩阵乘法，先乘的，即在左边的，后生效
 	//mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[1]), glm::vec3(0.0, 1.0, 0.0));
 	//mat_rotate = glm::rotate(mat_rotate, glm::radians(rotate_degree_set[0]), glm::vec3(1.0, 0.0, 0.0));
 
 
 }
+
 void set_rotate_degree(GLfloat x_degree, GLfloat y_degree, GLfloat z_degree) {
 	rotate_degree_set[0] = x_degree;
 	rotate_degree_set[1] = y_degree;
