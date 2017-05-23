@@ -73,6 +73,7 @@ public:
 
 			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
 			cout << "DTpyramid1 score iteral " << dist << endl;
+			cout << "level" << level << endl;
 			//	debugShowMatch(params_array);
 			//	waitKey(10);
 			iteral_count = iteral_count +1;
@@ -112,14 +113,14 @@ public:
 	
 	
 	void MatchSolver::dynamicBound(column_vector& lower_bound, column_vector& up_bound, column_vector var, double f) {
-		lower_bound = var(0) - 20 * f, var(1) - 20 * f, var(2) - 15 * f, std::min(var(3) - 50 * f, -1.0*rho_quat), std::min(var(4) - 50 * f, -1.0*rho_quat), std::min(var(5) - 50 * f, -1.0*rho_quat);
+		lower_bound = var(0) - 20 * f, var(1) -20 * f, var(2) - 20 * f, std::max(var(3) - 20 * f, -1.0*rho_quat), std::max(var(4) - 20 * f, -1.0*rho_quat), std::max(var(5) - 20 * f, -1.0*rho_quat);
 
-		up_bound = var(0) + 20 * f, var(1) + 20 * f, var(2) + 15 * f, std::max(var(3) + 50 * f, 1.0*rho_quat), std::max(var(4) + 50 * f, 1.0*rho_quat), std::max(var(5) + 50 * f, 1.0*rho_quat);
+		up_bound = var(0) + 20 * f, var(1) + 20 * f, var(2) + 20 * f, std::min(var(3) + 20 * f, 1.0*rho_quat), std::min(var(4) + 20 * f, 1.0*rho_quat), std::min(var(5) + 20 * f, 1.0*rho_quat);
 
 	}
 	void solve(double* final_result) {
-
-		CostFactorPyramid cost_factor_pyramid(cam_img,4);
+		int level_max = 4;
+		CostFactorPyramid cost_factor_pyramid(cam_img, level_max);
 
 		double epsilon_final; 
 		double var_double[6];
@@ -127,37 +128,50 @@ public:
 		var(3) *= rho_quat;
 		var(4) *= rho_quat;
 		var(5) *= rho_quat;
-		cost_factor_pyramid.setLevel(4);
-		
-			column_vector lower_bound, up_bound;
-			dynamicBound(lower_bound, up_bound, var, 1.0);
-			find_min_bobyqa(cost_factor_pyramid,
-				var,
-				8,    // number of interpolation points
-				lower_bound,  // lower bound constraint
-				up_bound,   // upper bound constraint
-				9,    // initial trust region radius
-				0.01,  // stopping trust region radius
-				500    // max number of objective function evaluations
-			);
-			double cost_left = cost_factor_pyramid(var);
-			double ff = 1;
-		while (cost_left > 1) {
-			cost_factor_pyramid.setLevel(3);
-			ff /= 2;
+		double ff = 1.0;
+		double stop_trust_region = 0.01;
+		double init_trust_region = 19;
+		column_vector lower_bound, up_bound;
+		for (int i = level_max; i >= 0; i--) {
+			cost_factor_pyramid.setLevel(i);
+
+			
 			dynamicBound(lower_bound, up_bound, var, ff);
 			find_min_bobyqa(cost_factor_pyramid,
 				var,
-				8,    // number of interpolation points
+				10,    // number of interpolation points
 				lower_bound,  // lower bound constraint
 				up_bound,   // upper bound constraint
-				9 *ff,    // initial trust region radius
-				0.01,  // stopping trust region radius
-				1000    // max number of objective function evaluations
+				init_trust_region,    // initial trust region radius
+				stop_trust_region,  // stopping trust region radius
+				500    // max number of objective function evaluations
 			);
-			cost_left = cost_factor_pyramid(var);
+
+			////////如果陷入局部最小点，重新搜索
+			double cost_left = cost_factor_pyramid(var);
+			
+			while (cost_left >= 50/(i+1)) {
+				
+				dynamicBound(lower_bound, up_bound, var, ff);
+				find_min_bobyqa(cost_factor_pyramid,
+					var,
+					15,    // number of interpolation points
+					lower_bound,  // lower bound constraint
+					up_bound,   // upper bound constraint
+					init_trust_region,    // initial trust region radius
+					stop_trust_region,  // stopping trust region radius
+					1000    // max number of objective function evaluations
+				);
+				cost_left = cost_factor_pyramid(var);
+			}
+			/////进入下一层高精度搜索
+			ff *= 0.5;
+			stop_trust_region *= 0.5;
+			init_trust_region *=  0.5;
 		}
-		
+	
+
+
 		cout << "test_function solution:\n" << var << endl;
 		cout << "total iteral times: " << iteral_count << endl;
 

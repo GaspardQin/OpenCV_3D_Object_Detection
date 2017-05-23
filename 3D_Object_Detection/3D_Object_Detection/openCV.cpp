@@ -3,7 +3,7 @@ cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3);//the 
 
 void creatSample() {
 	rotate_degree_set[0] = -20;
-	rotate_degree_set[1] =10;
+	rotate_degree_set[1] =14;
 	rotate_degree_set[2] = 3;
 	pos_model_set[0] = 15;
 	pos_model_set[1] = 20;
