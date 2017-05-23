@@ -17,7 +17,6 @@ public:
 	typedef dlib::matrix<double, 6, 1> column_vector;
 	typedef dlib::matrix<double, 1, 6> row_vector;
 	column_vector var;
-	
 	//parameter_vector var;
 	//std::vector<std::pair<input_vector, double> > data_samples;
 	void setIniVar(double x, double y, double z, double quat_x, double quat_y, double quat_z) {
@@ -28,7 +27,9 @@ public:
 		var(4) = quat_y;
 		var(5) = quat_z;
 	};
-	MatchSolver(Mat & cam_img_input) { cam_img = cam_img_input; };
+	MatchSolver(Mat & cam_img_input){
+		cam_img = cam_img_input;
+	};
 	
 	class  CostFactor :public MatchEdges {
 	public:
@@ -111,7 +112,7 @@ public:
 			// var 是位置、姿态参数，是一个大小为6的数组
 			
 			Mat back_ground = cam_src_color.clone();
-			MatchEdges matchEdgesForShow(cam_img);
+			
 
 		//	std::vector<Point2f> model_corners;
 			//matchEdgesForShow.modelCornerDect(var, model_corners);
@@ -121,7 +122,7 @@ public:
 
 			Mat back_ground2 = cam_src_color.clone();
 			Mat model_canny_img_src;
-			matchEdgesForShow.getModelImg(var, model_canny_img_src);
+			getModelImg(var, model_canny_img_src);
 			for (int i = 0; i < back_ground2.rows; i++)
 			{
 				for (int j = 0; j < back_ground2.cols; j++)
@@ -168,8 +169,8 @@ public:
 
 			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
 			cout << "DTpyramid1 score iteral " << dist << endl;
-			debugShowMatch(params_array);
-			waitKey(10);
+		//	debugShowMatch(params_array);
+		//	waitKey(10);
 			return dist;
 		}
 	};
@@ -205,8 +206,8 @@ public:
 
 			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
 			cout << "DTpyramid2 score iteral " << dist << endl;
-			debugShowMatch(params_array);
-			waitKey(10);
+			//debugShowMatch(params_array);
+		//	waitKey(10);
 			return dist;
 		}
 	};
@@ -359,7 +360,12 @@ public:
 		}
 	};
 	
-	
+	void MatchSolver::dynamicBound(parameter_vector& lower_bound, parameter_vector& up_bound, parameter_delta_vector var, double f) {
+		lower_bound = var(0) - 20 * f, var(1) - 20 * f, var(2) - 15 * f, std::min(var(3) - 50 * f, -1.0*rho_quat), std::min(var(4) - 50 * f, -1.0*rho_quat), std::min(var(5) - 50 * f, -1.0*rho_quat);
+
+		up_bound = var(0) + 20 * f, var(1) + 20 * f, var(2) + 15 * f, std::max(var(3) + 50 * f, 1.0*rho_quat), std::max(var(4) + 50 * f, 1.0*rho_quat), std::max(var(5) + 50 * f, 1.0*rho_quat);
+
+	}
 	void solve(double* final_result) {
 
 		//	find_min(cg_search_strategy(),  // Use BFGS search algorithm
@@ -401,28 +407,31 @@ public:
 		var(5) *= rho_quat;
 		flag = true;
 			column_vector lower_bound, up_bound;
-			lower_bound = var(0) -20, var(1)-20, var(2)-15, std::min(var(3)-50,-1.0*rho_quat), std::min(var(4) -50,-1.0*rho_quat), std::min(var(5) -50,-1.0*rho_quat);
-
-			up_bound = var(0) + 20, var(1) + 20, var(2) + 15, std::max(var(3) + 50, 1.0*rho_quat), std::max(var(4) + 50, 1.0*rho_quat), std::max(var(5) + 50, 1.0*rho_quat);
-		find_min_bobyqa(cost_factor_pyramid2,
-				var,
-				15,    // number of interpolation points
-				lower_bound,  // lower bound constraint
-				up_bound,   // upper bound constraint
-				9,    // initial trust region radius
-				0.001,  // stopping trust region radius
-				5000    // max number of objective function evaluations
-			);
-		while (cost_factor_pyramid2(var) > 0.1) {
+			dynamicBound(lower_bound, up_bound, var, 1.0);
 			find_min_bobyqa(cost_factor_pyramid2,
 				var,
-				15,    // number of interpolation points
+				8,    // number of interpolation points
 				lower_bound,  // lower bound constraint
 				up_bound,   // upper bound constraint
 				9,    // initial trust region radius
-				0.001,  // stopping trust region radius
-				5000    // max number of objective function evaluations
+				0.01,  // stopping trust region radius
+				500    // max number of objective function evaluations
 			);
+			double cost_left = cost_factor_pyramid2(var);
+			double ff = 1;
+		while (cost_left > 1) {
+			ff /= 2;
+			dynamicBound(lower_bound, up_bound, var, ff);
+			find_min_bobyqa(cost_factor_pyramid2,
+				var,
+				8,    // number of interpolation points
+				lower_bound,  // lower bound constraint
+				up_bound,   // upper bound constraint
+				9 *ff,    // initial trust region radius
+				0.01,  // stopping trust region radius
+				1000    // max number of objective function evaluations
+			);
+			cost_left = cost_factor_pyramid2(var);
 		}
 		/*
 		column_vector lower_bound_precise, up_bound_precise;
