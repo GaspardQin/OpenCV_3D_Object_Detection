@@ -24,7 +24,6 @@ public:
 	const void debugShowMatch(std::vector<Point2f> model_corners, std::vector<Point2f> cam_corners)const;
 	const void drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color)const;
 	double MatchEdges::DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, double k_u) const;
-	double MatchEdges::DTmatch(double *var, double k_l, double k_u) const;
 	double MatchEdges::DTmatchPyramid(double *var,int level, double k_l, double k_u) const;
 	void MatchEdges::DT(Mat cam_img, Mat &cam_DT) const;
 	void MatchEdges::binaryZoomOut(Mat input_img, Mat &output_img, double f)const;

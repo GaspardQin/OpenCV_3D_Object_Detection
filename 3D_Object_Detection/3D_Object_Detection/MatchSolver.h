@@ -133,13 +133,13 @@ public:
 		double init_trust_region = 19;
 		column_vector lower_bound, up_bound;
 		for (int i = level_max; i >= 0; i--) {
+			i = 0;
 			cost_factor_pyramid.setLevel(i);
 
-			
 			dynamicBound(lower_bound, up_bound, var, ff);
 			find_min_bobyqa(cost_factor_pyramid,
 				var,
-				10,    // number of interpolation points
+				18,    // number of interpolation points
 				lower_bound,  // lower bound constraint
 				up_bound,   // upper bound constraint
 				init_trust_region,    // initial trust region radius
@@ -155,7 +155,7 @@ public:
 				dynamicBound(lower_bound, up_bound, var, ff);
 				find_min_bobyqa(cost_factor_pyramid,
 					var,
-					15,    // number of interpolation points
+					20,    // number of interpolation points
 					lower_bound,  // lower bound constraint
 					up_bound,   // upper bound constraint
 					init_trust_region,    // initial trust region radius
@@ -171,18 +171,18 @@ public:
 		}
 	
 
-
+		final_result[0] = var(0);
+		final_result[1] = var(1);
+		final_result[2] = var(2);
+		final_result[3] = var(3) / rho_quat;
+		final_result[4] = var(4) / rho_quat;
+		final_result[5] = var(5) / rho_quat;
 		cout << "test_function solution:\n" << var << endl;
 		cout << "total iteral times: " << iteral_count << endl;
 
 		std::cout << "The final position and rotation are:  x: " << var(0) << " y: " << var(1) << " z: " << var(2) << " x_deg:" << var(3) << " y_deg:" << var(4) << " z_deg:" << var(5) << std::endl;
 		
-		final_result[0] = var(0);
-		final_result[1] = var(1);
-		final_result[2] = var(2);
-		final_result[3] = var(3)/ rho_quat;
-		final_result[4] = var(4)/ rho_quat;
-		final_result[5] = var(5)/ rho_quat;
+
 	};
 
 private:

@@ -264,9 +264,11 @@ void add_rotate_degree(GLfloat x_add, GLfloat y_add, GLfloat z_add) {
 	
 }
 void print_model_info() {
+	glm::vec3 debug_angle = glm::degrees(glm::eulerAngles(quat_set));
+
 	std::cout << "model's info : " << std::endl;
 	std::cout << "	pos: x " << pos_model_set[0] << "  y  " << pos_model_set[1] << "  z  " << pos_model_set[2] << std::endl;
-	std::cout << "	rotate: x" << rotate_degree_set[0] << "  y  " << rotate_degree_set[1] << " z  " << rotate_degree_set[2] << std::endl;
+	std::cout << "	rotate: x" << debug_angle[0] << "  y  " << debug_angle[1] << " z  " << debug_angle[2] << std::endl;
 
 
 }
