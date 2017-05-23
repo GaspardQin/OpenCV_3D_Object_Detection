@@ -3,7 +3,8 @@
 #include <time.h>       /* time */
 //using namespace dlib;
 
-typedef dlib::matrix<double, 6, 1> parameter_vector;
+typedef dlib::matrix<double, 6, 1> 
+;
 typedef dlib::matrix<double, 6, 1> parameter_delta_vector;
 typedef dlib::matrix<double, 1, 6> jac_vector;
 template <typename Fun,

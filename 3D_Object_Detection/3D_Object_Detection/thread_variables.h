@@ -51,4 +51,5 @@ extern GLfloat pos_model_set[3];
 extern glm::mat4 projection;
 extern glm::mat4 view;
 extern glm::mat4 M_model;
+extern int iteral_count;
 #endif
