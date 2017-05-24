@@ -157,6 +157,7 @@
     <ClCompile Include="loadModel.cpp" />
     <ClCompile Include="MatchEdges.cpp" />
     <ClCompile Include="OpenCV.cpp" />
+    <ClCompile Include="PSO.cpp" />
     <ClCompile Include="start.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -167,6 +168,8 @@
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="openCV.h" />
+    <ClInclude Include="particle.h" />
+    <ClInclude Include="PSO.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="thread_variables.h" />
     <ClInclude Include="texture.h" />

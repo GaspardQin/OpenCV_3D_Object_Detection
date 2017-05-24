@@ -51,6 +51,24 @@ public:
 			return calculateDTfactorPyramid(params);
 		};
 		double calculateDTfactorPyramid(double* params_array) {
+			params_array[3] = params_array[3] / rho_quat;
+			params_array[4] = params_array[4] / rho_quat;
+			params_array[5] = params_array[5] / rho_quat;
+			double dist = DTmatchPyramid(params_array, level, 0.3, 0.8);
+			glm::quat q;
+			q.x = params_array[3];
+			q.y = params_array[4];
+			q.z = params_array[5];
+			q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
+			glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+
+			cout << "params input: x: " << params_array[0] << " y: " << params_array[1] << " z: " << params_array[2] << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
+			cout << "DTpyramid1 score iteral " << dist << endl;
+			cout << "level" << level << endl;
+			//	debugShowMatch(params_array);
+			//	waitKey(10);
+			iteral_count = iteral_count + 1;
+			return dist;
 
 		}
 		double calculateDTfactorPyramid(

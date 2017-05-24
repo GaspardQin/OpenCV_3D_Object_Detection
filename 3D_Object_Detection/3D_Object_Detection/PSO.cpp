@@ -4,16 +4,16 @@
 double PSO::function(double *x)
 {
 
-	return this->hausdorffCost(x);
+	return this->cost_factor_pyramid->calculateDTfactorPyramid(x);
 
 }
 
 // 初始化
 void PSO::initial()
 {
-
-	c1 = 2.05;
-	c2 = 2.05;
+	w = 0.9;
+	c1 = 1.4961;
+	c2 = 1.4961;
 	fg = MAX_PSO;                                  // 全局最小寄存量
 	bestIndex = 0;                             // 记录最好粒子的序号                 
 	int i, j, k;
@@ -35,7 +35,7 @@ void PSO::initial()
 			// 初始化粒子的位置
 			for (j = 0; j<dim; ++j)
 			{
-				particle[i].position[j] = rand() / (double)RAND_MAX*UP_PSO;
+				particle[i].position[j] = init_x[j]+rand() / (double)RAND_MAX*(up_PSO[j] - down_PSO[j])/2; //使粒子初始点位置在估计点附近
 			}
 			// 初始化粒子的速度
 			for (j = 0; j<dim; ++j)
@@ -103,10 +103,10 @@ void PSO::createNew(int n)
 		{
 			particle[i].position[j] += particle[i].velocity[j];
 			// 控制粒子的位置范围
-			if (particle[i].position[j]>UP_PSO)
-				particle[i].position[j] = UP_PSO;
-			else if (particle[i].position[j]<DOWN_PSO)
-				particle[i].position[j] = DOWN_PSO;
+			if (particle[i].position[j]>up_PSO[j])
+				particle[i].position[j] = up_PSO[j];
+			else if (particle[i].position[j]<down_PSO[j])
+				particle[i].position[j] = down_PSO[j];
 		}
 
 		// 计算该位置的函数值 （适应度）
@@ -155,7 +155,7 @@ bool PSO::isExited(int n)
 }
 
 // 粒子群算法求解
-void PSO::doPSO(double * p_best, double &output_best)
+void PSO::doPSO(double * p_best, double &score_best)
 {
 	int n = 0;                    // 整个搜索过程的迭代计算机
 	int i;
@@ -186,13 +186,13 @@ void PSO::doPSO(double * p_best, double &output_best)
 			// 对最差粒子重新初始化其位置和速度
 			for (i = 0; i<particle[tempIndex].dim; ++i)
 			{
-				particle[i].position[tempIndex] = rand() / (double)RAND_MAX*UP_PSO;
+				particle[i].position[tempIndex] = init_x[tempIndex]+ rand() / (double)RAND_MAX*(up_PSO[tempIndex] - down_PSO[tempIndex])/2;
 				particle[i].velocity[tempIndex] = rand() / (double)RAND_MAX*UP_PSO;
 			}
 		}
 	} while (!isExited(n));
 	p_best = p[bestIndex];
-	output_best = fg;
+	score_best = fg;
 	// 输出最终结果
 	//cout<<"最优值点： "<<endl;
 	//cout<<"\t";

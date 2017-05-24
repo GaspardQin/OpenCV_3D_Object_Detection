@@ -1,7 +1,7 @@
 #pragma once
 #include "thread_variables.h"
-#include "MatchSolver.h"
-
+//#include "MatchSolver.h"
+#include "PSO.h"
 using namespace cv;
 using namespace std;
 class DetectionMethod {
@@ -19,7 +19,8 @@ public:
 
 	void initialization();
 
-	void shi_TomasiDetection(double* output_best);
+	void DT_solve_with_powell(double* output_best);
+	void DT_solve_with_PSO(double * output_best);
 	void debugShowContours(int canny_index, std::vector<std::vector<Point>> *cam_contours, int cam_index, std::vector<std::vector<Point>> *model_contours, int model_index);
 	void debugShowMatch(double* var);
 	void drawPoints(Mat &img,std::vector<Point2f> points, const Scalar& color);

@@ -38,7 +38,7 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 
 	double output_best[6];
 	
-	pos_detector.shi_TomasiDetection(output_best);//轮廓角点高精度定位
+	pos_detector.DT_solve_with_PSO(output_best);//轮廓角点高精度定位
 
 	//可视化
 	pos_detector.debugShowMatch(output_best);

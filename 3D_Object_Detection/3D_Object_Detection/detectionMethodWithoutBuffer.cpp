@@ -90,7 +90,7 @@ void DetectionMethod::drawPoints(Mat &img, std::vector<Point2f> points, const Sc
 		circle(img, points[i], 5, color);
 	}
 }
-void DetectionMethod::shi_TomasiDetection(double * output_best) {
+void DetectionMethod::DT_solve_with_powell(double * output_best) {
 	//output_best应为大小为6的数组
 	//高精度定位：边缘图像角点匹配
 	
@@ -104,4 +104,13 @@ void DetectionMethod::shi_TomasiDetection(double * output_best) {
 	cout << "Best Position is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:"<< output_best[2] << endl;
 	cout << "Best Rotation is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
 
+}
+void DetectionMethod::DT_solve_with_PSO(double * output_best) {
+	PSO psoSolver(cam_canny_img, pos_estimated, quat_estimated, 30, 6);
+	double score_best;
+	psoSolver.doPSO(output_best, score_best);
+
+	cout << "Best Position is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
+	cout << "Best Rotation is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
+	cout << "Final score is : " << score_best << endl;
 }
