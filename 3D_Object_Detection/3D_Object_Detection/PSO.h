@@ -1,5 +1,6 @@
 #pragma once
 #include"particle.h"
+#include "MatchSolver.h"
 #include "thread_variables.h"
 //#include "MatchPSO.h"
 using namespace std;
@@ -15,7 +16,7 @@ using namespace std;
 #define STEP_PSO 1.0                    // 随机摄动步长
 #define PI 3.1415926
 
-class PSO: public MatchPSO
+class PSO: public MatchSolver
 {
 protected:
     Particle *particle;             // 粒子
@@ -32,13 +33,14 @@ protected:
     int times2;               // 循环计数器
     int mode;                 // 选择方程
 public:
-	PSO(Mat *cam_img_input, double* deg_input, double *pixel_pos_input, double scale_ratio_estimated_before_input) 
-	:MatchPSO(cam_img_input, deg_input, pixel_pos_input, scale_ratio_estimated_before_input)
+	PSO(Mat &cam_img_input, double* init_pos, double * init_quat) 
+	:MatchSolver(cam_img_input)
 	{	
 		particle = NULL;
 	};
-    PSO(Mat *cam_img_input, double* deg_input, double *pixel_pos_input, double scale_ratio_estimated_before_input, int pn, int d )
-		:MatchPSO(cam_img_input, deg_input, pixel_pos_input, scale_ratio_estimated_before_input)
+    PSO(Mat &cam_img_input, double* init_pos, double* init_quat, int pn, int d )
+		//pn 粒子数量，d维度
+		:MatchSolver(cam_img_input)
     {
 		
         pNum = pn;

@@ -50,7 +50,9 @@ public:
 			) const {
 			return calculateDTfactorPyramid(params);
 		};
+		double calculateDTfactorPyramid(double* params_array) {
 
+		}
 		double calculateDTfactorPyramid(
 			const column_vector& params
 		)const {
