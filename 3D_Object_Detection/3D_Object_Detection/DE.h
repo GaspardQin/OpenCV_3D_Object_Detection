@@ -43,8 +43,20 @@ public:
 		return cost_factor_ptr->calculateDTfactorPyramid(params);
 	}
 };
-
-
+class my_termination_strategy :public de::termination_strategy {
+private:
+	double threshold;
+	size_t maxGen;
+public:
+	my_termination_strategy(size_t maxGen_, double threshold_) {
+		maxGen = maxGen_;
+		threshold = threshold_;
+	}
+	virtual bool event(individual_ptr best, size_t genCount)
+	{
+		return (genCount < maxGen) && (best->cost() > threshold);
+	}
+};
 #define VARS_COUNT 6
 #define POPULATION_SIZE 15
 class DEsolver {
@@ -113,13 +125,17 @@ public:
 			* parallel processors (4), the objective function and the
 			* listener
 			*/
+			
 			processors< objective_function_ptr>::processors_ptr _processors(boost::make_shared< processors< objective_function_ptr> >(THREAD_NUM, ofArray, processor_listener));
 
 			/**
 			* Instantiate a simple termination strategy wich will stop the
 			* optimization process after 10000 generations
 			*/
-			termination_strategy_ptr terminationStrategy(boost::make_shared< max_gen_termination_strategy >(1000));
+
+
+			termination_strategy_ptr terminationStrategy(boost::make_shared< my_termination_strategy >(100,150));
+
 
 			/**
 			* Instantiate the selection strategy - we'll use the best of
