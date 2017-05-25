@@ -33,9 +33,6 @@
     <ClCompile Include="detectionMethodWithoutBuffer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="PSO.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="shader.h">
@@ -68,10 +65,10 @@
     <ClInclude Include="detectionMethodWithoutBuffer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="PSO.h">
+    <ClInclude Include="DE.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="particle.h">
+    <ClInclude Include="objective_function.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -82,6 +79,7 @@
     <None Include="model.vertex">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="ClassDiagram.cd" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="modelPath.txt">

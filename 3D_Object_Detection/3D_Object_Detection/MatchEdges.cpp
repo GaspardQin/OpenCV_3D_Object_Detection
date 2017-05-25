@@ -80,7 +80,7 @@ double MatchEdges::DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, doub
 		sum += dist[i];
 	}
 	std::cout << "max distance :" << dist[floor(k_u*dist.size()) - 1] << std::endl;
-	return sum;
+	return sum*dist[floor(k_u*dist.size()) - 1];
 }
 void MatchEdges::DT(Mat cam_img_, Mat &cam_DT_) const {
 	bitwise_not(cam_img_, cam_img_);

@@ -9,12 +9,116 @@
 //using namespace dlib;
 
 static double rho_quat = 500;//四元数在最优化时放大的系数，在具体计算时应缩小相同系数
+typedef dlib::matrix<double, 6, 1> column_vector;
+typedef dlib::matrix<double, 1, 6> row_vector;
+class  CostFactorPyramid :public MatchEdges {
+public:
+	//typedef MatchSolver::column_vector column_vector;
+	typedef dlib::matrix<double> general_matrix;
+	Mat cam_img;
+	int level;
 
+	void setLevel(int level_) {
+		level = level_; //进入不同层优化阶段的时候需要调整level
+	}
+	CostFactorPyramid(const Mat &cam_img_input, int level_max_) : MatchEdges(cam_img_input, level_max_) {
+		level = level_max_;
+		
+		cam_img = cam_img_input;
+		cam_src_color = imread("./model/sample.jpg");
+		
+	}
+
+	double operator ()(
+		const column_vector& params
+		) const {
+		return calculateDTfactorPyramid(params);
+	};
+	double calculateDTfactorPyramid(double* params_array) {
+		params_array[3] = params_array[3] / rho_quat;
+		params_array[4] = params_array[4] / rho_quat;
+		params_array[5] = params_array[5] / rho_quat;
+		double dist = DTmatchPyramid(params_array, level, 0.3, 0.8);
+		glm::quat q;
+		q.x = params_array[3];
+		q.y = params_array[4];
+		q.z = params_array[5];
+		q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
+		glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+
+		cout << "params input: x: " << params_array[0] << " y: " << params_array[1] << " z: " << params_array[2] << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
+		cout << "DTpyramid1 score iteral " << dist << endl;
+		cout << "level" << level << endl;
+		//	debugShowMatch(params_array);
+		//	waitKey(10);
+		iteral_count = iteral_count + 1;
+		return dist;
+
+	}
+	double calculateDTfactorPyramid(
+		const column_vector& params
+	)const {
+		double params_array[6];
+		params_array[0] = params(0);
+		params_array[1] = params(1);
+		params_array[2] = params(2);
+		params_array[3] = params(3) / rho_quat;
+		params_array[4] = params(4) / rho_quat;
+		params_array[5] = params(5) / rho_quat;
+		double dist = DTmatchPyramid(params_array, level, 0.3, 0.8);
+
+
+		glm::quat q;
+		q.x = params_array[3];
+		q.y = params_array[4];
+		q.z = params_array[5];
+		q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
+		glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+
+		cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
+		cout << "DTpyramid1 score iteral " << dist << endl;
+		cout << "level" << level << endl;
+		//	debugShowMatch(params_array);
+		//	waitKey(10);
+		iteral_count = iteral_count + 1;
+		return dist;
+	}
+
+
+	Mat cam_src_color;
+	const Mat cam_canny_img;
+	const void drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color)const {
+		int i;
+		for (i = 0; i < points.size(); i++) {
+			circle(img, points[i], 5, color);
+		}
+	}
+	const void debugShowMatch(const double* var)const {
+		// var 是位置、姿态参数，是一个大小为6的数组
+
+		Mat back_ground = cam_src_color.clone();
+
+		Mat model_canny_img_src;
+		getModelImg(var, model_canny_img_src);
+		for (int i = 0; i < back_ground.rows; i++)
+		{
+			for (int j = 0; j < back_ground.cols; j++)
+			{
+				if (model_canny_img_src.at<uchar>(i, j)>0) {
+					back_ground.at<Vec3b>(i, j)[0] = 200; //Blue;
+					back_ground.at<Vec3b>(i, j)[1] = 100; //g;
+					back_ground.at<Vec3b>(i, j)[2] = 0; //r;
+				}
+			}
+		}
+		imshow("debugShowMatchImgs", back_ground);
+	}
+};
 class MatchSolver{
 public:
 
-	typedef dlib::matrix<double, 6, 1> column_vector;
-	typedef dlib::matrix<double, 1, 6> row_vector;
+	
+	
 	column_vector var;
 
 	void setIniVar(double x, double y, double z, double quat_x, double quat_y, double quat_z) {
@@ -29,107 +133,7 @@ public:
 		cam_img = cam_img_input;
 	};
 	
-	class  CostFactorPyramid :public MatchEdges {
-	public:
-		typedef MatchSolver::column_vector column_vector;
-		typedef dlib::matrix<double> general_matrix;
-		Mat cam_img;
-		int level;
-		
-		void setLevel(int level_) {
-			level = level_; //进入不同层优化阶段的时候需要调整level
-		}
-		CostFactorPyramid(const Mat &cam_img_input, int level_max_) : MatchEdges(cam_img_input, level_max_) {
-			level = level_max_;
-			cam_img = cam_img_input;
-			cam_src_color = imread("./model/sample.jpg");
-		}
-
-		double operator ()(
-			const column_vector& params
-			) const {
-			return calculateDTfactorPyramid(params);
-		};
-		double calculateDTfactorPyramid(double* params_array) {
-			params_array[3] = params_array[3] / rho_quat;
-			params_array[4] = params_array[4] / rho_quat;
-			params_array[5] = params_array[5] / rho_quat;
-			double dist = DTmatchPyramid(params_array, level, 0.3, 0.8);
-			glm::quat q;
-			q.x = params_array[3];
-			q.y = params_array[4];
-			q.z = params_array[5];
-			q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
-			glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
-
-			cout << "params input: x: " << params_array[0] << " y: " << params_array[1] << " z: " << params_array[2] << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
-			cout << "DTpyramid1 score iteral " << dist << endl;
-			cout << "level" << level << endl;
-			//	debugShowMatch(params_array);
-			//	waitKey(10);
-			iteral_count = iteral_count + 1;
-			return dist;
-
-		}
-		double calculateDTfactorPyramid(
-			const column_vector& params
-		)const {
-			double params_array[6];
-			params_array[0] = params(0);
-			params_array[1] = params(1);
-			params_array[2] = params(2);
-			params_array[3] = params(3) / rho_quat;
-			params_array[4] = params(4) / rho_quat;
-			params_array[5] = params(5) / rho_quat;
-			double dist = DTmatchPyramid(params_array, level, 0.3, 0.8);
-
-
-			glm::quat q;
-			q.x = params_array[3];
-			q.y = params_array[4];
-			q.z = params_array[5];
-			q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
-			glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
-
-			cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
-			cout << "DTpyramid1 score iteral " << dist << endl;
-			cout << "level" << level << endl;
-			//	debugShowMatch(params_array);
-			//	waitKey(10);
-			iteral_count = iteral_count +1;
-			return dist;
-		}
-
-
-		Mat cam_src_color;
-		const Mat cam_canny_img;
-		const void drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color)const {
-			int i;
-			for (i = 0; i < points.size(); i++) {
-				circle(img, points[i], 5, color);
-			}
-		}
-		const void debugShowMatch(const double* var)const {
-			// var 是位置、姿态参数，是一个大小为6的数组
-			
-			Mat back_ground = cam_src_color.clone();
-
-			Mat model_canny_img_src;
-			getModelImg(var, model_canny_img_src);
-			for (int i = 0; i < back_ground.rows; i++)
-			{
-				for (int j = 0; j < back_ground.cols; j++)
-				{
-					if (model_canny_img_src.at<uchar>(i, j)>0) {
-						back_ground.at<Vec3b>(i, j)[0] = 200; //Blue;
-						back_ground.at<Vec3b>(i, j)[1] = 100; //g;
-						back_ground.at<Vec3b>(i, j)[2] = 0; //r;
-					}
-				}
-			}
-			imshow("debugShowMatchImgs", back_ground);
-		}
-	};
+	
 	
 	
 	void MatchSolver::dynamicBound(column_vector& lower_bound, column_vector& up_bound, column_vector var, double f) {

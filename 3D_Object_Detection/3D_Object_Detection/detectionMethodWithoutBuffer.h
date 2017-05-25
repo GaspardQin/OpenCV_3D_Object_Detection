@@ -1,7 +1,11 @@
 #pragma once
+
+#ifndef  _DETECTION_METHOD_H_
+#define _DETECTION_METHOD_H_
+
 #include "thread_variables.h"
-//#include "MatchSolver.h"
-#include "PSO.h"
+#include "MatchSolver.h"
+#include "DE.h"
 using namespace cv;
 using namespace std;
 class DetectionMethod {
@@ -20,7 +24,8 @@ public:
 	void initialization();
 
 	void DT_solve_with_powell(double* output_best);
-	void DT_solve_with_PSO(double * output_best);
+
+	void DetectionMethod::DT_solve_with_DE(double * output_best);
 	void debugShowContours(int canny_index, std::vector<std::vector<Point>> *cam_contours, int cam_index, std::vector<std::vector<Point>> *model_contours, int model_index);
 	void debugShowMatch(double* var);
 	void drawPoints(Mat &img,std::vector<Point2f> points, const Scalar& color);
@@ -29,3 +34,4 @@ public:
 	
 
 };
+#endif // ! _DETECTION_METHOD_H_
