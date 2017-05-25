@@ -4,6 +4,7 @@ using namespace std;
 using namespace cv;
 
 void MatchEdges::getModelImg(const double* var, Mat& model_canny_img) const {
+	boost::lock_guard<boost::mutex> lock(gl_mutex); //保证每个时刻只有一个线程能与OpenGL通信
 	pos_model_set[0] = var[0];
 	pos_model_set[1] = var[1];
 	pos_model_set[2] = var[2]; //z为负值

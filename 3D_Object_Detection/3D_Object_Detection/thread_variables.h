@@ -39,6 +39,12 @@ extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables
 #include <cmath>
 #include <ctime>
 #include <cstdlib>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
+
+extern boost::mutex gl_mutex;
+
+
 extern GLfloat deltaTime; // 当前帧和上一帧的时间差
 extern GLfloat lastFrame; // 上一帧时间
 extern Camera camera;

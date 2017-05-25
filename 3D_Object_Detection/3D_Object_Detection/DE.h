@@ -7,10 +7,11 @@
 #include "objective_function.h"
 #include "thread_variables.h"
 using namespace de;
-
+#define THREAD_NUM 4
 /**
 * Objective function to optimize is "sumDT" 
 */
+
 class DE_factor:public objective_function
 {
 private:
@@ -94,7 +95,11 @@ public:
 			* takes a de::DVectorPtr as argument and returns a double. It
 			* can be passed as a reference, pointer or shared pointer.
 			*/
-			objective_function_ptr of(boost::make_shared< DE_factor >());
+			objective_function_ptr ofArray[THREAD_NUM];
+			for (int ii = 0; ii < THREAD_NUM; ii++) {
+				ofArray[ii] =boost::make_shared< DE_factor >();
+			}
+			
 
 			/**
 			* Instantiate two null listeners, one for the differential
@@ -108,7 +113,7 @@ public:
 			* parallel processors (4), the objective function and the
 			* listener
 			*/
-			processors< objective_function_ptr >::processors_ptr _processors(boost::make_shared< processors< objective_function_ptr > >(1, of, processor_listener));
+			processors< objective_function_ptr>::processors_ptr _processors(boost::make_shared< processors< objective_function_ptr> >(THREAD_NUM, ofArray, processor_listener));
 
 			/**
 			* Instantiate a simple termination strategy wich will stop the
@@ -151,7 +156,7 @@ public:
 			/**
 			* Print out the result
 			*/
-			std::cout << "minimum value for the " << of->name() << " is " << best->cost() << " for x=" << (*best->vars())[0] << ", y=" << (*best->vars())[1];
+			std::cout << "minimum value for the " << ofArray[0]->name() << " is " << best->cost() << " for x=" << (*best->vars())[0] << ", y=" << (*best->vars())[1];
 		}
 		catch (const std::exception& e)
 		{

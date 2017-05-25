@@ -8,6 +8,7 @@
 HANDLE sentModelEvent;
 HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables.h中声明extern
 //HANDLE readImgEvent;
+boost::mutex gl_mutex;
 int main() {
 	HANDLE h_glThread = INVALID_HANDLE_VALUE;
 	HANDLE h_cvModelThread = INVALID_HANDLE_VALUE;
