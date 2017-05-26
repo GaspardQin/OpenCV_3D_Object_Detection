@@ -75,7 +75,7 @@ void DetectionMethod::debugShowMatch(double* var) {
 	{
 		for (int j = 0; j < back_ground.cols; j++)
 		{
-			if (model_canny_img_src.at<uchar>(i, j)>0) {
+			if (model_canny_img_src.at<float>(i, j)>0) {
 				back_ground.at<Vec3b>(i, j)[0] = 200; //Blue;
 				back_ground.at<Vec3b>(i, j)[1] = 100; //g;
 				back_ground.at<Vec3b>(i, j)[2] = 0; //r;

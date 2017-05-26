@@ -137,13 +137,13 @@ public:
 	
 	
 	void MatchSolver::dynamicBound(column_vector& lower_bound, column_vector& up_bound, column_vector var, double f) {
-		lower_bound = var(0) - 20 * f, var(1) -20 * f, var(2) - 20 * f, std::max(var(3) - 20 * f, -1.0*rho_quat), std::max(var(4) - 20 * f, -1.0*rho_quat), std::max(var(5) - 20 * f, -1.0*rho_quat);
+		lower_bound = var(0) - 10 * f, var(1) -10 * f, var(2) - 10 * f, std::max(var(3) -20 * f, -1.0*rho_quat), std::max(var(4) - 20 * f, -1.0*rho_quat), std::max(var(5) - 20 * f, -1.0*rho_quat);
 
-		up_bound = var(0) + 20 * f, var(1) + 20 * f, var(2) + 20 * f, std::min(var(3) + 20 * f, 1.0*rho_quat), std::min(var(4) + 20 * f, 1.0*rho_quat), std::min(var(5) + 20 * f, 1.0*rho_quat);
+		up_bound = var(0) + 10 * f, var(1) + 10 * f, var(2) + 10 * f, std::min(var(3) + 20 * f, 1.0*rho_quat), std::min(var(4) + 20 * f, 1.0*rho_quat), std::min(var(5) + 20 * f, 1.0*rho_quat);
 
 	}
 	void solve(double* final_result) {
-		int level_max = 4;
+		int level_max = 0;
 		CostFactorPyramid cost_factor_pyramid(cam_img, level_max);
 
 		double epsilon_final; 
@@ -154,27 +154,27 @@ public:
 		var(5) *= rho_quat;
 		double ff = 1.0;
 		double stop_trust_region = 0.01;
-		double init_trust_region = 19;
+		double init_trust_region = 9;
 		column_vector lower_bound, up_bound;
-		for (int i = level_max; i >= 0; i--) {
-			i = 0;
-			cost_factor_pyramid.setLevel(i);
+		//for (int i = level_max; i >= 0; i--) {
+			int i = 0;
+			//cost_factor_pyramid.setLevel(i);
 
 			dynamicBound(lower_bound, up_bound, var, ff);
 			find_min_bobyqa(cost_factor_pyramid,
 				var,
-				18,    // number of interpolation points
+				8,    // number of interpolation points
 				lower_bound,  // lower bound constraint
 				up_bound,   // upper bound constraint
 				init_trust_region,    // initial trust region radius
 				stop_trust_region,  // stopping trust region radius
-				500    // max number of objective function evaluations
+				5000    // max number of objective function evaluations
 			);
 
 			////////如果陷入局部最小点，重新搜索
 			double cost_left = cost_factor_pyramid(var);
 			
-			while (cost_left >= 50/(i+1)) {
+			while (cost_left >= 150/(i+1)) {
 				
 				dynamicBound(lower_bound, up_bound, var, ff);
 				find_min_bobyqa(cost_factor_pyramid,
@@ -192,7 +192,7 @@ public:
 			ff *= 0.5;
 			stop_trust_region *= 0.5;
 			init_trust_region *=  0.5;
-		}
+	//	}
 	
 
 		final_result[0] = var(0);

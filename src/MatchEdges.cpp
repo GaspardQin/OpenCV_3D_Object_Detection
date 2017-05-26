@@ -24,7 +24,7 @@ void MatchEdges::getModelImg(const double* var, Mat& model_canny_img) const {
 	Canny(readSrcImg, model_canny_img, 50, 200);
 	//double a;
 	//a = (1.0 / 255.0);
-	//model_canny_img.convertTo(model_canny_img, CV_32FC1,a);
+	model_canny_img.convertTo(model_canny_img, CV_32FC1);
 }
 
 const void MatchEdges::drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color)const {
@@ -63,14 +63,17 @@ double MatchEdges::DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, doub
 	}
 	*/
 	//用乘法替代搜索，更高效
-	Mat product; uchar temp;
+	Mat product; 
+	//uchar temp;
+	double temp;
 	multiply(cam_DT, model_canny_img, product,1.0/255.0);
 	cv::sort(product, product, CV_SORT_DESCENDING);
 
 	for (int i = 0; i < product.size().height; i++) {
-		//if (product.at<uchar>(i, 0) == 0) break;
+		
 		for (int j = 0; j < product.size().width; j++) {
-			temp = product.at<uchar>(i, j);
+			//temp = product.at<uchar>(i, j);
+			temp = product.at<float>(i, j);
 			if (temp == 0) break;
 			else dist.push_back(temp);
 		}
@@ -85,7 +88,9 @@ double MatchEdges::DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, doub
 }
 void MatchEdges::DT(Mat cam_img_, Mat &cam_DT_) const {
 	bitwise_not(cam_img_, cam_img_);
-	distanceTransform(cam_img_,cam_DT_, CV_DIST_L1, 3, CV_8UC1);
+	//distanceTransform(cam_img_, cam_DT_, CV_DIST_L1, 3, CV_8UC1);
+
+	distanceTransform(cam_img_,cam_DT_, CV_DIST_L2, 3, CV_32FC1);
 }
 
 double MatchEdges::DTmatchPyramid(double* var, int level, double k_l, double k_u) const {

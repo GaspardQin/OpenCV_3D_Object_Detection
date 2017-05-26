@@ -34,6 +34,5 @@ ipch/
 *.VC.*db
 3D_Object_Detection/3D_Object_Detection/includes/*
 3D_Object_Detection/3D_Object_Detection/x64/*
-libraries/*
 x64/*
 *.vspx

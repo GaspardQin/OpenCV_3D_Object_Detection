@@ -7,10 +7,11 @@
 #include "objective_function.h"
 #include "thread_variables.h"
 using namespace de;
-#define THREAD_NUM 8
+#define THREAD_NUM 6
 #define VARS_COUNT 6
-#define POPULATION_SIZE 15
+#define POPULATION_SIZE 20
 #define LEVEL 0
+#define THRESHOLD_FINAL 200
 /**
 * Objective function to optimize is "sumDT" 
 */
@@ -57,6 +58,7 @@ public:
 	}
 	virtual bool event(individual_ptr best, size_t genCount)
 	{
+		std::cout << "genCount : " << genCount << std::endl;
 		return (genCount < maxGen) && (best->cost() > threshold);
 	}
 };
@@ -94,9 +96,9 @@ public:
 			*  type real with x between -10, 10 and y between -100, 100.
 			*/
 			constraints_ptr constraints(boost::make_shared< constraints >(VARS_COUNT, -1.0e6, 1.0e6));
-			(*constraints)[0] = boost::make_shared< real_constraint >(init_var[0] - 10, init_var[0] + 10);
-			(*constraints)[1] = boost::make_shared< real_constraint >(init_var[1] - 10, init_var[1] + 10);
-			(*constraints)[2] = boost::make_shared< real_constraint >(init_var[2] - 10, init_var[2] + 10);
+			(*constraints)[0] = boost::make_shared< real_constraint >(init_var[0] - 50, init_var[0] + 50);
+			(*constraints)[1] = boost::make_shared< real_constraint >(init_var[1] - 50, init_var[1] + 50);
+			(*constraints)[2] = boost::make_shared< real_constraint >(init_var[2] - 50, init_var[2] + 50);
 			(*constraints)[3] = boost::make_shared< real_constraint >(std::max(init_var[3] - 20, -0.5*rho_quat), std::min(init_var[3] + 20, 0.5*rho_quat));
 			(*constraints)[4] = boost::make_shared< real_constraint >(std::max(init_var[4] - 20, -0.5*rho_quat), std::min(init_var[4] + 20, 0.5*rho_quat));
 			(*constraints)[5] = boost::make_shared< real_constraint >(std::max(init_var[5] - 20, -0.5*rho_quat), std::min(init_var[5] + 20, 0.5*rho_quat));
@@ -136,7 +138,7 @@ public:
 			*/
 
 
-			termination_strategy_ptr terminationStrategy(boost::make_shared< my_termination_strategy >(100,500));
+			termination_strategy_ptr terminationStrategy(boost::make_shared< my_termination_strategy >(100, THRESHOLD_FINAL));
 
 
 			/**
@@ -150,7 +152,7 @@ public:
 			* strategy 1 with the weight and crossover factors set to 0.5
 			* and 0.9 respectively
 			*/
-			mutation_strategy_arguments mutation_arguments(0.8, 0.6);
+			mutation_strategy_arguments mutation_arguments(0.8, 0.9);
 			mutation_strategy_ptr mutationStrategy(boost::make_shared< mutation_strategy_3 >(VARS_COUNT, mutation_arguments));
 
 			/**

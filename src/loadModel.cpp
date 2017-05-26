@@ -150,7 +150,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		//read pixels into opencv mat
 
 		glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, readSrcImg.data);
-		cv::flip(readSrcImg, readSrcImg, 0);
+		//cv::flip(readSrcImg, readSrcImg, 0);
 		glfwSwapBuffers(window); // ½»»»»º´æ
 
 
