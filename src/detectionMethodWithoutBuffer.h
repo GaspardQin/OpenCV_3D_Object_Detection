@@ -21,6 +21,8 @@ public:
 	template<typename T> int maxElement(T* src, int size);
 	template<typename T> int minElement(T* src, int size);
 
+	void arrayMatWrite(const string& filename, const Mat* matrices, const int array_size);
+	void arrayMatRead(const string& filename, int array_size, boost::shared_array<Mat> model_DT_mats_output);
 	void initialization();
 
 	void DT_solve_with_powell(double* output_best);
