@@ -21,7 +21,6 @@ Thumbs.db
 *.log
 [Bb]in
 [Dd]ebug*/
-*.lib
 *.sbr
 obj/
 [Rr]elease*/
@@ -34,3 +33,5 @@ ipch/
 *.VC.*db
 3D_Object_Detection/3D_Object_Detection/includes/*
 3D_Object_Detection/3D_Object_Detection/x64/*
+x64/*
+*.vspx
