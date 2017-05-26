@@ -133,7 +133,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 			1, GL_FALSE, glm::value_ptr(view));
 		glm::mat4 model = glm::mat4(1.0);
 		model = glm::translate(model, glm::vec3(pos_model_set[0], pos_model_set[1], pos_model_set[2])); // 再调整位置
-		rotate_model(quat_set, model); //先旋转
+		rotate_model(rotate_degree_set, model); //先旋转
 		M_model = model;
 		//model = glm::scale(model,vec_scale); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
@@ -264,11 +264,11 @@ void add_rotate_degree(GLfloat x_add, GLfloat y_add, GLfloat z_add) {
 	
 }
 void print_model_info() {
-	glm::vec3 debug_angle = glm::degrees(glm::eulerAngles(quat_set));
+//	glm::vec3 debug_angle = glm::degrees(glm::eulerAngles(quat_set));
 
 	std::cout << "model's info : " << std::endl;
 	std::cout << "	pos: x " << pos_model_set[0] << "  y  " << pos_model_set[1] << "  z  " << pos_model_set[2] << std::endl;
-	std::cout << "	rotate: x" << debug_angle[0] << "  y  " << debug_angle[1] << " z  " << debug_angle[2] << std::endl;
+	std::cout << "	rotate: x" << rotate_degree_set[0] << "  y  " << rotate_degree_set[1] << " z  " << rotate_degree_set[2] << std::endl;
 
 
 }

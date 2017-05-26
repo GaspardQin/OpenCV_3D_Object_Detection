@@ -8,7 +8,7 @@
 #include <dlib\optimization.h>
 //using namespace dlib;
 
-static double rho_quat = 500;//四元数在最优化时放大的系数，在具体计算时应缩小相同系数
+static double rho_quat = 50;//四元数在最优化时放大的系数，在具体计算时应缩小相同系数
 typedef dlib::matrix<double, 6, 1> column_vector;
 typedef dlib::matrix<double, 1, 6> row_vector;
 class  CostFactorPyramid :public MatchEdges {
@@ -62,20 +62,20 @@ public:
 		params_array[0] = params(0);
 		params_array[1] = params(1);
 		params_array[2] = params(2);
-		params_array[3] = params(3) / rho_quat;
-		params_array[4] = params(4) / rho_quat;
-		params_array[5] = params(5) / rho_quat;
+		params_array[3] = params(3)/2;// / rho_quat;
+		params_array[4] = params(4)/2;// / rho_quat;
+		params_array[5] = params(5)/2;// / rho_quat;
 		double dist = DTmatchPyramid(params_array, level, 0.3, 0.8);
 
 
-		glm::quat q;
-		q.x = params_array[3];
-		q.y = params_array[4];
-		q.z = params_array[5];
-		q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
-		glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
+		//glm::quat q;
+		//q.x = params_array[3];
+		//q.y = params_array[4];
+		//q.z = params_array[5];
+		//q.w = sqrt(1 - q.x*q.x - q.y*q.y - q.z*q.z);
+		//glm::vec3 euler = glm::degrees(glm::eulerAngles(q));
 
-		cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << euler.x << " y_deg: " << euler.y << " z_deg: " << euler.z << endl;
+		cout << "params input: x: " << params(0) << " y: " << params(1) << " z: " << params(2) << " x_deg: " << params(3)<< " y_deg: " << params(4) << " z_deg: " << params(5) << endl;
 		cout << "DTpyramid1 score iteral " << dist*pow(2, level)*pow(2, level) << endl;
 		cout << "level" << level << endl;
 		//	debugShowMatch(params_array);
@@ -121,13 +121,13 @@ public:
 	
 	column_vector var;
 
-	void setIniVar(double x, double y, double z, double quat_x, double quat_y, double quat_z) {
+	void setIniVar(double x, double y, double z, double rotate_x, double rotate_y, double rotate_z) {
 		var(0) = x;
 		var(1) = y;
 		var(2) = z;
-		var(3) = quat_x;
-		var(4) = quat_y;
-		var(5) = quat_z;
+		var(3) = rotate_x;
+		var(4) = rotate_y;
+		var(5) = rotate_z;
 	};
 	MatchSolver(Mat & cam_img_input){
 		cam_img = cam_img_input;

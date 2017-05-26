@@ -72,17 +72,17 @@ public:
 		init_var[0] = pos_estimated[0];
 		init_var[1] = pos_estimated[1];
 		init_var[2] = pos_estimated[2];
-		init_var[3] = quat_estimated[0]*rho_quat;
-		init_var[4] = quat_estimated[1]*rho_quat;
-		init_var[5] = quat_estimated[2]*rho_quat;
+		init_var[3] = quat_estimated[0];// *rho_quat;
+		init_var[4] = quat_estimated[1];// *rho_quat;
+		init_var[5] = quat_estimated[2];// *rho_quat;
 	}
 	void setInitVar(double x, double y, double z, double quat_x, double quat_y, double quat_z) {
 		init_var[0] = x;
 		init_var[1] = y;
 		init_var[2] = z;
-		init_var[3] = quat_x*rho_quat;
-		init_var[4] = quat_y*rho_quat;
-		init_var[5] = quat_z*rho_quat;
+		init_var[3] = quat_x;// *rho_quat;
+		init_var[4] = quat_y;// *rho_quat;
+		init_var[5] = quat_z;// *rho_quat;
 	};
 
 	void solve() {
@@ -96,12 +96,12 @@ public:
 			*  type real with x between -10, 10 and y between -100, 100.
 			*/
 			constraints_ptr constraints(boost::make_shared< constraints >(VARS_COUNT, -1.0e6, 1.0e6));
-			(*constraints)[0] = boost::make_shared< real_constraint >(init_var[0] - 50, init_var[0] + 50);
-			(*constraints)[1] = boost::make_shared< real_constraint >(init_var[1] - 50, init_var[1] + 50);
-			(*constraints)[2] = boost::make_shared< real_constraint >(init_var[2] - 50, init_var[2] + 50);
-			(*constraints)[3] = boost::make_shared< real_constraint >(std::max(init_var[3] - 20, -0.5*rho_quat), std::min(init_var[3] + 20, 0.5*rho_quat));
-			(*constraints)[4] = boost::make_shared< real_constraint >(std::max(init_var[4] - 20, -0.5*rho_quat), std::min(init_var[4] + 20, 0.5*rho_quat));
-			(*constraints)[5] = boost::make_shared< real_constraint >(std::max(init_var[5] - 20, -0.5*rho_quat), std::min(init_var[5] + 20, 0.5*rho_quat));
+			(*constraints)[0] = boost::make_shared< int_constraint >(init_var[0] - 50, init_var[0] + 50);
+			(*constraints)[1] = boost::make_shared< int_constraint >(init_var[1] - 50, init_var[1] + 50);
+			(*constraints)[2] = boost::make_shared< int_constraint >(init_var[2] - 20, init_var[2] + 20);
+			(*constraints)[3] = boost::make_shared< int_constraint >((init_var[3] - 3)*2, (init_var[3] + 3)*2);
+			(*constraints)[4] = boost::make_shared< int_constraint >((init_var[4] - 3)*2, (init_var[4] + 3)*2);
+			(*constraints)[5] = boost::make_shared< int_constraint >((init_var[5] - 3)*2, (init_var[5] + 3)*2);
 
 
 			/**

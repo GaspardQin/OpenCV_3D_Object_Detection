@@ -9,7 +9,7 @@ void creatSample() {
 	pos_model_set[0] = 5;
 	pos_model_set[1] = 21;
 	pos_model_set[2] = -178;
-	quat_set = glm::quat(glm::vec3(glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[2])));
+	//quat_set = glm::quat(glm::vec3(glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[2])));
 	SetEvent(readModelEvent);
 	WaitForSingleObject(sentModelEvent, INFINITE);
 	imshow("creatSample", readSrcImg);
@@ -25,11 +25,14 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	pos_detector.initialization();//读取sample.jpg作为cam得到的图像
 	
 	//debug 手动输入粗定位位置，调试精定位方法
-	glm::quat quat_est = glm::quat(glm::vec3(glm::radians(-18.0), glm::radians(13.0), glm::radians(5.0)));//YXZ
+//	glm::quat quat_est = glm::quat(glm::vec3(glm::radians(-18.0), glm::radians(13.0), glm::radians(5.0)));//YXZ
 	//glm::vec3 debug_angle = glm::degrees(glm::eulerAngles(quat_est));
-	pos_detector.quat_estimated[0] = quat_est[0];
-	pos_detector.quat_estimated[1] = quat_est[1];
-	pos_detector.quat_estimated[2] = quat_est[2];
+	//pos_detector.quat_estimated[0] = quat_est[0];
+	//pos_detector.quat_estimated[1] = quat_est[1];
+	//pos_detector.quat_estimated[2] = quat_est[2];
+	pos_detector.rotate_estimated[0] = -18;
+	pos_detector.rotate_estimated[1] = 13;
+	pos_detector.rotate_estimated[2] = 5;
 	pos_detector.pos_estimated[0] = 12;
 	pos_detector.pos_estimated[1] = 17;
 	pos_detector.pos_estimated[2] = -176;

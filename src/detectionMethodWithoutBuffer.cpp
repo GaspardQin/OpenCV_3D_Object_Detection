@@ -97,7 +97,7 @@ void DetectionMethod::DT_solve_with_powell(double * output_best) {
 	
 	//需先调用至少一种粗定位函数确保匹配模板和待匹配图像像素位置有重合
 	MatchSolver matchSolver(cam_canny_img);
-	matchSolver.setIniVar(pos_estimated[0], pos_estimated[1], pos_estimated[2], quat_estimated[0], quat_estimated[1], quat_estimated[2]);
+	matchSolver.setIniVar(pos_estimated[0], pos_estimated[1], pos_estimated[2], rotate_estimated[0], rotate_estimated[1], rotate_estimated[2]);
 	matchSolver.solve(output_best);
 		
 	
@@ -118,15 +118,15 @@ void DetectionMethod::DT_solve_with_PSO(double * output_best) {
 }
 */
 void DetectionMethod::DT_solve_with_DE(double * output_best) {
-	DEsolver deSolver(pos_estimated, quat_estimated);
+	DEsolver deSolver(pos_estimated, rotate_estimated);
 	double score_best;
 	deSolver.solve();
 	output_best[0] = (*(deSolver.best)->vars())[0];
 	output_best[1] = (*(deSolver.best)->vars())[1];
 	output_best[2] = (*(deSolver.best)->vars())[2];
-	output_best[3] = (*(deSolver.best)->vars())[3]/rho_quat;
-	output_best[4] = (*(deSolver.best)->vars())[4]/rho_quat;
-	output_best[5] = (*(deSolver.best)->vars())[5]/rho_quat;
+	output_best[3] = (*(deSolver.best)->vars())[3]/2;// /rho_quat;
+	output_best[4] = (*(deSolver.best)->vars())[4]/2;// / rho_quat;
+	output_best[5] = (*(deSolver.best)->vars())[5]/2;// / rho_quat;
 	score_best = deSolver.best->cost();
 	cout << "Best Position is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
 	cout << "Best Rotation is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
