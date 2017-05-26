@@ -48,7 +48,7 @@ template<typename T> int DetectionMethod::minElement(T* src, int size) {
 	return min;
 
 }
-void PosDetection::arrayMatWrite(const string& filename, const Mat* matrices, const int array_size)
+void DetectionMethod::arrayMatWrite(const string& filename, const Mat* matrices, const int array_size)
 {
 	ofstream fs(filename, fstream::binary);
 
@@ -79,7 +79,7 @@ void PosDetection::arrayMatWrite(const string& filename, const Mat* matrices, co
 		}
 	}
 }
-void PosDetection::arrayMatRead(const string& filename, int array_size, boost::shared_array<Mat> model_DT_mats_output)
+void DetectionMethod::arrayMatRead(const string& filename, int array_size, boost::shared_array<Mat> model_DT_mats_output)
 {
 	Mat *p = new Mat[array_size];
 	boost::shared_array<Mat> model_DT_mats(p);
