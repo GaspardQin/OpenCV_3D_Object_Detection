@@ -8,7 +8,7 @@
 #include <dlib\optimization.h>
 //using namespace dlib;
 
-static double rho_quat = 500;//四元数在最优化时放大的系数，在具体计算时应缩小相同系数
+static double rho_quat = 100;//四元数在最优化时放大的系数，在具体计算时应缩小相同系数
 typedef dlib::matrix<double, 6, 1> column_vector;
 typedef dlib::matrix<double, 1, 6> row_vector;
 class  CostFactorPyramid :public MatchEdges {

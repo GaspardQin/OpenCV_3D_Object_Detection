@@ -11,7 +11,7 @@ using namespace de;
 #define VARS_COUNT 6
 #define POPULATION_SIZE 20
 #define LEVEL 0
-#define THRESHOLD_FINAL 200
+#define THRESHOLD_FINAL 250
 /**
 * Objective function to optimize is "sumDT" 
 */
@@ -96,12 +96,12 @@ public:
 			*  type real with x between -10, 10 and y between -100, 100.
 			*/
 			constraints_ptr constraints(boost::make_shared< constraints >(VARS_COUNT, -1.0e6, 1.0e6));
-			(*constraints)[0] = boost::make_shared< real_constraint >(init_var[0] - 50, init_var[0] + 50);
-			(*constraints)[1] = boost::make_shared< real_constraint >(init_var[1] - 50, init_var[1] + 50);
-			(*constraints)[2] = boost::make_shared< real_constraint >(init_var[2] - 50, init_var[2] + 50);
-			(*constraints)[3] = boost::make_shared< real_constraint >(std::max(init_var[3] - 20, -0.5*rho_quat), std::min(init_var[3] + 20, 0.5*rho_quat));
-			(*constraints)[4] = boost::make_shared< real_constraint >(std::max(init_var[4] - 20, -0.5*rho_quat), std::min(init_var[4] + 20, 0.5*rho_quat));
-			(*constraints)[5] = boost::make_shared< real_constraint >(std::max(init_var[5] - 20, -0.5*rho_quat), std::min(init_var[5] + 20, 0.5*rho_quat));
+			(*constraints)[0] = boost::make_shared< int_constraint >(init_var[0] - 50, init_var[0] + 50);
+			(*constraints)[1] = boost::make_shared< int_constraint >(init_var[1] - 50, init_var[1] + 50);
+			(*constraints)[2] = boost::make_shared< int_constraint >(init_var[2] - 10, init_var[2] + 10);
+			(*constraints)[3] = boost::make_shared< int_constraint >(std::max(init_var[3] - 5, -0.5*rho_quat), std::min(init_var[3] + 5, 0.5*rho_quat));
+			(*constraints)[4] = boost::make_shared< int_constraint >(std::max(init_var[4] - 5, -0.5*rho_quat), std::min(init_var[4] + 5, 0.5*rho_quat));
+			(*constraints)[5] = boost::make_shared< int_constraint >(std::max(init_var[5] - 5, -0.5*rho_quat), std::min(init_var[5] + 5, 0.5*rho_quat));
 
 
 			/**
