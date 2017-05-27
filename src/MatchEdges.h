@@ -20,6 +20,11 @@ public:
 			cam_DT_pyramid.push_back(cam_DT);
 		}
 	};
+	MatchEdges(int levelMax_input) {
+		levelMax = levelMax_input;
+
+	};
+	void MatchEdges::getModelImg(const int* var, Mat& model_canny_img) const;
 	void getModelImg(const double *var, Mat& model_canny_img) const;
 	const void debugShowMatch(std::vector<Point2f> model_corners, std::vector<Point2f> cam_corners)const;
 	const void drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color)const;
