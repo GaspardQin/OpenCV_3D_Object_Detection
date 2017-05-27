@@ -30,13 +30,13 @@ void MatchEdges::getModelImg(const double* var, Mat& model_canny_img) const {
 	pos_model_set[0] = var[0];
 	pos_model_set[1] = var[1];
 	pos_model_set[2] = var[2]; //zÎª¸ºÖµ
-	//rotate_degree_set[0] = var[3];
-	//rotate_degree_set[1] = var[4];
-	//rotate_degree_set[2] = var[5];
-	quat_set.x = var[3];
-	quat_set.y = var[4];
-	quat_set.z = var[5];
-	quat_set.w = sqrt(1 - quat_set.x * quat_set.x - quat_set.y * quat_set.y - quat_set.z* quat_set.z);
+	rotate_degree_set[0] = var[3];
+	rotate_degree_set[1] = var[4];
+	rotate_degree_set[2] = var[5];
+	//quat_set.x = var[3];
+	//quat_set.y = var[4];
+	//quat_set.z = var[5];
+	//quat_set.w = sqrt(1 - quat_set.x * quat_set.x - quat_set.y * quat_set.y - quat_set.z* quat_set.z);
 	ResetEvent(sentModelEvent);
 	SetEvent(readModelEvent);
 	

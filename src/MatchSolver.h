@@ -4,13 +4,13 @@
 #define MATCH_SOLVER
 //#include "LM.cpp"
 #include "MatchEdges.h"
-#define GLOG_NO_ABBREVIATED_SEVERITIES
 #include <dlib\optimization.h>
 //using namespace dlib;
 
 static double rho_quat = 50;//四元数在最优化时放大的系数，在具体计算时应缩小相同系数
 typedef dlib::matrix<double, 6, 1> column_vector;
 typedef dlib::matrix<double, 1, 6> row_vector;
+
 class  CostFactorPyramid :public MatchEdges {
 public:
 	//typedef MatchSolver::column_vector column_vector;
@@ -62,9 +62,9 @@ public:
 		params_array[0] = params(0);
 		params_array[1] = params(1);
 		params_array[2] = params(2);
-		params_array[3] = params(3)/2;// / rho_quat;
-		params_array[4] = params(4)/2;// / rho_quat;
-		params_array[5] = params(5)/2;// / rho_quat;
+		params_array[3] = params(3);// / 2;// / rho_quat;
+		params_array[4] = params(4);// / 2;// / rho_quat;
+		params_array[5] = params(5);// / 2;// / rho_quat;
 		double dist = DTmatchPyramid(params_array, level, 0.3, 0.8);
 
 

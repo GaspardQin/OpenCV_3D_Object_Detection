@@ -9,7 +9,7 @@
 using namespace de;
 #define THREAD_NUM 6
 #define VARS_COUNT 6
-#define POPULATION_SIZE 20
+#define POPULATION_SIZE 25
 #define LEVEL 0
 #define THRESHOLD_FINAL 200
 /**
@@ -68,21 +68,21 @@ private:
 	double init_var[6];
 public:
 	individual_ptr best;
-	DEsolver(double * pos_estimated, double * quat_estimated) {
+	DEsolver(double * pos_estimated, double * deg_estimated) {
 		init_var[0] = pos_estimated[0];
 		init_var[1] = pos_estimated[1];
 		init_var[2] = pos_estimated[2];
-		init_var[3] = quat_estimated[0];// *rho_quat;
-		init_var[4] = quat_estimated[1];// *rho_quat;
-		init_var[5] = quat_estimated[2];// *rho_quat;
+		init_var[3] = deg_estimated[0];// *rho_quat;
+		init_var[4] = deg_estimated[1];// *rho_quat;
+		init_var[5] = deg_estimated[2];// *rho_quat;
 	}
-	void setInitVar(double x, double y, double z, double quat_x, double quat_y, double quat_z) {
+	void setInitVar(double x, double y, double z, double deg_x, double deg_y, double deg_z) {
 		init_var[0] = x;
 		init_var[1] = y;
 		init_var[2] = z;
-		init_var[3] = quat_x;// *rho_quat;
-		init_var[4] = quat_y;// *rho_quat;
-		init_var[5] = quat_z;// *rho_quat;
+		init_var[3] = deg_x;// *rho_quat;
+		init_var[4] = deg_y;// *rho_quat;
+		init_var[5] = deg_z;// *rho_quat;
 	};
 
 	void solve() {
@@ -99,9 +99,9 @@ public:
 			(*constraints)[0] = boost::make_shared< int_constraint >(init_var[0] - 50, init_var[0] + 50);
 			(*constraints)[1] = boost::make_shared< int_constraint >(init_var[1] - 50, init_var[1] + 50);
 			(*constraints)[2] = boost::make_shared< int_constraint >(init_var[2] - 20, init_var[2] + 20);
-			(*constraints)[3] = boost::make_shared< int_constraint >((init_var[3] - 3)*2, (init_var[3] + 3)*2);
-			(*constraints)[4] = boost::make_shared< int_constraint >((init_var[4] - 3)*2, (init_var[4] + 3)*2);
-			(*constraints)[5] = boost::make_shared< int_constraint >((init_var[5] - 3)*2, (init_var[5] + 3)*2);
+			(*constraints)[3] = boost::make_shared< int_constraint >(init_var[3] - 3, init_var[3] + 3);
+			(*constraints)[4] = boost::make_shared< int_constraint >(init_var[4] - 3, init_var[4] + 3);
+			(*constraints)[5] = boost::make_shared< int_constraint >(init_var[5] - 3, init_var[5] + 3);
 
 
 			/**
