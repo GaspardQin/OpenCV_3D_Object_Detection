@@ -79,7 +79,7 @@ void DetectionMethod::arrayMatWrite(const string& filename, const Mat* matrices,
 		}
 	}
 }
-void DetectionMethod::arrayMatRead(const string& filename, int array_size, boost::shared_array<Mat> model_DT_mats_output)
+void DetectionMethod::arrayMatRead(const string& filename, int array_size)
 {
 	Mat *p = new Mat[array_size];
 	boost::shared_array<Mat> model_DT_mats(p);
@@ -111,7 +111,171 @@ void DetectionMethod::arrayMatRead(const string& filename, int array_size, boost
 		std::cout << "Error: array_size is not correct! " << std::endl;
 	}
 
-	model_DT_mats_output = model_DT_mats;
+	model_DT_imgs = model_DT_mats;
+}
+void DetectionMethod::setBufferInitValue(int x_init, int y_init, int z_init, int deg_x, int deg_y, int deg_z) {
+	init_buffer_var[0] = x_init;
+	init_buffer_var[1] = y_init;
+	init_buffer_var[2] = z_init;
+	init_buffer_var[3] = deg_x;
+	init_buffer_var[4] = deg_y;
+	init_buffer_var[5] = deg_z;
+}
+void DetectionMethod::setBufferPrecision(int x_precision,int y_precision, int z_precision, int x_deg_precision, int y_deg_precision, int z_deg_precision ) {
+	init_buffer_precision[0] = x_precision;
+	init_buffer_precision[1] = y_precision;
+	init_buffer_precision[2] = z_precision;
+	init_buffer_precision[3] = x_deg_precision;
+	init_buffer_precision[4] = y_deg_precision;
+	init_buffer_precision[5] = z_deg_precision;
+
+}
+
+void DetectionMethod::setBufferBoundary(int delta_x, int delta_y, int delta_z, int delta_x_deg, int delta_y_deg, int delta_z_deg) {
+	//边界与中心值差值，上下边界关于中心值对称
+	init_buffer_delta[0] = delta_x;
+	init_buffer_delta[1] = delta_y;
+	init_buffer_delta[2] = delta_z;
+	init_buffer_delta[3] = delta_x_deg;
+	init_buffer_delta[4] = delta_y_deg;
+	init_buffer_delta[5] = delta_z_deg;
+
+	init_buffer_num[0] = 2 * floor(delta_x / init_buffer_precision[0]) + 1;
+	init_buffer_num[1] = 2 * floor(delta_y / init_buffer_precision[1]) + 1;
+	init_buffer_num[2] = 2 * floor(delta_z / init_buffer_precision[2]) + 1;
+	init_buffer_num[3] = 2 * floor(delta_x_deg / init_buffer_precision[3]) + 1;
+	init_buffer_num[4] = 2 * floor(delta_y_deg / init_buffer_precision[4]) + 1;
+	init_buffer_num[5] = 2 * floor(delta_z_deg / init_buffer_precision[5]) + 1;
+	
+	init_buffer_l_boundary[0] = init_buffer_var[0] - (init_buffer_num[0] - 1) / 2 *init_buffer_precision[0];
+	init_buffer_l_boundary[1] = init_buffer_var[1] - (init_buffer_num[1] - 1) / 2 *init_buffer_precision[1];
+	init_buffer_l_boundary[2] = init_buffer_var[2] - (init_buffer_num[2] - 1) / 2 *init_buffer_precision[2];
+	init_buffer_l_boundary[3] = init_buffer_var[3] - (init_buffer_num[3] - 1) / 2 *init_buffer_precision[3];
+	init_buffer_l_boundary[4] = init_buffer_var[4] - (init_buffer_num[4] - 1) / 2 *init_buffer_precision[4];
+	init_buffer_l_boundary[5] = init_buffer_var[5] - (init_buffer_num[5] - 1) / 2 *init_buffer_precision[5];
+	
+	init_buffer_r_boundary[0] = init_buffer_var[0] + (init_buffer_num[0] - 1) / 2 *init_buffer_precision[0];
+	init_buffer_r_boundary[1] = init_buffer_var[1] + (init_buffer_num[1] - 1) / 2 *init_buffer_precision[1];
+	init_buffer_r_boundary[2] = init_buffer_var[2] + (init_buffer_num[2] - 1) / 2 *init_buffer_precision[2];
+	init_buffer_r_boundary[3] = init_buffer_var[3] + (init_buffer_num[3] - 1) / 2 *init_buffer_precision[3];
+	init_buffer_r_boundary[4] = init_buffer_var[4] + (init_buffer_num[4] - 1) / 2 *init_buffer_precision[4];
+	init_buffer_r_boundary[5] = init_buffer_var[5] + (init_buffer_num[5] - 1) / 2 *init_buffer_precision[5];
+
+	init_buffer_count_for_levels[0] = init_buffer_num[0] * init_buffer_num[1] * init_buffer_num[2] * init_buffer_num[3] * init_buffer_num[4] * init_buffer_num[5];
+	init_buffer_count_for_levels[1] = init_buffer_num[1] * init_buffer_num[2] * init_buffer_num[3] * init_buffer_num[4] * init_buffer_num[5];
+	init_buffer_count_for_levels[2] = init_buffer_num[2] * init_buffer_num[3] * init_buffer_num[4] * init_buffer_num[5];
+	init_buffer_count_for_levels[3] = init_buffer_num[3] * init_buffer_num[4] * init_buffer_num[5];
+	init_buffer_count_for_levels[4] = init_buffer_num[4] * init_buffer_num[5];
+	init_buffer_count_for_levels[5] = init_buffer_num[5];
+
+}
+int DetectionMethod::getIndex(int* var) {
+	return getIndex(var[0], var[1], var[2], var[3], var[4], var[5]);
+}
+int DetectionMethod::getIndex(int x, int y, int z, int deg_x, int deg_y, int deg_z) {
+	//得到array中对应的index
+	int index, x_count, y_count, z_count, deg_x_count, deg_y_count, deg_z_count;
+	if ((x - init_buffer_l_boundary[0]) % init_buffer_precision[0] > 0) {
+		while (1) {
+			std::cout << "Error: wrong Index of x !" << std::endl;
+		}
+	}
+	if ((y - init_buffer_l_boundary[1]) % init_buffer_precision[1] > 0) {
+		while (1) {
+			std::cout << "Error: wrong Index of y !" << std::endl;
+		}
+	}
+	if ((z - init_buffer_l_boundary[2]) % init_buffer_precision[2] > 0) {
+		while (1) {
+			std::cout << "Error: wrong Index of z !" << std::endl;
+		}
+	}
+	if ((deg_x - init_buffer_l_boundary[3]) % init_buffer_precision[3] > 0) {
+		while (1) {
+			std::cout << "Error: wrong Index of deg_x !" << std::endl;
+		}
+	}
+	if ((deg_y - init_buffer_l_boundary[4]) % init_buffer_precision[4] > 0) {
+		while (1) {
+			std::cout << "Error: wrong Index of deg_y !" << std::endl;
+		}
+	}
+	if ((deg_z - init_buffer_l_boundary[5]) % init_buffer_precision[5] > 0) {
+		while (1) {
+			std::cout << "Error: wrong Index of deg_z !" << std::endl;
+		}
+	}
+
+
+	x_count = (x - init_buffer_l_boundary[0]) / init_buffer_precision[0];//从0开始数
+	y_count = (y - init_buffer_l_boundary[1]) / init_buffer_precision[1];
+	z_count = (z - init_buffer_l_boundary[2]) / init_buffer_precision[2];
+	deg_x_count = (deg_x - init_buffer_l_boundary[3]) / init_buffer_precision[3];
+	deg_y_count = (deg_y - init_buffer_l_boundary[4]) / init_buffer_precision[4];
+	deg_z_count = (deg_z - init_buffer_l_boundary[5]) / init_buffer_precision[5];
+
+	/*
+	index = x_count * (init_buffer_num[1] * init_buffer_num[2] * init_buffer_num[3] * init_buffer_num[4] * init_buffer_num[5])
+	                        	+ y_count * (init_buffer_num[2] * init_buffer_num[3] * init_buffer_num[4] * init_buffer_num[5])
+													+ z_count * (init_buffer_num[3] * init_buffer_num[4] * init_buffer_num[5])
+																	+ deg_x_count * (init_buffer_num[4] * init_buffer_num[5])
+																							+ deg_y_count*init_buffer_num[5]
+																										+ deg_z_count;
+    */
+	
+	//避免重复运算乘法
+	index = x_count * init_buffer_count_for_levels[1] + y_count * init_buffer_count_for_levels[2] + z_count * init_buffer_count_for_levels[3]
+		+ deg_x_count *init_buffer_count_for_levels[4] + deg_y_count*init_buffer_count_for_levels[5] + deg_z_count;
+	return index;
+
+}
+void DetectionMethod::creatBuffer() {
+	Mat* array_buffer;
+	array_buffer = new Mat[init_buffer_count_for_levels[0]];
+
+
+	int* debug_array;
+	debug_array = new int[init_buffer_count_for_levels[0]];
+	memset(debug_array, -1, init_buffer_count_for_levels[0]* sizeof(int));
+	
+	
+	MatchEdges creatMatchImgs(0);
+	int var[6];
+	Mat temp_mat;
+	for (var[0] = init_buffer_l_boundary[0]; var[0] <= init_buffer_r_boundary[0]; var[0] += init_buffer_precision[0]) {
+		for (var[1] = init_buffer_l_boundary[1]; var[1] <= init_buffer_r_boundary[1]; var[1] += init_buffer_precision[1]) {
+			for (var[2] = init_buffer_l_boundary[2]; var[2] <= init_buffer_r_boundary[2]; var[2] += init_buffer_precision[2]) {
+				for (var[3] = init_buffer_l_boundary[3]; var[3] <= init_buffer_r_boundary[3]; var[3] += init_buffer_precision[3]) {
+					for (var[4] = init_buffer_l_boundary[4]; var[4] <= init_buffer_r_boundary[4]; var[4] += init_buffer_precision[4]) {
+						for (var[5] = init_buffer_l_boundary[5]; var[5] <= init_buffer_r_boundary[5]; var[5] += init_buffer_precision[5]) {
+							
+							creatMatchImgs.getModelImg(var, temp_mat);
+							//DT变换
+							creatMatchImgs.DT(temp_mat,temp_mat);
+							array_buffer[getIndex(var)] = temp_mat;
+
+						//for debug
+							if (debug_array[getIndex(var)] != -1) {
+								debug_array[getIndex(var)] = 1;
+							}
+							else {
+								while (1) {
+									std::cout << "wrong Index Input" << std::endl;
+								}
+							}
+					    ////
+							
+						}
+					}
+				}
+			}
+		}
+	}
+
+	arrayMatWrite("../model/buffer.bin", array_buffer, init_buffer_count_for_levels[0]);
+}
+void DetectionMethod::readBuffer() {
+	arrayMatRead("../model/buffer.bin", init_buffer_count_for_levels[0]);
 }
 void DetectionMethod::initialization() {
 	cam_src = imread("../model/sample.jpg", CV_8UC1);
