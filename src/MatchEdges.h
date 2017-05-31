@@ -5,6 +5,7 @@ using namespace cv;
 class MatchEdges {
 private:
 	boost::shared_array<Mat> model_DT_imgs;
+	boost::shared_array<std::vector<Point2i>> model_points_vec_array;
 	boost::shared_array<int> init_buffer_l_boundary;
 	boost::shared_array<int> init_buffer_r_boundary;
 	boost::shared_array<int> init_buffer_precision;
@@ -34,9 +35,18 @@ public:
 		init_buffer_r_boundary = init_buffer_r_boundary_;
 		init_buffer_precision = init_buffer_precision_;
 		init_buffer_count_for_levels = init_buffer_count_for_levels_;
-		getCamCannyPoints(cam_img_input, cam_canny_points);
-		cam_img_debug = cam_img_input;
+		getCannyPoints(cam_img_input, cam_canny_points);
+	
 		model_DT_imgs = model_DT_imgs_;
+	};
+	MatchEdges(const Mat &cam_img_input, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_) {
+		//for offline OpenGL Only
+		init_buffer_l_boundary = init_buffer_l_boundary_;
+		init_buffer_r_boundary = init_buffer_r_boundary_;
+		init_buffer_precision = init_buffer_precision_;
+		init_buffer_count_for_levels = init_buffer_count_for_levels_;
+		DT(cam_img_input, cam_DT);
+		model_points_vec_array = model_points_vec_array_;
 	};
 	MatchEdges(boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_) {
 		//for offline OpenGL buffer creating Only
@@ -45,7 +55,7 @@ public:
 		init_buffer_precision = init_buffer_precision_;
 		init_buffer_count_for_levels = init_buffer_count_for_levels_;
 	};
-	void getCamCannyPoints(const Mat & cam_canny_img, vector<Point2i>& points)const;
+	void getCannyPoints(const Mat & cam_canny_img, vector<Point2i>& points)const;
 	void getModelImgUchar(const int* var, Mat& model_canny_img) const;
 	template <typename T> void getModelImg(const T *var, Mat& model_canny_img) const;
 	double DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, double k_u) const;
@@ -122,6 +132,7 @@ public:
 	}
 	void getROI(Mat img_input, Mat& ROI_output, double x, double y, double z)const;
 	void getROIrect(double x, double y, double z, int* output_array) const;
+	template <typename T> double modelCannycamDT_Match(T* var, double k_l, double k_u) const;
 };
 
 template <typename T> void MatchEdges::getModelImg(const T* var, Mat& model_canny_img) const {
@@ -197,4 +208,23 @@ template <typename T> double MatchEdges::modelDTcamCannyMatch(T* var, double k_l
 }
 template <typename T> double MatchEdges::modelDTcamCannyROIMatch(T* var, double k_l, double k_u) const {
 	return modelDTcamCannyROIMatchHelp<T>(model_DT_imgs[getIndex(var)], var, cam_canny_points, k_l, k_u);
+}
+template <typename T> double MatchEdges::modelCannycamDT_Match(T* var, double k_l, double k_u) const {
+	vector<double> dist;
+	int col_temp, row_temp;
+	int debug_ = getIndex(var);
+	int debug = model_points_vec_array[getIndex(var)].size();
+	for (int i = 0; i < model_points_vec_array[getIndex(var)].size(); i++) {
+
+		dist.push_back(cam_DT.at<float>(model_points_vec_array[getIndex(var)][i].x, model_points_vec_array[getIndex(var)][i].y));
+	}
+	sort(dist.begin(), dist.end());
+
+	double sum = 0;
+	for (int i = floor(k_u*dist.size()) - 1; i > floor(k_l*dist.size()); i--) {
+		sum += dist[i];
+	}
+	std::cout << "max distance :" << dist[floor(k_u*dist.size()) - 1] << std::endl;
+	return sum*dist[floor(k_u*dist.size()) - 1];
+
 }

@@ -25,6 +25,7 @@ private:
 	//int init_buffer_num[6];//每个维度有多少个点
 	//int init_buffer_count_for_levels[6]; //参见getIndex()
 	boost::shared_array<Mat> model_DT_imgs;
+	boost::shared_array<vector<Point2i>> model_canny_points;
 public:
 	
 	std::vector<cv::Mat> model_ini_Canny_imgs;//存储预先生成的模型2D边缘图
@@ -46,6 +47,10 @@ public:
 
 	void creatBuffer();
 	void readBuffer();
+	void creatBuffer_ModelPoints();
+	void readBuffer_ModelPoints();
+	void arrayVecOfPointsWrite(const string& filename, const vector<Point2i>* points_vector_array, const int array_size);
+	void arrayVecOfPointsRead(const string& filename, int array_size);
 	void arrayMatWrite(const string& filename, const Mat* matrices, const int array_size);
 	void arrayMatRead(const string& filename, int array_size);
 	void initialization();
@@ -57,6 +62,7 @@ public:
 	void debugShowMatch(double* var);
 	void drawPoints(Mat &img,std::vector<Point2f> points, const Scalar& color);
 	void DT_solve_with_DE_offline(double * output_best);
+	void DT_solve_with_DE_offline_modelCanny_camDT(double * output_best);
 	DetectionMethod() {
 
 		//初始化shared_array

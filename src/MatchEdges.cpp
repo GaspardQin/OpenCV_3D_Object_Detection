@@ -121,10 +121,10 @@ double MatchEdges::DTmatchPyramid(double* var, int level, double k_l, double k_u
 	return DTmatchHelp(cam_DT_pyramid[level], model_canny_img, k_l, k_u);
 }
 
-void MatchEdges::getCamCannyPoints(const Mat & cam_canny_img, vector<Point2i>& points)const {
-	for (int i = 0; i < cam_canny_img.size().height; i++) {
-		for (int j = 0; j < cam_canny_img.size().width; j++) {
-			if (cam_canny_img.at<uchar>(i, j) > 0) points.push_back(Point2i(i, j));
+void MatchEdges::getCannyPoints(const Mat & canny_img, vector<Point2i>& points)const {
+	for (int i = 0; i < canny_img.size().height; i++) {
+		for (int j = 0; j < canny_img.size().width; j++) {
+			if (canny_img.at<uchar>(i, j) > 0) points.push_back(Point2i(i, j));
 
 		}
 	}

@@ -3,11 +3,11 @@ cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3);//the 
 
 void creatSample() {
 	//OpenGL 生成的图上下颠倒，y,x_degree,z_degree应取相反数
-	rotate_degree_set[0] = -17;
-	rotate_degree_set[1] =15.5;
-	rotate_degree_set[2] = 4.5;
-	pos_model_set[0] = 3.5;
-	pos_model_set[1] = 21;
+	rotate_degree_set[0] = -20;
+	rotate_degree_set[1] =16;
+	rotate_degree_set[2] = 4;
+	pos_model_set[0] = 6;
+	pos_model_set[1] = 19;
 	pos_model_set[2] = -699;
 	//quat_set = glm::quat(glm::vec3(glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[2])));
 	SetEvent(readModelEvent);
@@ -33,10 +33,11 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 
 	pos_detector.setBufferInitValue(5, 20, -700, -20, 16, 4);
 	pos_detector.setBufferPrecision(2, 2, 2, 2,2, 2);
-	pos_detector.setBufferBoundary(10,10, 10, 4, 1, 1);
-   // pos_detector.creatBuffer();
+	pos_detector.setBufferBoundary(10,10, 10, 10, 1, 1);
 
-	pos_detector.readBuffer();
+	//pos_detector.creatBuffer_ModelPoints();
+	pos_detector.readBuffer_ModelPoints();
+
 
 
 	//debug 手动输入粗定位位置，调试精定位方法
@@ -58,7 +59,8 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	double output_best[6];
 	//pos_detector.DT_solve_with_powell(output_best);
 	//pos_detector.DT_solve_with_DE(output_best);//轮廓角点高精度定位
-	pos_detector.DT_solve_with_DE_offline(output_best);
+	//pos_detector.DT_solve_with_DE_offline(output_best);
+	pos_detector.DT_solve_with_DE_offline_modelCanny_camDT(output_best);
 	//可视化
 	pos_detector.debugShowMatch(output_best);
 	waitKey();
