@@ -105,7 +105,8 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	//glLineWidth(3);
 	//glPolygonMode(GL_FRONT, GL_LINE);
 	// 开始游戏主循环
-
+	projection = glm::perspective(GLfloat(glm::atan(CCD_WIDTH / 2.0 / FOCAL_DISTANCE)),
+		(GLfloat)(WINDOW_WIDTH / WINDOW_HEIGHT), 10.0f, 1000.0f); // 投影矩阵
 	while (!glfwWindowShouldClose(window))
 	{
 //		WaitForSingleObject(readImgEvent,INFINITE);
@@ -123,9 +124,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		shader.use();
-		
-		projection = glm::perspective(camera.mouse_zoom,
-			(GLfloat)(WINDOW_WIDTH) / WINDOW_HEIGHT, 10.0f, 1000.0f); // 投影矩阵
+
 		view = camera.getViewMatrix(); // 视变换矩阵
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"),
 			1, GL_FALSE, glm::value_ptr(projection));

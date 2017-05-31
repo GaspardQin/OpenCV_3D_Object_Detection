@@ -77,6 +77,8 @@ void DetectionMethod::arrayMatWrite(const string& filename, const Mat* matrices,
 				fs.write(mat.ptr<char>(r), rowsz);
 			}
 		}
+		cout.setf(ios::fixed);
+		std::cout << "Writing ... " << double(i) / double(array_size) *100<<"%"<< endl;
 	}
 }
 void DetectionMethod::arrayMatRead(const string& filename, int array_size)
@@ -110,7 +112,6 @@ void DetectionMethod::arrayMatRead(const string& filename, int array_size)
 	if (count != array_size) {
 		std::cout << "Error: array_size is not correct! " << std::endl;
 	}
-
 	model_DT_imgs = model_DT_mats;
 }
 void DetectionMethod::setBufferInitValue(int x_init, int y_init, int z_init, int deg_x, int deg_y, int deg_z) {
@@ -239,9 +240,11 @@ void DetectionMethod::creatBuffer() {
 	memset(debug_array, -1, init_buffer_count_for_levels[0]* sizeof(int));
 	
 	
-	MatchEdges creatMatchImgs(0);
+	MatchEdges creatMatchImgs(init_buffer_l_boundary, init_buffer_r_boundary,init_buffer_precision,init_buffer_count_for_levels);
 	int var[6];
 	Mat temp_mat;
+	double count = 0;
+	double count_total = init_buffer_count_for_levels[0];
 	for (var[0] = init_buffer_l_boundary[0]; var[0] <= init_buffer_r_boundary[0]; var[0] += init_buffer_precision[0]) {
 		for (var[1] = init_buffer_l_boundary[1]; var[1] <= init_buffer_r_boundary[1]; var[1] += init_buffer_precision[1]) {
 			for (var[2] = init_buffer_l_boundary[2]; var[2] <= init_buffer_r_boundary[2]; var[2] += init_buffer_precision[2]) {
@@ -249,13 +252,17 @@ void DetectionMethod::creatBuffer() {
 					for (var[4] = init_buffer_l_boundary[4]; var[4] <= init_buffer_r_boundary[4]; var[4] += init_buffer_precision[4]) {
 						for (var[5] = init_buffer_l_boundary[5]; var[5] <= init_buffer_r_boundary[5]; var[5] += init_buffer_precision[5]) {
 							
-							creatMatchImgs.getModelImg(var, temp_mat);
+							creatMatchImgs.getModelImgUchar(var, temp_mat);
 							//DT±ä»»
-							creatMatchImgs.DT(temp_mat,temp_mat);
+							creatMatchImgs.DT_L1(temp_mat,temp_mat);
+							creatMatchImgs.getROI(temp_mat, temp_mat, var[0], var[1], var[2]);
 							array_buffer[getIndex(var)] = temp_mat;
-
+							count++;
+							std::cout.setf(ios::fixed);
+							std::cout << "Creating model DT imgs' buffer  " << setprecision(2) << count / count_total * 100 << " % " << std::endl;
+/////////////////////////////////////////////////////////////////
 						//for debug
-							if (debug_array[getIndex(var)] != -1) {
+							if (debug_array[getIndex(var)] == -1) {
 								debug_array[getIndex(var)] = 1;
 							}
 							else {
@@ -263,7 +270,7 @@ void DetectionMethod::creatBuffer() {
 									std::cout << "wrong Index Input" << std::endl;
 								}
 							}
-					    ////
+//////////////////////////////////////////////////////////////////////					  
 							
 						}
 					}
@@ -298,7 +305,7 @@ void DetectionMethod::debugShowMatch(double* var) {
 	MatchEdges matchEdgesForShow(cam_canny_img,0);
 
 	Mat model_canny_img_src;
-	matchEdgesForShow.getModelImg(var, model_canny_img_src);
+	matchEdgesForShow.getModelImg<double>(var, model_canny_img_src);
 	for (int i = 0; i < back_ground.rows; i++)
 	{
 		for (int j = 0; j < back_ground.cols; j++)
@@ -358,5 +365,26 @@ void DetectionMethod::DT_solve_with_DE(double * output_best) {
 	score_best = deSolver.best->cost();
 	cout << "Best Position is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
 	cout << "Best Rotation is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
+	cout << "Final score is : " << score_best << endl;
+}
+void DetectionMethod::DT_solve_with_DE_offline(double * output_best) {
+	DE_Offline_Solver deOfflineSolver( init_buffer_var,  init_buffer_precision,  init_buffer_num, init_buffer_l_boundary, init_buffer_r_boundary, model_DT_imgs, init_buffer_count_for_levels);
+	double score_best;
+	deOfflineSolver.solve();
+	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
+	for (int i = 0; i < VARS_COUNT; i++) {
+		if (init_buffer_num[i] > 1) vars_valide.push_back(i);
+		else vars_non_valide.push_back(i);
+	}
+	for (int i = 0; i < vars_valide.size(); i++) {
+		output_best[vars_valide[i]] = init_buffer_var[vars_valide[i]] + (*(deOfflineSolver.best)->vars())[vars_valide[i]]* init_buffer_precision[vars_valide[i]];
+	}
+	for (int i = 0; i < vars_non_valide.size(); i++) {
+		output_best[vars_non_valide[i]] = init_buffer_var[vars_non_valide[i]];
+	}
+	
+	score_best = deOfflineSolver.best->cost();
+	cout << "Best Position of offlineSolver is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
+	cout << "Best Rotation of offlineSolver is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
 	cout << "Final score is : " << score_best << endl;
 }

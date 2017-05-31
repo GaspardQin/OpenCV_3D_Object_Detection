@@ -10,13 +10,20 @@ using namespace cv;
 using namespace std;
 class DetectionMethod {
 private:
-	int init_buffer_var[6];
-	int init_buffer_precision[6];
-	int init_buffer_delta[6];
-	int init_buffer_l_boundary[6];
-	int init_buffer_r_boundary[6];
-	int init_buffer_num[6];//每个维度有多少个点
-	int init_buffer_count_for_levels[6]; //参见getIndex()
+	//int init_buffer_var[6];
+	boost::shared_array<int> init_buffer_var;
+	boost::shared_array<int> init_buffer_delta;
+	boost::shared_array<int> init_buffer_l_boundary;
+	boost::shared_array<int> init_buffer_r_boundary;
+	boost::shared_array<int> init_buffer_precision;
+	boost::shared_array<int> init_buffer_num;
+	boost::shared_array<int> init_buffer_count_for_levels;
+	//int init_buffer_precision[6];
+	//int init_buffer_delta[6];
+	//int init_buffer_l_boundary[6];
+	//int init_buffer_r_boundary[6];
+	//int init_buffer_num[6];//每个维度有多少个点
+	//int init_buffer_count_for_levels[6]; //参见getIndex()
 	boost::shared_array<Mat> model_DT_imgs;
 public:
 	
@@ -49,8 +56,32 @@ public:
 	void debugShowContours(int canny_index, std::vector<std::vector<Point>> *cam_contours, int cam_index, std::vector<std::vector<Point>> *model_contours, int model_index);
 	void debugShowMatch(double* var);
 	void drawPoints(Mat &img,std::vector<Point2f> points, const Scalar& color);
+	void DT_solve_with_DE_offline(double * output_best);
+	DetectionMethod() {
 
-	DetectionMethod() {};
+		//初始化shared_array
+		int *init_buffer_var_ = new int[6];
+		int *init_buffer_delta_ = new int[6];
+		int *init_buffer_l_boundary_ = new int[6];
+		int *init_buffer_r_boundary_ = new int[6];
+		int *init_buffer_precision_ = new int[6];
+		int *init_buffer_num_ = new int[6];
+		int *init_buffer_count_for_levels_ = new int[6];
+		boost::shared_array<int> _init_buffer_var(init_buffer_var_);
+		boost::shared_array<int> _init_buffer_delta(init_buffer_delta_);
+		boost::shared_array<int> _init_buffer_l_boundary(init_buffer_l_boundary_);
+		boost::shared_array<int> _init_buffer_r_boundary(init_buffer_r_boundary_);
+		boost::shared_array<int> _init_buffer_precision(init_buffer_precision_);
+		boost::shared_array<int> _init_buffer_num(init_buffer_num_);
+		boost::shared_array<int> _init_buffer_count_for_levels(init_buffer_count_for_levels_);
+		init_buffer_var = _init_buffer_var;
+		init_buffer_delta = _init_buffer_delta;
+		init_buffer_l_boundary = _init_buffer_l_boundary;
+		init_buffer_r_boundary = _init_buffer_r_boundary;
+		init_buffer_precision = _init_buffer_precision;
+		init_buffer_num = _init_buffer_num;
+		init_buffer_count_for_levels = _init_buffer_count_for_levels;
+	};
 	
 
 };

@@ -41,6 +41,15 @@ extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables
 #include <cstdlib>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/shared_array.hpp>
+
+#define WINDOW_WIDTH 800.0
+#define WINDOW_HEIGHT 600.0 //pixel
+#define ROI_WIDTH 400.0
+#define ROI_HEIGHT 400.0  //pixel
+#define FOCAL_DISTANCE 16.0 //mm
+#define CCD_WIDTH 13.0 //mm
+
 
 extern boost::mutex gl_mutex;
 
@@ -50,7 +59,7 @@ extern GLfloat lastFrame; // 上一帧时间
 extern Camera camera;
 extern float rotate_degree_set[3];
 extern glm::quat quat_set;
-const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 600;
+
 extern cv::Mat readSrcImg;
 extern GLfloat camera_z;
 extern GLfloat pos_model_set[3];
