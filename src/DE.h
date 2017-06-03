@@ -9,9 +9,9 @@
 using namespace de;
 #define THREAD_NUM 1
 #define VARS_COUNT 6
-#define POPULATION_SIZE 25
+#define POPULATION_SIZE 30
 #define LEVEL 0
-#define THRESHOLD_FINAL 5000
+#define THRESHOLD_FINAL 100
 /**
 * Objective function to optimize is "sumDT" 
 */

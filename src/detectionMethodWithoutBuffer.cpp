@@ -52,17 +52,20 @@ void DetectionMethod::arrayVecOfPointsWrite(const string& filename, const vector
 {
 	ofstream fs(filename, fstream::binary);
 	const size_t point2i_size =  sizeof(Point2i);
-	
+	vector<int> vectors_size;
+	vectors_size.reserve(array_size);
+	for (size_t i = 0; i < array_size; ++i) {
+		vectors_size.push_back(points_vector_array[i].size());
+	}
+	fs.write((char*)&vectors_size[0], sizeof(int)*array_size);
+
 	for (size_t i = 0; i < array_size; ++i)
 	{
-		const vector<Point2i>& points_vector = points_vector_array[i];
-		//(char*)&student[0], student.size() * sizeof(Student)
-		// Data
-		int vector_size = points_vector.size();
-		fs.write((char*)&vector_size, sizeof(int));
-		for (size_t j = 0; j < vector_size; j++) {
-			fs.write((char*)&points_vector[j], point2i_size);
-		}
+		//const vector<Point2i>& points_vector = points_vector_array[i];
+
+		//for (size_t j = 0; j < vector_size; j++) {
+			fs.write((char*)&points_vector_array[i][0], points_vector_array[i].size()*point2i_size);
+	//	}
 		cout.setf(ios::fixed);
 		std::cout << "Writing ... " << double(i) / double(array_size) * 100 << "%" << endl;
 	}
@@ -81,27 +84,31 @@ void DetectionMethod::arrayVecOfPointsRead(const string& filename, int array_siz
 	const size_t point2i_size = sizeof(Point2i);
 	// Get length of file
 	fs.seekg(0, fs.end);
-	int length = fs.tellg();
+	//int length = fs.tellg();//tellg()应对2G以上文件时会出现bug
+	__int64 length = *(__int64*)(((char*)&(fs.tellg())) + 8);
 	fs.seekg(0, fs.beg);
 
 	int count = 0;
-	while (fs.tellg() < length)
+	vector<int> vectors_size(array_size);
+
+	fs.read(reinterpret_cast<char*>(&vectors_size[0]), array_size*sizeof(vectors_size[0]));
+	__int64 debug0 = *(__int64*)(((char*)&(fs.tellg())) + 8);
+	while (*(__int64*)(((char*)&(fs.tellg())) + 8) < length)
 	{
-		int vector_size;
-		fs.read((char*)&vector_size, sizeof(int));
 		// Data
-		Point2i point_temp;
-		for (int j = 0; j < vector_size; j++) {
-			fs.read((char*)&point_temp, point2i_size);
-			model_canny_points_[count].push_back(point_temp);
-		}
+		vector<Point2i> vec_point_temp(vectors_size[count]);
+		fs.read((char*)&vec_point_temp[0], point2i_size*vectors_size[count]);
+		model_canny_points_[count] = vec_point_temp;
+		vec_point_temp.~vector();
 		count++;
 		cout.setf(ios::fixed);
 		std::cout << "Reading... " << double(count)/ double(array_size)*100<<" %" << endl;
+		__int64 debug1 = *(__int64*)(((char*)&(fs.tellg())) + 8);
 	}
 	if (count != array_size) {
 		std::cout << "Error: array_size is not correct! " << std::endl;
 	}
+	
 	model_canny_points = model_canny_points_;
 }
 void DetectionMethod::arrayMatWrite(const string& filename, const Mat* matrices, const int array_size)
@@ -343,7 +350,7 @@ void DetectionMethod::creatBuffer() {
 	arrayMatWrite("../model/buffer.bin", array_buffer, init_buffer_count_for_levels[0]);
 }
 void DetectionMethod::creatBuffer_ModelPoints() {
-	vector<Point2i>* points_array_buffer;
+	vector<Point2i> *points_array_buffer;
 	points_array_buffer = new vector<Point2i>[init_buffer_count_for_levels[0]];
 
 
@@ -365,8 +372,7 @@ void DetectionMethod::creatBuffer_ModelPoints() {
 						for (var[5] = init_buffer_l_boundary[5]; var[5] <= init_buffer_r_boundary[5]; var[5] += init_buffer_precision[5]) {
 
 							creatMatchImgs.getModelImgUchar(var, temp_mat);
-							//DT变换
-							creatMatchImgs.getCannyPoints(temp_mat, points_array_buffer[getIndex(var)]);
+							cv::findNonZero(temp_mat, points_array_buffer[getIndex(var)]);
 							count++;
 							std::cout.setf(ios::fixed);
 							std::cout << "Creating model DT imgs' buffer  " << setprecision(2) << count / count_total * 100 << " % " << std::endl;

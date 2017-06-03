@@ -11,9 +11,12 @@ private:
 	boost::shared_array<int> init_buffer_precision;
 	boost::shared_array<int> init_buffer_count_for_levels;
 	vector<Point2i> cam_canny_points;
+	Mat cam_DT;
+	float* row_camDT_ptrs[int(WINDOW_HEIGHT)]; //cam_DT矩阵每一行第一个值的地址（为了取代at函数，做到对元素的快速访问）
+	
 public:
 	Mat cam_img_debug;
-	Mat cam_img, cam_img_pyramid_1, cam_img_pyramid_2, cam_DT, cam_DT_pyramid_1, cam_DT_pyramid_2;
+	Mat cam_img, cam_img_pyramid_1, cam_img_pyramid_2, cam_DT_pyramid_1, cam_DT_pyramid_2;
 	std::vector<Mat> cam_DT_pyramid;
 	int levelMax;
 
@@ -35,7 +38,7 @@ public:
 		init_buffer_r_boundary = init_buffer_r_boundary_;
 		init_buffer_precision = init_buffer_precision_;
 		init_buffer_count_for_levels = init_buffer_count_for_levels_;
-		getCannyPoints(cam_img_input, cam_canny_points);
+		cv::findNonZero(cam_img_input, cam_canny_points);
 	
 		model_DT_imgs = model_DT_imgs_;
 	};
@@ -47,6 +50,10 @@ public:
 		init_buffer_count_for_levels = init_buffer_count_for_levels_;
 		DT(cam_img_input, cam_DT);
 		model_points_vec_array = model_points_vec_array_;
+		for (int i = 0; i < cam_DT.rows; i++) {
+			row_camDT_ptrs[i] = cam_DT.ptr<float>(i);
+		}
+
 	};
 	MatchEdges(boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_) {
 		//for offline OpenGL buffer creating Only
@@ -55,7 +62,7 @@ public:
 		init_buffer_precision = init_buffer_precision_;
 		init_buffer_count_for_levels = init_buffer_count_for_levels_;
 	};
-	void getCannyPoints(const Mat & cam_canny_img, vector<Point2i>& points)const;
+	//void getCannyPoints(const Mat & cam_canny_img, vector<Point2i>& points)const;
 	void getModelImgUchar(const int* var, Mat& model_canny_img) const;
 	template <typename T> void getModelImg(const T *var, Mat& model_canny_img) const;
 	double DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, double k_u) const;
@@ -211,20 +218,22 @@ template <typename T> double MatchEdges::modelDTcamCannyROIMatch(T* var, double 
 }
 template <typename T> double MatchEdges::modelCannycamDT_Match(T* var, double k_l, double k_u) const {
 	vector<double> dist;
-	int col_temp, row_temp;
-	int debug_ = getIndex(var);
-	int debug = model_points_vec_array[getIndex(var)].size();
-	for (int i = 0; i < model_points_vec_array[getIndex(var)].size(); i++) {
-
-		dist.push_back(cam_DT.at<float>(model_points_vec_array[getIndex(var)][i].x, model_points_vec_array[getIndex(var)][i].y));
+	double temp;
+	vector<Point2i> *  point_vec = &model_points_vec_array[getIndex(var)];
+	for (std::vector<Point2i>::iterator iter = point_vec->begin(); iter < point_vec->end(); iter++) {
+		temp = row_camDT_ptrs[iter->y][iter->x];//findNonZero得到的Point x,y与Mat中的坐标相反
+		if(temp > 0) dist.push_back(temp);
 	}
 	sort(dist.begin(), dist.end());
 
 	double sum = 0;
-	for (int i = floor(k_u*dist.size()) - 1; i > floor(k_l*dist.size()); i--) {
-		sum += dist[i];
+	if (dist.size() == 0) dist.push_back(0);
+	else {
+		for (int i = floor(k_u*dist.size()) - 1; i > floor(k_l*dist.size()); i--) {
+			sum += dist[i];
+		}
 	}
 	std::cout << "max distance :" << dist[floor(k_u*dist.size()) - 1] << std::endl;
-	return sum*dist[floor(k_u*dist.size()) - 1];
+	return sum;// *dist[floor(k_u*dist.size()) - 1];
 
 }

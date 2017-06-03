@@ -43,8 +43,8 @@ extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables
 #include <boost/thread/thread.hpp>
 #include <boost/shared_array.hpp>
 
-#define WINDOW_WIDTH 800.0
-#define WINDOW_HEIGHT 600.0 //pixel
+#define WINDOW_WIDTH 1920.0
+#define WINDOW_HEIGHT 1080.0 //pixel
 #define ROI_WIDTH 400.0
 #define ROI_HEIGHT 400.0  //pixel
 #define FOCAL_DISTANCE 16.0 //mm

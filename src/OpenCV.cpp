@@ -6,9 +6,9 @@ void creatSample() {
 	rotate_degree_set[0] = -20;
 	rotate_degree_set[1] =16;
 	rotate_degree_set[2] = 4;
-	pos_model_set[0] = 6;
-	pos_model_set[1] = 19;
-	pos_model_set[2] = -699;
+	pos_model_set[0] = 5;
+	pos_model_set[1] = 20;
+	pos_model_set[2] = -700;
 	//quat_set = glm::quat(glm::vec3(glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[2])));
 	SetEvent(readModelEvent);
 	WaitForSingleObject(sentModelEvent, INFINITE);
@@ -16,6 +16,7 @@ void creatSample() {
 	//cv::flip(readSrcImg, readSrcImg, 0);
 	waitKey();
 	imwrite("../model/sample.jpg", readSrcImg);
+	imwrite("../model/sample.bmp", readSrcImg);
 	SetEvent(readModelEvent);
 }
 
@@ -32,10 +33,10 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	//pos_detector.creatBuffer();
 
 	pos_detector.setBufferInitValue(5, 20, -700, -20, 16, 4);
-	pos_detector.setBufferPrecision(2, 2, 2, 2,2, 2);
-	pos_detector.setBufferBoundary(10,10, 10, 10, 1, 1);
+	pos_detector.setBufferPrecision(5, 5, 4, 4,2, 2);
+	pos_detector.setBufferBoundary(10,10, 4, 2, 1, 1);
 
-	//pos_detector.creatBuffer_ModelPoints();
+	pos_detector.creatBuffer_ModelPoints();
 	pos_detector.readBuffer_ModelPoints();
 
 
