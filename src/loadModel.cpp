@@ -31,8 +31,9 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 	// 创建窗口
-	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT,
+	GLFWwindow* window = glfwCreateWindow(1, 1,
 		"Loading model with AssImp", NULL, NULL);
+	glfwHideWindow(window);
 	if (!window)
 	{
 		std::cout << "Error::GLFW could not create winddow!" << std::endl;
@@ -64,9 +65,40 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		return 0;
 	}
 
+
+
+	//Somewhere at initialization
+	GLuint fbo, fbo_render; //fbo, 
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	//std::cout << glGetError() << std::endl;
+	
+	glGenRenderbuffers(1, &fbo_render);
+	//std::cout << glGetError() << std::endl;
+	glBindRenderbuffer(GL_RENDERBUFFER, fbo_render);
+	//std::cout << glGetError() << std::endl;
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, WINDOW_WIDTH, WINDOW_HEIGHT);
+	//std::cout << glGetError() << std::endl;
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fbo_render);
+	//std::cout << glGetError() << std::endl;
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	//std::cout << glGetError() << std::endl;
+	GLuint fbo_depth;
+	glGenRenderbuffers(1, &fbo_depth);
+	glBindRenderbuffer(GL_RENDERBUFFER, fbo_depth);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, fbo_depth);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	//Before drawing
+	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+	//std::cout << glGetError() << std::endl;
+
+
+
+
 	// 设置视口参数
 	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-	
+	//std::cout << glGetError() << std::endl;
 	//Section1 加载模型数据 为了方便更换模型 我们从文件读取模型文件路径
 	Model objModel;
 	std::ifstream modelPath("../src/modelPath.txt");
@@ -97,62 +129,75 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
-	//glEnable(GL_LINE_SMOOTH);
+
 	
 	glEnable(GL_CULL_FACE);
-	//glStencilFunc(GL_NOTEQUAL, 1, -1);
-	//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-	//glLineWidth(3);
-	//glPolygonMode(GL_FRONT, GL_LINE);
-	// 开始游戏主循环
+	
 	projection = glm::perspective(GLfloat(glm::atan(CCD_WIDTH / 2.0 / FOCAL_DISTANCE)),
 		(GLfloat)(WINDOW_WIDTH / WINDOW_HEIGHT), 10.0f, 1000.0f); // 投影矩阵
+	view = camera.getViewMatrix(); // 视变换矩阵
+
+	//******************* 
+	//从OpenGL读取图片的时候会上下颠倒，因此在渲染的时候即颠倒图片可避免使用cv::flip()函数，该函数开销过大
+	projection = glm::scale(projection, glm::vec3(1.0, -1.0, 1.0));//投影矩阵上下颠倒
+	glFrontFace(GL_CW); //投影矩阵上下颠倒后，需要改正前后两面的判断方法
+	//*******************
+	
+	
+	glm::mat4 model;
 	while (!glfwWindowShouldClose(window))
 	{
 //		WaitForSingleObject(readImgEvent,INFINITE);
+
 		WaitForSingleObject(readModelEvent, INFINITE);
 
-		GLfloat currentFrame = (GLfloat)glfwGetTime();
-		deltaTime = currentFrame - lastFrame;
+		//GLfloat currentFrame = (GLfloat)glfwGetTime();
+	//	deltaTime = currentFrame - lastFrame;
 		//if (deltaTime < 1/20) continue;
-		lastFrame = currentFrame;
-		glfwPollEvents(); // 处理例如鼠标 键盘等事件
+	//	lastFrame = currentFrame;
+		//glfwPollEvents(); // 处理例如鼠标 键盘等事件
 		//do_movement(); // 根据用户操作情况 更新相机属性
 		print_model_info();//print the model info;
 		// 清除颜色缓冲区 重置为指定颜色
 		glClearColor(0.f, 0.0f, 0.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+		//std::cout << glGetError() << std::endl;
 		shader.use();
 
-		view = camera.getViewMatrix(); // 视变换矩阵
+
+		model = glm::mat4(1.0);
+		model = glm::translate(model, glm::vec3(pos_model_set[0], pos_model_set[1], pos_model_set[2])); // 再调整位置
+		rotate_model(rotate_degree_set, model); //先旋转
+	//	M_model = model;
+		//model = glm::scale(model,vec_scale); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"),
 			1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"),
 			1, GL_FALSE, glm::value_ptr(view));
-		glm::mat4 model = glm::mat4(1.0);
-		model = glm::translate(model, glm::vec3(pos_model_set[0], pos_model_set[1], pos_model_set[2])); // 再调整位置
-		rotate_model(rotate_degree_set, model); //先旋转
-		M_model = model;
-		//model = glm::scale(model,vec_scale); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
 			1, GL_FALSE, glm::value_ptr(model));
 		// 这里填写场景绘制代码
+		//std::cout << glGetError() << std::endl;
+		objModel.offscreenDraw(shader, fbo); // 绘制物体
 		
-		objModel.draw(shader); // 绘制物体
-		
-		glBindVertexArray(0);
+		//glBindVertexArray(0);
 		
 		glUseProgram(0);
 		//display_axis();
 
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		//read pixels into opencv mat
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		
+		glReadBuffer(GL_COLOR_ATTACHMENT0);
+		glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
+		//使用共享内存的intel 核心显卡 可以显著降低此步骤消耗
+		//主要消耗用于在显存与内存中的传输数据，受限于PCIE的速度
 
-		glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, readSrcImg.data);
-		//cv::flip(readSrcImg, readSrcImg, 0);
-		glfwSwapBuffers(window); // 交换缓存
-
-
+		//cv::flip(readSrcImg, readSrcImg, 0); //时间消耗过高，采用更改projection 矩阵代替
+		//glfwSwapBuffers(window); // 交换缓存
+		std::cout << glGetError() << std::endl;
+		
 
 
 		ResetEvent(readModelEvent);
@@ -161,6 +206,11 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		
 	}
 	// 释放资源
+	
+	//glDeleteFramebuffers(1, &fbo);
+	glDeleteRenderbuffers(1, &fbo);
+
+
 	glfwTerminate();
 	return 0;
 }

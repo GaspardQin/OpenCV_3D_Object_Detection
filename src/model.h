@@ -14,6 +14,13 @@
 class Model
 {
 public:
+	void offscreenDraw(const Shader& shader,const GLint fbo) const
+	{
+		for (std::vector<Mesh>::const_iterator it = this->meshes.begin(); this->meshes.end() != it; ++it)
+		{
+			it->offscreenDraw(shader, fbo);
+		}
+	}
 	void draw(const Shader& shader) const
 	{
 		for (std::vector<Mesh>::const_iterator it = this->meshes.begin(); this->meshes.end() != it; ++it)

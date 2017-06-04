@@ -1,5 +1,5 @@
 #include "openCV.h"
-cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3);//the raw img got from the screenshot of OpenGL;
+cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3); //CV_8UC3);//the raw img got from the screenshot of OpenGL;
 
 void creatSample() {
 	//OpenGL 生成的图上下颠倒，y,x_degree,z_degree应取相反数
