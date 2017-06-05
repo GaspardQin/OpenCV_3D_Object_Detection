@@ -44,6 +44,7 @@ public:
 	};
 	MatchEdges(const Mat &cam_img_input, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_) {
 		//for offline OpenGL Only
+		cam_img = cam_img_input;
 		init_buffer_l_boundary = init_buffer_l_boundary_;
 		init_buffer_r_boundary = init_buffer_r_boundary_;
 		init_buffer_precision = init_buffer_precision_;
@@ -159,10 +160,11 @@ template <typename T> void MatchEdges::getModelImg(const T* var, Mat& model_cann
 
 	WaitForSingleObject(sentModelEvent, INFINITE);
 	//cv::flip(readSrcImg, readSrcImg, 0);
-	Mat model_canny_img_pre;
-	Canny(readSrcImg, model_canny_img, 50, 200);
+	//Mat model_canny_img_pre;
+	//Canny(readSrcImg, model_canny_img, 50, 200);
 	//double a;
 	//a = (1.0 / 255.0);
+	cvtColor(readSrcImg, model_canny_img, CV_RGB2GRAY);
 	model_canny_img.convertTo(model_canny_img, CV_32FC1);
 };
 template <typename T> double MatchEdges::modelDTcamCannyROIMatchHelp(Mat model_DT, T* var, vector<Point2i> cam_canny_points, double k_l, double k_u) const {
@@ -219,7 +221,24 @@ template <typename T> double MatchEdges::modelDTcamCannyROIMatch(T* var, double 
 template <typename T> double MatchEdges::modelCannycamDT_Match(T* var, double k_l, double k_u) const {
 	vector<double> dist;
 	double temp;
+	int debug = getIndex(var);
 	vector<Point2i> *  point_vec = &model_points_vec_array[getIndex(var)];
+
+	Mat back_ground = cam_img.clone();
+	for (std::vector<Point2i>::iterator i = point_vec->begin(); i < point_vec->end(); i++)
+	{
+
+		back_ground.at<uchar>(i->y, i->x) = 150; //Blue;
+
+
+	}
+
+	imshow("debugShowMatchImgs", back_ground);
+	waitKey(10);
+
+
+
+
 	for (std::vector<Point2i>::iterator iter = point_vec->begin(); iter < point_vec->end(); iter++) {
 		temp = row_camDT_ptrs[iter->y][iter->x];//findNonZero得到的Point x,y与Mat中的坐标相反
 		if(temp > 0) dist.push_back(temp);
@@ -229,11 +248,11 @@ template <typename T> double MatchEdges::modelCannycamDT_Match(T* var, double k_
 	double sum = 0;
 	if (dist.size() == 0) dist.push_back(0);
 	else {
-		for (int i = floor(k_u*dist.size()) - 1; i > floor(k_l*dist.size()); i--) {
+		for (int i = floor(k_u*dist.size()) ; i > floor(k_l*dist.size()); i--) {
 			sum += dist[i];
 		}
 	}
-	std::cout << "max distance :" << dist[floor(k_u*dist.size()) - 1] << std::endl;
+	std::cout << "max distance :" << dist[floor(k_u*dist.size())] << std::endl;
 	return sum;// *dist[floor(k_u*dist.size()) - 1];
 
 }

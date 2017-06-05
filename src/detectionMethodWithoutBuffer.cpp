@@ -111,6 +111,7 @@ void DetectionMethod::arrayVecOfPointsRead(const string& filename, int array_siz
 	
 	model_canny_points = model_canny_points_;
 }
+
 void DetectionMethod::arrayMatWrite(const string& filename, const Mat* matrices, const int array_size)
 {
 	ofstream fs(filename, fstream::binary);
@@ -350,8 +351,8 @@ void DetectionMethod::creatBuffer() {
 	arrayMatWrite("../model/buffer.bin", array_buffer, init_buffer_count_for_levels[0]);
 }
 void DetectionMethod::creatBuffer_ModelPoints() {
-	vector<Point2i> *points_array_buffer;
-	points_array_buffer = new vector<Point2i>[init_buffer_count_for_levels[0]];
+	vector<Point2i>* points_array_buffer = new vector<Point2i>[init_buffer_count_for_levels[0]];
+
 
 
 	int* debug_array;
@@ -436,9 +437,23 @@ void DetectionMethod::debugShowMatch(double* var) {
 			}
 		}
 	}
+	imshow("debugShowMatchImgs_FINAL", back_ground);
+}
+void DetectionMethod::debugShowMatch_offline_points(int* var) {
+	// var 是位置、姿态参数，是一个大小为6的数组
+	Mat back_ground = cam_src_color.clone();
+	std::vector<Point2i> * points_vec = &model_canny_points[getIndex(var)];
+	for (std::vector<Point2i>::iterator i = points_vec->begin(); i < points_vec->end(); i++)
+	{
+			
+				back_ground.at<Vec3b>(i->y, i->x)[0] = 200; //Blue;
+				back_ground.at<Vec3b>(i->y, i->x)[1] = 100; //g;
+				back_ground.at<Vec3b>(i->y, i->x)[2] = 0; //r;
+
+	}
+	
 	imshow("debugShowMatchImgs", back_ground);
 }
-
 void DetectionMethod::drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color) {
 	int i;
 	for (i = 0; i < points.size(); i++) {

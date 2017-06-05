@@ -112,6 +112,7 @@
     <None Include="..\src\model.geometry" />
     <None Include="..\src\model.vertex" />
     <None Include="..\src\model_object.frag" />
+    <None Include="..\src\model_object.geometry" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

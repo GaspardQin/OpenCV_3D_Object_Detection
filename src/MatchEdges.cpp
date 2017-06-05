@@ -44,9 +44,10 @@ void MatchEdges::getModelImgUchar(const int* var, Mat& model_canny_img) const {
 	SetEvent(readModelEvent);
 
 	WaitForSingleObject(sentModelEvent, INFINITE);
+	cvtColor(readSrcImg, model_canny_img, CV_RGB2GRAY);
 	//cv::flip(readSrcImg, readSrcImg, 0);
-	Mat model_canny_img_pre;
-	Canny(readSrcImg, model_canny_img, 50, 200);
+	//Mat model_canny_img_pre;
+	//Canny(readSrcImg, model_canny_img, 50, 200);
 }
 
 

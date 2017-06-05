@@ -11,7 +11,7 @@ using namespace de;
 #define VARS_COUNT 6
 #define POPULATION_SIZE 30
 #define LEVEL 0
-#define THRESHOLD_FINAL 100
+#define THRESHOLD_FINAL 2000
 /**
 * Objective function to optimize is "sumDT" 
 */
@@ -99,9 +99,11 @@ private:
 public:
 	DE_factor_offline_modelCanny_camDT(std::vector<int>& vars_valide_, std::vector<int>& vars_non_valide_, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_var, boost::shared_array<int>& init_buffer_precision, boost::shared_array<int>& init_buffer_l_boundary, boost::shared_array<int>& init_buffer_r_boundary, boost::shared_array<int>& init_buffer_count_for_levels) :objective_function("sumDT_offline")
 	{
-		Mat cam_src = imread("../model/sample.jpg", CV_8UC1);
-		Mat cam_canny_img;
-		Canny(cam_src, cam_canny_img, 50, 200);
+		Mat cam_src = imread("../model/sample.bmp", CV_8UC1);
+		Mat cam_canny_img = cam_src;
+		//cam_canny_img.convertTo(cam_canny_img, CV_32FC1);
+		//Canny(cam_src, cam_canny_img, 50, 200);
+		
 		model_points_vec_array = model_points_vec_array_;
 		cost_factor_ptr = boost::make_shared<CostFactorDT_Offline_modelCanny_camDT>(cam_canny_img, model_points_vec_array, init_buffer_l_boundary, init_buffer_r_boundary, init_buffer_precision, init_buffer_count_for_levels);
 		buffer_var = init_buffer_var;

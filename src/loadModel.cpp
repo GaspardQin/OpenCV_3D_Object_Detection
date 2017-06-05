@@ -29,7 +29,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	//glfwWindowHint(GLFW_SAMPLES, 4);
 	// 创建窗口
 	GLFWwindow* window = glfwCreateWindow(1, 1,
 		"Loading model with AssImp", NULL, NULL);
@@ -68,20 +68,29 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 
 
 	//Somewhere at initialization
-	GLuint fbo, fbo_render; //fbo, 
+	GLuint fbo, fbo_render,fbo_texture; //fbo, 
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	//std::cout << glGetError() << std::endl;
-	
-	glGenRenderbuffers(1, &fbo_render);
+
+	glGenTextures(1, &fbo_texture);
+	glBindTexture(GL_TEXTURE_2D, fbo_texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WINDOW_WIDTH, WINDOW_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL); //末尾的NULL表示我们只预分配空间，而不实际加载纹理
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, fbo_texture, 0);
+
+
+
+	//glGenRenderbuffers(1, &fbo_render);
 	//std::cout << glGetError() << std::endl;
-	glBindRenderbuffer(GL_RENDERBUFFER, fbo_render);
+	//glBindRenderbuffer(GL_RENDERBUFFER, fbo_render);
 	//std::cout << glGetError() << std::endl;
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, WINDOW_WIDTH, WINDOW_HEIGHT);
+	//glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB, WINDOW_WIDTH, WINDOW_HEIGHT);
 	//std::cout << glGetError() << std::endl;
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fbo_render);
+	//glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, fbo_render);
 	//std::cout << glGetError() << std::endl;
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	//glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	//std::cout << glGetError() << std::endl;
 	GLuint fbo_depth;
 	glGenRenderbuffers(1, &fbo_depth);
@@ -92,8 +101,6 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	//Before drawing
 	//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 	//std::cout << glGetError() << std::endl;
-
-
 
 
 	// 设置视口参数
@@ -126,16 +133,18 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	}
 	// Section2 准备着色器程序
 	Shader shader_silhouette("../src/model.vertex", "../src/model.frag","../src/model.geometry");
-	Shader shader_object("../src/model.vertex", "../src/model.frag"); //为了隐藏掉后面重叠的线框
+	Shader shader_object("../src/model.vertex", "../src/model_object.frag", "../src/model_object.geometry"); //为了隐藏掉后面重叠的线框
 	//Shader shader("../src/model.vertex", "../src/model.geometry");
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_MULTISAMPLE);
-
 	
+	//glEnable(GL_MULTISAMPLE);
+	glEnable(GL_POLYGON_OFFSET_FILL);
+	glEnable(GL_POLYGON_OFFSET_LINE);
+	glEnable(GL_POLYGON_OFFSET_POINT);
 	glEnable(GL_CULL_FACE);
 	
 	projection = glm::perspective(GLfloat(glm::atan(CCD_WIDTH / 2.0 / FOCAL_DISTANCE)),
-		(GLfloat)(WINDOW_WIDTH / WINDOW_HEIGHT), 10.0f, 1000.0f); // 投影矩阵
+		(GLfloat)(WINDOW_WIDTH / WINDOW_HEIGHT), 20.0f, 1000.0f); // 投影矩阵
 	view = camera.getViewMatrix(); // 视变换矩阵
 
 	//******************* 
@@ -146,31 +155,51 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	
 	
 	glm::mat4 model;
+	glDepthFunc(GL_LEQUAL);
 	while (!glfwWindowShouldClose(window))
 	{
-//////////		WaitForSingleObject(readImgEvent,INFINITE);
 
+		
 		WaitForSingleObject(readModelEvent, INFINITE);
-
+		
 		//GLfloat currentFrame = (GLfloat)glfwGetTime();
 	//	deltaTime = currentFrame - lastFrame;
 		//if (deltaTime < 1/20) continue;
 	//	lastFrame = currentFrame;
 		glfwPollEvents(); // 处理例如鼠标 键盘等事件
-		//do_movement(); // 根据用户操作情况 更新相机属性
+
 		print_model_info();//print the model info;
 		// 清除颜色缓冲区 重置为指定颜色
 		glClearColor(0.f, 0.0f, 0.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//std::cout << glGetError() << std::endl;
-		shader_silhouette.use();
-
-
 		model = glm::mat4(1.0);
 		model = glm::translate(model, glm::vec3(pos_model_set[0], pos_model_set[1], pos_model_set[2])); // 再调整位置
 		rotate_model(rotate_degree_set, model); //先旋转
-	//	M_model = model;
-		//model = glm::scale(model,vec_scale); // 适当缩小模型
+												//	M_model = model;
+												//model = glm::scale(model,vec_scale); // 适当缩小模型
+		std::cout << glGetError() << std::endl;
+
+
+
+		glPolygonOffset(1.f, 0.f); //解决z-fighting 问题，object部分绘制的时候加上一定的向后的偏移
+
+
+
+		shader_object.use();
+
+
+		glUniformMatrix4fv(glGetUniformLocation(shader_object.programId, "projection"),
+			1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(shader_object.programId, "view"),
+			1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(shader_object.programId, "model"),
+			1, GL_FALSE, glm::value_ptr(model));
+		objModel.offscreenDraw(shader_object, fbo); // 绘制物体
+		//std::cout << glGetError() << std::endl;
+
+		glPolygonOffset(0.0f, 0.f); //对于边框绘制部分，将偏移量置为0
+		shader_silhouette.use();
+
 		glUniformMatrix4fv(glGetUniformLocation(shader_silhouette.programId, "projection"),
 			1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader_silhouette.programId, "view"),
@@ -181,6 +210,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		//std::cout << glGetError() << std::endl;
 		objModel.offscreenDraw(shader_silhouette, fbo); // 绘制物体
 		
+
 		
 		glUseProgram(0);
 
@@ -192,8 +222,12 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		//因此使用共享内存的intel 核心显卡 可以显著降低此步骤消耗
 
 		//cv::flip(readSrcImg, readSrcImg, 0); //时间消耗过高，采用更改projection 矩阵代替
-		std::cout << glGetError() << std::endl;
-		
+		//std::cout << glGetError() << std::endl;
+		if (glGetError() != 0) {
+			while (1) {
+				std::cout << "OpenGL Error" << std::endl;
+			}
+		}
 
 
 		ResetEvent(readModelEvent);

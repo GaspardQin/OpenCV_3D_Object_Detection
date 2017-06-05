@@ -36,7 +36,7 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	pos_detector.setBufferPrecision(5, 5, 4, 4,2, 2);
 	pos_detector.setBufferBoundary(10,10, 4, 2, 1, 1);
 
-	pos_detector.creatBuffer_ModelPoints();
+	//pos_detector.creatBuffer_ModelPoints();
 	pos_detector.readBuffer_ModelPoints();
 
 
@@ -54,7 +54,6 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	pos_detector.pos_estimated[1] = 17;
 	pos_detector.pos_estimated[2] = -700;
 
-	
 	//精定位
 
 	double output_best[6];
@@ -64,7 +63,10 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	pos_detector.DT_solve_with_DE_offline_modelCanny_camDT(output_best);
 	//可视化
 	pos_detector.debugShowMatch(output_best);
+
+
 	waitKey();
+
 	
 	return 0;
 }
