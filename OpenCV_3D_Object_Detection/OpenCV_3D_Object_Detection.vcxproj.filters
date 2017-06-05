@@ -84,5 +84,11 @@
     <None Include="..\src\model.vertex">
       <Filter>资源文件</Filter>
     </None>
+    <None Include="..\src\model.geometry">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\src\model_object.frag">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

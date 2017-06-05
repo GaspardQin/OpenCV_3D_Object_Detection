@@ -125,8 +125,9 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		return 0;
 	}
 	// Section2 准备着色器程序
-	Shader shader("../src/model.vertex", "../src/model.frag");
-
+	Shader shader_silhouette("../src/model.vertex", "../src/model.frag","../src/model.geometry");
+	Shader shader_object("../src/model.vertex", "../src/model.frag"); //为了隐藏掉后面重叠的线框
+	//Shader shader("../src/model.vertex", "../src/model.geometry");
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_MULTISAMPLE);
 
@@ -147,7 +148,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	glm::mat4 model;
 	while (!glfwWindowShouldClose(window))
 	{
-//		WaitForSingleObject(readImgEvent,INFINITE);
+//////////		WaitForSingleObject(readImgEvent,INFINITE);
 
 		WaitForSingleObject(readModelEvent, INFINITE);
 
@@ -155,14 +156,14 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	//	deltaTime = currentFrame - lastFrame;
 		//if (deltaTime < 1/20) continue;
 	//	lastFrame = currentFrame;
-		//glfwPollEvents(); // 处理例如鼠标 键盘等事件
+		glfwPollEvents(); // 处理例如鼠标 键盘等事件
 		//do_movement(); // 根据用户操作情况 更新相机属性
 		print_model_info();//print the model info;
 		// 清除颜色缓冲区 重置为指定颜色
 		glClearColor(0.f, 0.0f, 0.f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//std::cout << glGetError() << std::endl;
-		shader.use();
+		shader_silhouette.use();
 
 
 		model = glm::mat4(1.0);
@@ -170,32 +171,27 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		rotate_model(rotate_degree_set, model); //先旋转
 	//	M_model = model;
 		//model = glm::scale(model,vec_scale); // 适当缩小模型
-		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"),
+		glUniformMatrix4fv(glGetUniformLocation(shader_silhouette.programId, "projection"),
 			1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"),
+		glUniformMatrix4fv(glGetUniformLocation(shader_silhouette.programId, "view"),
 			1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"),
+		glUniformMatrix4fv(glGetUniformLocation(shader_silhouette.programId, "model"),
 			1, GL_FALSE, glm::value_ptr(model));
 		// 这里填写场景绘制代码
 		//std::cout << glGetError() << std::endl;
-		objModel.offscreenDraw(shader, fbo); // 绘制物体
+		objModel.offscreenDraw(shader_silhouette, fbo); // 绘制物体
 		
-		//glBindVertexArray(0);
 		
 		glUseProgram(0);
-		//display_axis();
 
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		//read pixels into opencv mat
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		
 		glReadBuffer(GL_COLOR_ATTACHMENT0);
 		glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
-		//使用共享内存的intel 核心显卡 可以显著降低此步骤消耗
 		//主要消耗用于在显存与内存中的传输数据，受限于PCIE的速度
+		//因此使用共享内存的intel 核心显卡 可以显著降低此步骤消耗
 
 		//cv::flip(readSrcImg, readSrcImg, 0); //时间消耗过高，采用更改projection 矩阵代替
-		//glfwSwapBuffers(window); // 交换缓存
 		std::cout << glGetError() << std::endl;
 		
 

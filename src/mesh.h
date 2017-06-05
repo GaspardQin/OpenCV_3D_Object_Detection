@@ -35,7 +35,7 @@ struct Texture
 class Mesh
 {
 public:
-	
+
 	void offscreenDraw(const Shader& shader, const GLint fbo) const //快速绘制
 	{
 
@@ -85,12 +85,11 @@ public:
 		//glGetError();
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 		//std::cout << glGetError() << std::endl;
-		glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+		//glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES_ADJACENCY, this->indices.size(), GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-		glUseProgram(0
-		
-		);
+		glUseProgram(0);
 
 
 	

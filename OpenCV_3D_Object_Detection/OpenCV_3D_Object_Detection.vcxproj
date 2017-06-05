@@ -109,7 +109,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\model.frag" />
+    <None Include="..\src\model.geometry" />
     <None Include="..\src\model.vertex" />
+    <None Include="..\src\model_object.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

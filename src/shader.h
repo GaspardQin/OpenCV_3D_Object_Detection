@@ -19,6 +19,7 @@ struct ShaderFile
 class Shader
 {
 public:
+	
 	Shader(const char* vertexPath, const char* fragPath) :programId(0)
 	{
 		std::vector<ShaderFile> fileVec;
@@ -26,6 +27,14 @@ public:
 		fileVec.push_back(ShaderFile(GL_FRAGMENT_SHADER, fragPath));
 		loadFromFile(fileVec);
 	}
+	/*
+	Shader(const char* vertexPath, const char* geometryPath) :programId(0)
+	{
+		std::vector<ShaderFile> fileVec;
+		fileVec.push_back(ShaderFile(GL_VERTEX_SHADER, vertexPath));
+		fileVec.push_back(ShaderFile(GL_GEOMETRY_SHADER, geometryPath));
+		loadFromFile(fileVec);
+	}*/
 	Shader(const char* vertexPath, const char* fragPath, const char* geometryPath) :programId(0)
 	{
 		std::vector<ShaderFile> fileVec;
@@ -34,6 +43,7 @@ public:
 		fileVec.push_back(ShaderFile(GL_GEOMETRY_SHADER, geometryPath));
 		loadFromFile(fileVec);
 	}
+
 	void use() const
 	{
 		glUseProgram(this->programId);

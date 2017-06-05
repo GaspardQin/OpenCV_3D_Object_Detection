@@ -92,6 +92,31 @@ private:
 		}
 		return true;
 	}
+	bool findAdjacentIndex(const aiMesh* meshPtr, const GLuint index1, const GLuint index2, const GLuint index3, GLuint & index_return) {
+		//std::vector<unsigned int> indexMap[2];
+
+		for (unsigned int i = 0; i<meshPtr->mNumFaces; ++i) {
+			GLuint*& indices = meshPtr->mFaces[i].mIndices;
+			aiVector3D* vertexes = meshPtr->mVertices;
+			for (int edge = 0; edge < 3; ++edge) { //iterate all edges of the face
+				GLuint v1 = indices[edge]; //first edge index
+				GLuint v2 = indices[(edge + 1) % 3]; //second edge index
+				GLuint vOpp = indices[(edge + 2) % 3]; //index of opposite vertex
+															 //if the edge matches the search edge and the opposite vertex does not match
+				if (((vertexes[v1] == vertexes[index1] && vertexes[v2] == vertexes[index2]) || (vertexes[v2] == vertexes[index1] && vertexes[v1] == vertexes[index2])) && vertexes[vOpp] != vertexes[index3]) {
+					index_return = vOpp;
+					return true; //we have found the adjacent vertex
+				}
+
+				if (((v1 == index1 && v2 == index2) || (v2 == index1 && v1 == index2)) && vOpp != index3) {
+					index_return = vOpp;
+					return true; //we have found the adjacent vertex
+				}
+			}
+		}
+		int debug = 0;
+		return false;
+	}
 	bool processMesh(const aiMesh* meshPtr, const aiScene* sceneObjPtr, Mesh& meshObj)
 	{
 		if (!meshPtr || !sceneObjPtr)
@@ -143,6 +168,11 @@ private:
 			for (size_t j = 0; j < face.mNumIndices; ++j)
 			{
 				indices.push_back(face.mIndices[j]);
+				GLuint OppositeIndex;
+				if (findAdjacentIndex(meshPtr, face.mIndices[j], face.mIndices[(j + 1) % 3], face.mIndices[(j + 2) % 3], OppositeIndex)) {
+					indices.push_back(OppositeIndex);
+				}
+				else indices.push_back(-1);
 			}
 		}
 		// 获取纹理数据
