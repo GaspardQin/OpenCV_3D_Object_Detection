@@ -27,17 +27,14 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	pos_detector.initialization();//读取sample.jpg作为cam得到的图像
 	
 	//生成buffer，仅第一次运行需要
-	//pos_detector.setBufferInitValue(5, 10, -180, -10, 10, 5);
-	//pos_detector.setBufferPrecision(2, 2, 2, 2, 2, 2);
-	//pos_detector.setBufferBoundary(20, 20, 20, 4, 1, 1);
-	//pos_detector.creatBuffer();
+
 
 	pos_detector.setBufferInitValue(5, 20, -700, -20, 16, 4);
 	pos_detector.setBufferPrecision(5, 5, 4, 4,2, 2);
 	pos_detector.setBufferBoundary(10,10, 4, 2, 1, 1);
 
 	//pos_detector.creatBuffer_ModelPoints();
-	pos_detector.readBuffer_ModelPoints();
+	//pos_detector.readBuffer_ModelPoints();
 
 
 
@@ -58,9 +55,8 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 
 	double output_best[6];
 	//pos_detector.DT_solve_with_powell(output_best);
-	//pos_detector.DT_solve_with_DE(output_best);//轮廓角点高精度定位
-	//pos_detector.DT_solve_with_DE_offline(output_best);
-	pos_detector.DT_solve_with_DE_offline_modelCanny_camDT(output_best);
+	pos_detector.DT_solve_with_DE(output_best);
+	//pos_detector.DT_solve_with_DE_offline_modelCanny_camDT(output_best);
 	//可视化
 	pos_detector.debugShowMatch(output_best);
 

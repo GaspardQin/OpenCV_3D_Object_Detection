@@ -33,15 +33,18 @@ public:
 			cam_DT_pyramid.push_back(cam_DT);
 		}
 	};
-	MatchEdges(const Mat &cam_img_input, boost::shared_array<Mat>& model_DT_imgs_, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_) {
-		//for offline OpenGL Only
+	MatchEdges(const Mat &cam_img_input, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_, boost::shared_array<double>& cache_match_) {
+		//for Online OpenGL Only
+		cam_img = cam_img_input;
 		init_buffer_l_boundary = init_buffer_l_boundary_;
 		init_buffer_r_boundary = init_buffer_r_boundary_;
 		init_buffer_precision = init_buffer_precision_;
 		init_buffer_count_for_levels = init_buffer_count_for_levels_;
-		cv::findNonZero(cam_img_input, cam_canny_points);
-	
-		model_DT_imgs = model_DT_imgs_;
+		DT(cam_img_input, cam_DT);
+		for (int i = 0; i < cam_DT.rows; i++) {
+			row_camDT_ptrs[i] = cam_DT.ptr<float>(i);
+		}
+		cache_match = cache_match_;
 	};
 	MatchEdges(const Mat &cam_img_input, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_, boost::shared_array<double>& cache_match_) {
 		//for offline OpenGL Only
@@ -70,11 +73,13 @@ public:
 	double DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, double k_u) const;
 	double modelDTcamCannyMatchHelp(Mat model_DT, vector<Point2i> cam_canny_points, double k_l, double k_u) const;
 	template <typename T> double MatchEdges::modelDTcamCannyROIMatchHelp(Mat model_DT, T* var, vector<Point2i> cam_canny_points, double k_l, double k_u) const;
-	double DTmatchPyramid(double *var,int level, double k_l, double k_u) const;
+	
 	template <typename T> double modelDTcamCannyMatch(T* var, double k_l, double k_u) const;
 	template <typename T> double modelDTcamCannyROIMatch(T* var, double k_l, double k_u) const;
 	void DT(Mat cam_img, Mat &cam_DT) const;
 	void MatchEdges::DT_L1(Mat cam_img_, Mat &cam_DT_) const;
+	double DTmatchOnlinePyramid(int * var, int level, double k_l, double k_u) const;
+	
 	void binaryZoomOut(Mat input_img, Mat &output_img, double f)const;
 	int getIndex(int* var) const {
 		return getIndex(var[0], var[1], var[2], var[3], var[4], var[5]);
@@ -219,7 +224,7 @@ template <typename T> double MatchEdges::modelDTcamCannyROIMatch(T* var, double 
 template <typename T> double MatchEdges::modelCannycamDT_Match(T* var, double k_l, double k_u) const {
 	//检查cache中是否有保存
 	int index = getIndex(var);
-	double debug = cache_match[index];
+	//double debug = cache_match[index];
 	if (cache_match[index] >= 0) { //读取操作是线程安全的
 		return cache_match[index];
 	}

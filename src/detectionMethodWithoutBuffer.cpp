@@ -460,6 +460,7 @@ void DetectionMethod::drawPoints(Mat &img, std::vector<Point2f> points, const Sc
 		circle(img, points[i], 5, color);
 	}
 }
+/*
 void DetectionMethod::DT_solve_with_powell(double * output_best) {
 	//output_best应为大小为6的数组
 	//高精度定位：边缘图像角点匹配
@@ -475,6 +476,7 @@ void DetectionMethod::DT_solve_with_powell(double * output_best) {
 	cout << "Best Rotation is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
 
 }
+*/
 /*
 void DetectionMethod::DT_solve_with_PSO(double * output_best) {
 	PSO psoSolver(cam_canny_img, pos_estimated, quat_estimated, 30, 6);
@@ -487,20 +489,27 @@ void DetectionMethod::DT_solve_with_PSO(double * output_best) {
 }
 */
 void DetectionMethod::DT_solve_with_DE(double * output_best) {
-	DEsolver deSolver(pos_estimated, rotate_estimated);
+	DE_OnlineSolver DE_solver(init_buffer_var, init_buffer_precision, init_buffer_num, init_buffer_l_boundary, init_buffer_r_boundary, init_buffer_count_for_levels);
 	double score_best;
-	deSolver.solve();
-	output_best[0] = (*(deSolver.best)->vars())[0];
-	output_best[1] = (*(deSolver.best)->vars())[1];
-	output_best[2] = (*(deSolver.best)->vars())[2];
-	output_best[3] = (*(deSolver.best)->vars())[3];
-	output_best[4] = (*(deSolver.best)->vars())[4];
-	output_best[5] = (*(deSolver.best)->vars())[5];
-	score_best = deSolver.best->cost();
-	cout << "Best Position is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
-	cout << "Best Rotation is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
+	DE_solver.solve();
+	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
+	for (int i = 0; i < VARS_COUNT; i++) {
+		if (init_buffer_num[i] > 1) vars_valide.push_back(i);
+		else vars_non_valide.push_back(i);
+	}
+	for (int i = 0; i < vars_valide.size(); i++) {
+		output_best[vars_valide[i]] = init_buffer_var[vars_valide[i]] + (*(DE_solver.best)->vars())[vars_valide[i]] * init_buffer_precision[vars_valide[i]];
+	}
+	for (int i = 0; i < vars_non_valide.size(); i++) {
+		output_best[vars_non_valide[i]] = init_buffer_var[vars_non_valide[i]];
+	}
+
+	score_best = DE_solver.best->cost();
+	cout << "Best Position of offlineSolver is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
+	cout << "Best Rotation of offlineSolver is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
 	cout << "Final score is : " << score_best << endl;
 }
+/*
 void DetectionMethod::DT_solve_with_DE_offline(double * output_best) {
 	DE_Offline_Solver deOfflineSolver( init_buffer_var,  init_buffer_precision,  init_buffer_num, init_buffer_l_boundary, init_buffer_r_boundary, model_DT_imgs, init_buffer_count_for_levels);
 	double score_best;
@@ -522,6 +531,7 @@ void DetectionMethod::DT_solve_with_DE_offline(double * output_best) {
 	cout << "Best Rotation of offlineSolver is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
 	cout << "Final score is : " << score_best << endl;
 }
+*/
 void DetectionMethod::DT_solve_with_DE_offline_modelCanny_camDT(double * output_best) {
 	DE_Offline_Solver_modelCanny_camDT deOfflineSolver(init_buffer_var, init_buffer_precision, init_buffer_num, init_buffer_l_boundary, init_buffer_r_boundary, model_canny_points, init_buffer_count_for_levels);
 	double score_best;
