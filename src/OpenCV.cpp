@@ -19,10 +19,53 @@ void creatSample() {
 	imwrite("../model/sample.bmp", readSrcImg);
 	SetEvent(readModelEvent);
 }
+void test_camera() {
+	VideoCapture cap(CV_CAP_PVAPI);
 
+	if (!cap.isOpened())  // if not success, exit program
+	{
+		cout << "Cannot open the video cam" << endl;
+		return ;
+	}
+
+	double dWidth = cap.get(CV_CAP_PROP_FRAME_WIDTH); //get the width of frames of the video
+	double dHeight = cap.get(CV_CAP_PROP_FRAME_HEIGHT); //get the height of frames of the video
+
+	cout << "Frame size : " << dWidth << " x " << dHeight << endl;
+
+	namedWindow("MyVideo", CV_WINDOW_AUTOSIZE); //create a window called "MyVideo"
+
+	while (1)
+	{
+		Mat frame;
+
+		bool bSuccess = cap.read(frame); // read a new frame from video
+
+		if (!bSuccess) //if not success, break loop
+		{
+			cout << "Cannot read a frame from video stream" << endl;
+			break;
+		}
+
+		imshow("MyVideo", frame); //show the frame in "MyVideo" window
+
+		if (waitKey(30) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
+		{
+			cout << "esc key is pressed by user" << endl;
+			break;
+		}
+	}
+	
+
+}
 
 DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
-	creatSample();
+	
+	Mat camera_img_src;
+	test_camera();
+	imshow("camera_img_src", camera_img_src);
+
+
 	DetectionMethod pos_detector;
 	pos_detector.initialization();//读取sample.jpg作为cam得到的图像
 	
@@ -30,8 +73,8 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 
 
 	pos_detector.setBufferInitValue(5, 20, -700, -20, 16, 4);
-	pos_detector.setBufferPrecision(5, 5, 4, 4,2, 2);
-	pos_detector.setBufferBoundary(10,10, 4, 2, 1, 1);
+	pos_detector.setBufferPrecision(1, 1, 1, 1,1, 1);
+	pos_detector.setBufferBoundary(20,20, 10, 4, 1, 1);
 
 	//pos_detector.creatBuffer_ModelPoints();
 	//pos_detector.readBuffer_ModelPoints();
@@ -44,12 +87,7 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	//pos_detector.quat_estimated[0] = quat_est[0];
 	//pos_detector.quat_estimated[1] = quat_est[1];
 	//pos_detector.quat_estimated[2] = quat_est[2];
-	pos_detector.rotate_estimated[0] = -18;
-	pos_detector.rotate_estimated[1] = 13;
-	pos_detector.rotate_estimated[2] = 5;
-	pos_detector.pos_estimated[0] = 7;
-	pos_detector.pos_estimated[1] = 17;
-	pos_detector.pos_estimated[2] = -700;
+
 
 	//精定位
 

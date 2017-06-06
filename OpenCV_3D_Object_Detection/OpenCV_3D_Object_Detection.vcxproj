@@ -103,6 +103,7 @@
     <ClInclude Include="..\src\shader.h" />
     <ClInclude Include="..\src\texture.h" />
     <ClInclude Include="..\src\thread_variables.h" />
+    <ClInclude Include="CaptureCameraImage.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\modelPath.txt" />

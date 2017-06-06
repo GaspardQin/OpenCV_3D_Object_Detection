@@ -11,7 +11,7 @@ using namespace de;
 #define VARS_COUNT 6
 #define POPULATION_SIZE 30
 #define LEVEL 0
-#define THRESHOLD_FINAL 2000
+#define THRESHOLD_FINAL 1000
 /**
 * Objective function to optimize is "sumDT" 
 */
@@ -225,7 +225,7 @@ public:
 			* strategy 1 with the weight and crossover factors set to 0.5
 			* and 0.9 respectively
 			*/
-			mutation_strategy_arguments mutation_arguments(0.8, 0.9);
+			mutation_strategy_arguments mutation_arguments(0.4, 0.6);
 			mutation_strategy_ptr mutationStrategy(boost::make_shared< mutation_strategy_3 >(vars_valide.size(), mutation_arguments));
 
 			/**

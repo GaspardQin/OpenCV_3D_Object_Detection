@@ -67,4 +67,5 @@ extern glm::mat4 projection;
 extern glm::mat4 view;
 extern glm::mat4 M_model;
 extern int iteral_count;
+extern Mat camera_img_src;
 #endif
