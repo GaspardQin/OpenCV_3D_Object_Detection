@@ -92,10 +92,11 @@ void MatchEdges::DT_L1(Mat cam_img_, Mat &cam_DT_) const {
 	//distanceTransform(cam_img_, cam_DT_, CV_DIST_L2, 3, CV_32FC1);
 }
 
-double MatchEdges::DTmatchOnlinePyramid(int* var, int level, double k_l, double k_u) const {
+double MatchEdges::DTmatchOnline(const int* var, double k_l, double k_u) const {
 
-	int index = getIndex(var);
-	if (cache_match[index] >= 0) { //读取操作是线程安全的
+	int index = discrete_info.getIndex(var);
+	if (cache_match[index] >= 0) { 
+		boost::shared_lock<boost::shared_mutex> lock(cv_cache_mutex);//读取操作是采用读取锁（可多线程同时读取）
 		return cache_match[index];
 	}
 
@@ -106,9 +107,6 @@ double MatchEdges::DTmatchOnlinePyramid(int* var, int level, double k_l, double 
 	double temp;
 
 	getModelImgUchar(var, model_canny_img);
-	if (level > 0) {
-		binaryZoomOut(model_canny_img, model_canny_img, 1 / pow(2, level));
-	}
 	cv::findNonZero(model_canny_img, point_vec);
 
 	for (std::vector<Point2i>::iterator iter = point_vec.begin(); iter < point_vec.end(); iter++) {
@@ -127,7 +125,7 @@ double MatchEdges::DTmatchOnlinePyramid(int* var, int level, double k_l, double 
 	}
 
 	std::cout << "max distance :" << dist[floor(k_u*dist.size())] << std::endl;
-	boost::lock_guard<boost::mutex> lock(cv_cache_mutex); //保证每个时刻只有一个线程能写入cache_match;
+	boost::lock_guard<boost::shared_mutex> lock(cv_cache_mutex); //保证每个时刻只有一个线程能写入cache_match;
 	cache_match[index] = sum; //存入cache；
 
 	return sum;// *dist[floor(k_u*dist.size()) - 1];

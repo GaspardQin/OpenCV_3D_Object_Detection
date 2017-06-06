@@ -91,6 +91,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\camera.h" />
+    <ClInclude Include="..\src\CaptureCameraImage.h" />
     <ClInclude Include="..\src\DE.h" />
     <ClInclude Include="..\src\detectionMethodWithoutBuffer.h" />
     <ClInclude Include="..\src\loadModel.h" />
@@ -103,7 +104,6 @@
     <ClInclude Include="..\src\shader.h" />
     <ClInclude Include="..\src\texture.h" />
     <ClInclude Include="..\src\thread_variables.h" />
-    <ClInclude Include="CaptureCameraImage.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\modelPath.txt" />

@@ -1,6 +1,13 @@
 #include "openCV.h"
 cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3); //CV_8UC3);//the raw img got from the screenshot of OpenGL;
-
+DiscreteInfo discrete_info; //全局变量
+std::vector<cv::Mat> model_offline_DT_imgs;//全局变量
+std::vector<std::vector<cv::Point2i>> model_offline_canny_points;//全局变量
+cv::Mat cam_canny_img;
+std::vector<Point2i> cam_canny_points;//全局变量
+Mat cam_DT;//全局变量
+std::vector<double> cache_match;//全局变量
+Mat cam_img_src,cam_img_color_src;
 void creatSample() {
 	//OpenGL 生成的图上下颠倒，y,x_degree,z_degree应取相反数
 	rotate_degree_set[0] = -20;
@@ -61,35 +68,27 @@ void test_camera() {
 
 DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	
-	Mat camera_img_src;
-	test_camera();
-	imshow("camera_img_src", camera_img_src);
+	//test_camera();
+	//imshow("camera_img_src", camera_img_src);
+	cam_img_src = imread("../model/sample.jpg", CV_8UC1);
+	cam_img_color_src = imread("../model/sample.jpg", CV_8UC3);
+	//Canny(cam_img_src, cam_canny_img, 50, 200);
+	cam_canny_img = cam_img_src;
+
+	discrete_info.setInitValue(5, 20, -700, -20, 16, 4);
+	discrete_info.setPrecision(1, 1, 1, 1, 1, 1);
+	discrete_info.setBoundary(20, 20, 10, 4, 1, 1);
 
 
 	DetectionMethod pos_detector;
 	pos_detector.initialization();//读取sample.jpg作为cam得到的图像
 	
 	//生成buffer，仅第一次运行需要
+	
 
-
-	pos_detector.setBufferInitValue(5, 20, -700, -20, 16, 4);
-	pos_detector.setBufferPrecision(1, 1, 1, 1,1, 1);
-	pos_detector.setBufferBoundary(20,20, 10, 4, 1, 1);
 
 	//pos_detector.creatBuffer_ModelPoints();
 	//pos_detector.readBuffer_ModelPoints();
-
-
-
-	//debug 手动输入粗定位位置，调试精定位方法
-//	glm::quat quat_est = glm::quat(glm::vec3(glm::radians(-18.0), glm::radians(13.0), glm::radians(5.0)));//YXZ
-	//glm::vec3 debug_angle = glm::degrees(glm::eulerAngles(quat_est));
-	//pos_detector.quat_estimated[0] = quat_est[0];
-	//pos_detector.quat_estimated[1] = quat_est[1];
-	//pos_detector.quat_estimated[2] = quat_est[2];
-
-
-	//精定位
 
 	double output_best[6];
 	//pos_detector.DT_solve_with_powell(output_best);

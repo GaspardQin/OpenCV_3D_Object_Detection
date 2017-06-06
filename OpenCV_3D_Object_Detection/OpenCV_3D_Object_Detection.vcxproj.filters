@@ -71,7 +71,7 @@
     <ClInclude Include="..\src\DE.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="CaptureCameraImage.h">
+    <ClInclude Include="..\src\CaptureCameraImage.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

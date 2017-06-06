@@ -10,34 +10,54 @@ using namespace de;
 #define THREAD_NUM 4
 #define VARS_COUNT 6
 #define POPULATION_SIZE 30
-#define LEVEL 0
 #define THRESHOLD_FINAL 1000
 /**
 * Objective function to optimize is "sumDT" 
 */
+class DE_factor :public objective_function
+{
+private:
+	boost::shared_ptr<CostFactorOnline> cost_factor_ptr;
+	int params[6];
+	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
+public:
+	DE_factor(std::vector<int>& vars_valide_, std::vector<int>& vars_non_valide_) :objective_function("sumDT")
+	{
+		cost_factor_ptr = boost::make_shared<CostFactorOnline>();
+		vars_valide = vars_valide_;
+		vars_non_valide = vars_non_valide_;
+	}
 
+	virtual double operator()(de::DVectorPtr args)
+	{
+		/**
+		* The two function arguments are the elements index 0 and 1 in
+		* the argument vector, as defined by the constraints vector
+		* below
+		*/
+
+		for (int i = 0; i < vars_valide.size(); i++) {
+			params[vars_valide[i]] = (*args)[vars_valide[i]] *discrete_info.precision[vars_valide[i]] + discrete_info.init_var[vars_valide[i]];
+		}
+		for (int i = 0; i < vars_non_valide.size(); i++) {
+			params[vars_non_valide[i]] = discrete_info.init_var[vars_non_valide[i]];
+		}
+
+		return cost_factor_ptr->calculateDTfactorPyramid(params);
+	}
+};
 class DE_OnlineFactor:public objective_function
 {
 private:
-	boost::shared_ptr<CostFactorOnlinePyramid> cost_factor_ptr;
-	dlib::matrix<double, 6L, 1L> params;
-	boost::shared_array<int> buffer_var;
-	boost::shared_array<int> buffer_precision;
-	boost::shared_array<std::vector<Point2i>> model_points_vec_array;
+	boost::shared_ptr<CostFactorOnline> cost_factor_ptr;
+	int params[6];
 	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
-	boost::shared_array<double> cache_match;
 public:
-	DE_OnlineFactor(std::vector<int>& vars_valide_, std::vector<int>& vars_non_valide_, boost::shared_array<int>& init_buffer_var, boost::shared_array<int>& init_buffer_precision, boost::shared_array<int>& init_buffer_l_boundary, boost::shared_array<int>& init_buffer_r_boundary, boost::shared_array<int>& init_buffer_count_for_levels, boost::shared_array<double>& cache_match_) :objective_function("sumDT")
+	DE_OnlineFactor(std::vector<int>& vars_valide_, std::vector<int>& vars_non_valide_) :objective_function("sumDT")
 	{
-		Mat cam_src = imread("../model/sample.jpg", CV_8UC1);
-		Mat cam_canny_img = cam_src;
-		//Canny(cam_src, cam_canny_img, 50, 200);
-		cost_factor_ptr = boost::make_shared<CostFactorOnlinePyramid>(cam_canny_img, LEVEL, init_buffer_l_boundary, init_buffer_r_boundary, init_buffer_precision, init_buffer_count_for_levels, cache_match_);
-		buffer_var = init_buffer_var;
-		buffer_precision = init_buffer_precision;
+		cost_factor_ptr = boost::make_shared<CostFactorOnline>();
 		vars_valide = vars_valide_;
 		vars_non_valide = vars_non_valide_;
-		cache_match = cache_match_;
 	}
 	
 	virtual double operator()(de::DVectorPtr args)
@@ -49,13 +69,13 @@ public:
 		*/
 		
 		for (int i = 0; i < vars_valide.size(); i++) {
-			params(vars_valide[i]) = (*args)[vars_valide[i]] * buffer_precision[vars_valide[i]] + buffer_var[vars_valide[i]];
+			params[vars_valide[i]] = (*args)[vars_valide[i]] * discrete_info.precision[vars_valide[i]] + discrete_info.init_var[vars_valide[i]];
 		}
 		for (int i = 0; i < vars_non_valide.size(); i++) {
-			params(vars_non_valide[i]) = buffer_var[vars_non_valide[i]];
+			params[vars_non_valide[i]] = discrete_info.init_var[vars_non_valide[i]];
 		}
 
-		return cost_factor_ptr->calculateDTfactorPyramid(params)* pow(2,LEVEL)* pow(2,LEVEL);
+		return cost_factor_ptr->calculateDTfactorPyramid(params);
 	}
 };
 
@@ -63,27 +83,15 @@ class DE_factor_offline_modelCanny_camDT :public objective_function
 {
 private:
 	boost::shared_ptr<CostFactorDT_Offline_modelCanny_camDT> cost_factor_ptr;
-	dlib::matrix<double, 6L, 1L> params;
-	boost::shared_array<int> buffer_var;
-	boost::shared_array<int> buffer_precision;
-	boost::shared_array<std::vector<Point2i>> model_points_vec_array;
+	int params[6];
 	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
-	boost::shared_array<double> cache_match;
 public:
-	DE_factor_offline_modelCanny_camDT(std::vector<int>& vars_valide_, std::vector<int>& vars_non_valide_, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_var, boost::shared_array<int>& init_buffer_precision, boost::shared_array<int>& init_buffer_l_boundary, boost::shared_array<int>& init_buffer_r_boundary, boost::shared_array<int>& init_buffer_count_for_levels, boost::shared_array<double>& cache_match_) :objective_function("sumDT_offline")
+	DE_factor_offline_modelCanny_camDT(std::vector<int>& vars_valide_, std::vector<int>& vars_non_valide_) :objective_function("sumDT_offline")
 	{
-		Mat cam_src = imread("../model/sample.bmp", CV_8UC1);
-		Mat cam_canny_img = cam_src;
-		//cam_canny_img.convertTo(cam_canny_img, CV_32FC1);
-		//Canny(cam_src, cam_canny_img, 50, 200);
-		
-		model_points_vec_array = model_points_vec_array_;
-		cost_factor_ptr = boost::make_shared<CostFactorDT_Offline_modelCanny_camDT>(cam_canny_img, model_points_vec_array, init_buffer_l_boundary, init_buffer_r_boundary, init_buffer_precision, init_buffer_count_for_levels,cache_match_);
-		buffer_var = init_buffer_var;
-		buffer_precision = init_buffer_precision;
+
+		cost_factor_ptr = boost::make_shared<CostFactorDT_Offline_modelCanny_camDT>();
 		vars_valide = vars_valide_;
 		vars_non_valide = vars_non_valide_;
-		cache_match = cache_match_;
 	}
 
 	virtual double operator()(de::DVectorPtr args)
@@ -94,13 +102,13 @@ public:
 		* below
 		*/
 		for (int i = 0; i < vars_valide.size(); i++) {
-			params(vars_valide[i]) = (*args)[vars_valide[i]] * buffer_precision[vars_valide[i]] + buffer_var[vars_valide[i]];
+			params[vars_valide[i]] = (*args)[vars_valide[i]] * discrete_info.precision[vars_valide[i]] + discrete_info.init_var[vars_valide[i]];
 		}
 		for (int i = 0; i < vars_non_valide.size(); i++) {
-			params(vars_non_valide[i]) = buffer_var[vars_non_valide[i]];
+			params[vars_non_valide[i]] = discrete_info.init_var[vars_non_valide[i]];
 		}
 
-		return cost_factor_ptr->calculateDTfactorPyramid(params)* pow(2, LEVEL)* pow(2, LEVEL);
+		return cost_factor_ptr->calculateDTfactorPyramid(params);
 	}
 };
 
@@ -122,38 +130,10 @@ public:
 };
 
 class DE_OnlineSolver {
-private:
-	boost::shared_array<int> init_var;
-	boost::shared_array<int> buffer_precision;
-	boost::shared_array<int> buffer_l_boundary;
-	boost::shared_array<int> buffer_r_boundary;
-	boost::shared_array<std::vector<Point2i>> model_points_vec_array;
-
-	boost::shared_array<int> buffer_num;
-	boost::shared_array<int> init_buffer_count_for_levels;
-	boost::shared_array<double> cache_match;
 public:
 	individual_ptr best;
-	DE_OnlineSolver( boost::shared_array<int>& init_buffer_var, boost::shared_array<int>& init_buffer_precision, boost::shared_array<int>& init_buffer_num, boost::shared_array<int>& init_buffer_l_boundary, boost::shared_array<int>& init_buffer_r_boundary, boost::shared_array<int> init_buffer_count_for_levels_) {
-		init_var = init_buffer_var;
-		buffer_precision = init_buffer_precision;
-		buffer_l_boundary = init_buffer_l_boundary;
-		buffer_r_boundary = init_buffer_r_boundary;
-		buffer_num = init_buffer_num;
-		init_buffer_count_for_levels = init_buffer_count_for_levels_;
-		double* ptr = new double[init_buffer_count_for_levels_[0]];
-		std::fill_n(ptr, init_buffer_count_for_levels_[0], -1.0);
-		boost::shared_array<double> cache_match_(ptr);
-		cache_match = cache_match_;
+	DE_OnlineSolver( ) {
 	}
-	void setInitVar(double x, double y, double z, double deg_x, double deg_y, double deg_z) {
-		init_var[0] = x;
-		init_var[1] = y;
-		init_var[2] = z;
-		init_var[3] = deg_x;// *rho_quat;
-		init_var[4] = deg_y;// *rho_quat;
-		init_var[5] = deg_z;// *rho_quat;
-	};
 
 	void solve() {
 		try
@@ -167,12 +147,12 @@ public:
 			*/
 			std::vector<int> vars_valide; std::vector<int> vars_non_valide;
 			for (int i = 0; i < VARS_COUNT; i++) {
-				if (buffer_num[i] > 1) vars_valide.push_back(i);
+				if (discrete_info.num[i] > 1) vars_valide.push_back(i);
 				else vars_non_valide.push_back(i);
 			}
 			constraints_ptr constraints(boost::make_shared< constraints >(vars_valide.size(), -1.0e6, 1.0e6));
 			for (int i = 0; i < vars_valide.size(); i++) {
-				(*constraints)[i] = boost::make_shared< int_constraint >(-(buffer_num[vars_valide[i]] - 1) / 2, +(buffer_num[vars_valide[i]] - 1) / 2);
+				(*constraints)[i] = boost::make_shared< int_constraint >(-(discrete_info.num[vars_valide[i]] - 1) / 2, +(discrete_info.num[vars_valide[i]] - 1) / 2);
 			}
 
 
@@ -186,7 +166,7 @@ public:
 			*/
 			objective_function_ptr ofArray[THREAD_NUM];
 			for (int ii = 0; ii < THREAD_NUM; ii++) {
-				ofArray[ii] = boost::make_shared< DE_OnlineFactor >(vars_valide, vars_non_valide, init_var, buffer_precision, buffer_l_boundary, buffer_r_boundary, init_buffer_count_for_levels, cache_match);
+				ofArray[ii] = boost::make_shared< DE_OnlineFactor >(vars_valide, vars_non_valide);
 			}
 
 
@@ -263,32 +243,12 @@ public:
 };
 
 class DE_Offline_Solver_modelCanny_camDT {
-private:
-	boost::shared_array<int> init_var;
-	boost::shared_array<int> buffer_precision;
-	boost::shared_array<int> buffer_l_boundary;
-	boost::shared_array<int> buffer_r_boundary;
-	boost::shared_array<std::vector<Point2i>> model_points_vec_array;
-
-	boost::shared_array<int> buffer_num;
-	boost::shared_array<int> init_buffer_count_for_levels;
-	boost::shared_array<double> cache_match;
 
 public:
 	individual_ptr best;
 
-	DE_Offline_Solver_modelCanny_camDT(boost::shared_array<int>& init_buffer_var, boost::shared_array<int>& init_buffer_precision, boost::shared_array<int>& init_buffer_num, boost::shared_array<int>& init_buffer_l_boundary, boost::shared_array<int>& init_buffer_r_boundary, boost::shared_array<std::vector<Point2i>> & model_points_vec_array_, boost::shared_array<int> init_buffer_count_for_levels_) {
-		init_var = init_buffer_var;
-		buffer_precision = init_buffer_precision;
-		buffer_l_boundary = init_buffer_l_boundary;
-		buffer_r_boundary = init_buffer_r_boundary;
-		model_points_vec_array = model_points_vec_array_;
-		buffer_num = init_buffer_num;
-		init_buffer_count_for_levels = init_buffer_count_for_levels_;
-		double* ptr = new double[init_buffer_count_for_levels_[0]];
-		std::fill_n(ptr, init_buffer_count_for_levels_[0], -1.0);
-		boost::shared_array<double> cache_match_(ptr);
-		cache_match = cache_match_;
+	DE_Offline_Solver_modelCanny_camDT() {
+
 	}
 
 	void solve() {
@@ -303,12 +263,12 @@ public:
 			*/
 			std::vector<int> vars_valide; std::vector<int> vars_non_valide;
 			for (int i = 0; i < VARS_COUNT; i++) {
-				if (buffer_num[i] > 1) vars_valide.push_back(i);
+				if (discrete_info.num[i] > 1) vars_valide.push_back(i);
 				else vars_non_valide.push_back(i);
 			}
 			constraints_ptr constraints(boost::make_shared< constraints >(vars_valide.size(), -1.0e6, 1.0e6));
 			for (int i = 0; i < vars_valide.size(); i++) {
-				(*constraints)[i] = boost::make_shared< int_constraint >(-(buffer_num[vars_valide[i]] - 1) / 2, +(buffer_num[vars_valide[i]] - 1) / 2);
+				(*constraints)[i] = boost::make_shared< int_constraint >(-(discrete_info.num[vars_valide[i]] - 1) / 2, +(discrete_info.num[vars_valide[i]] - 1) / 2);
 			}
 
 
@@ -322,7 +282,7 @@ public:
 			*/
 			objective_function_ptr ofArray[THREAD_NUM];
 			for (int ii = 0; ii < THREAD_NUM; ii++) {
-				ofArray[ii] = boost::make_shared< DE_factor_offline_modelCanny_camDT >(vars_valide, vars_non_valide, model_points_vec_array, init_var, buffer_precision, buffer_l_boundary, buffer_r_boundary, init_buffer_count_for_levels,cache_match);
+				ofArray[ii] = boost::make_shared< DE_factor_offline_modelCanny_camDT >(vars_valide, vars_non_valide);
 			}
 
 
