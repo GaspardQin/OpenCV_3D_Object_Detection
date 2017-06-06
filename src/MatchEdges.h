@@ -13,7 +13,8 @@ private:
 	vector<Point2i> cam_canny_points;
 	Mat cam_DT;
 	float* row_camDT_ptrs[int(WINDOW_HEIGHT)]; //cam_DT矩阵每一行第一个值的地址（为了取代at函数，做到对元素的快速访问）
-	
+	boost::shared_array<double> cache_match;
+
 public:
 	Mat cam_img_debug;
 	Mat cam_img, cam_img_pyramid_1, cam_img_pyramid_2, cam_DT_pyramid_1, cam_DT_pyramid_2;
@@ -42,7 +43,7 @@ public:
 	
 		model_DT_imgs = model_DT_imgs_;
 	};
-	MatchEdges(const Mat &cam_img_input, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_) {
+	MatchEdges(const Mat &cam_img_input, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_, boost::shared_array<double>& cache_match_) {
 		//for offline OpenGL Only
 		cam_img = cam_img_input;
 		init_buffer_l_boundary = init_buffer_l_boundary_;
@@ -54,7 +55,7 @@ public:
 		for (int i = 0; i < cam_DT.rows; i++) {
 			row_camDT_ptrs[i] = cam_DT.ptr<float>(i);
 		}
-
+		cache_match = cache_match_;
 	};
 	MatchEdges(boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_) {
 		//for offline OpenGL buffer creating Only
@@ -151,10 +152,7 @@ template <typename T> void MatchEdges::getModelImg(const T* var, Mat& model_cann
 	rotate_degree_set[0] = var[3];
 	rotate_degree_set[1] = var[4];
 	rotate_degree_set[2] = var[5];
-	//quat_set.x = var[3];
-	//quat_set.y = var[4];
-	//quat_set.z = var[5];
-	//quat_set.w = sqrt(1 - quat_set.x * quat_set.x - quat_set.y * quat_set.y - quat_set.z* quat_set.z);
+
 	ResetEvent(sentModelEvent);
 	SetEvent(readModelEvent);
 
@@ -219,10 +217,19 @@ template <typename T> double MatchEdges::modelDTcamCannyROIMatch(T* var, double 
 	return modelDTcamCannyROIMatchHelp<T>(model_DT_imgs[getIndex(var)], var, cam_canny_points, k_l, k_u);
 }
 template <typename T> double MatchEdges::modelCannycamDT_Match(T* var, double k_l, double k_u) const {
+	//检查cache中是否有保存
+	int index = getIndex(var);
+	double debug = cache_match[index];
+	if (cache_match[index] >= 0) { //读取操作是线程安全的
+		return cache_match[index];
+	}
+
 	vector<double> dist;
 	double temp;
-	int debug = getIndex(var);
-	vector<Point2i> *  point_vec = &model_points_vec_array[getIndex(var)];
+	vector<Point2i> *  point_vec = &model_points_vec_array[index];
+/*
+//****************************debug for show
+	
 
 	Mat back_ground = cam_img.clone();
 	for (std::vector<Point2i>::iterator i = point_vec->begin(); i < point_vec->end(); i++)
@@ -235,8 +242,8 @@ template <typename T> double MatchEdges::modelCannycamDT_Match(T* var, double k_
 
 	imshow("debugShowMatchImgs", back_ground);
 	waitKey(10);
-
-
+//****************************
+*/
 
 
 	for (std::vector<Point2i>::iterator iter = point_vec->begin(); iter < point_vec->end(); iter++) {
@@ -252,7 +259,11 @@ template <typename T> double MatchEdges::modelCannycamDT_Match(T* var, double k_
 			sum += dist[i];
 		}
 	}
+
 	std::cout << "max distance :" << dist[floor(k_u*dist.size())] << std::endl;
+	boost::lock_guard<boost::mutex> lock(cv_cache_mutex); //保证每个时刻只有一个线程能写入cache_match;
+	cache_match[index] = sum; //存入cache；
+	
 	return sum;// *dist[floor(k_u*dist.size()) - 1];
 
 }

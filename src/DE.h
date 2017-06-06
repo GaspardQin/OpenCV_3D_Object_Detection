@@ -7,7 +7,7 @@
 #include "objective_function.h"
 #include "thread_variables.h"
 using namespace de;
-#define THREAD_NUM 1
+#define THREAD_NUM 4
 #define VARS_COUNT 6
 #define POPULATION_SIZE 30
 #define LEVEL 0
@@ -96,8 +96,9 @@ private:
 	boost::shared_array<int> buffer_precision;
 	boost::shared_array<std::vector<Point2i>> model_points_vec_array;
 	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
+	boost::shared_array<double> cache_match;
 public:
-	DE_factor_offline_modelCanny_camDT(std::vector<int>& vars_valide_, std::vector<int>& vars_non_valide_, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_var, boost::shared_array<int>& init_buffer_precision, boost::shared_array<int>& init_buffer_l_boundary, boost::shared_array<int>& init_buffer_r_boundary, boost::shared_array<int>& init_buffer_count_for_levels) :objective_function("sumDT_offline")
+	DE_factor_offline_modelCanny_camDT(std::vector<int>& vars_valide_, std::vector<int>& vars_non_valide_, boost::shared_array<std::vector<Point2i>>& model_points_vec_array_, boost::shared_array<int>& init_buffer_var, boost::shared_array<int>& init_buffer_precision, boost::shared_array<int>& init_buffer_l_boundary, boost::shared_array<int>& init_buffer_r_boundary, boost::shared_array<int>& init_buffer_count_for_levels, boost::shared_array<double>& cache_match_) :objective_function("sumDT_offline")
 	{
 		Mat cam_src = imread("../model/sample.bmp", CV_8UC1);
 		Mat cam_canny_img = cam_src;
@@ -105,11 +106,12 @@ public:
 		//Canny(cam_src, cam_canny_img, 50, 200);
 		
 		model_points_vec_array = model_points_vec_array_;
-		cost_factor_ptr = boost::make_shared<CostFactorDT_Offline_modelCanny_camDT>(cam_canny_img, model_points_vec_array, init_buffer_l_boundary, init_buffer_r_boundary, init_buffer_precision, init_buffer_count_for_levels);
+		cost_factor_ptr = boost::make_shared<CostFactorDT_Offline_modelCanny_camDT>(cam_canny_img, model_points_vec_array, init_buffer_l_boundary, init_buffer_r_boundary, init_buffer_precision, init_buffer_count_for_levels,cache_match_);
 		buffer_var = init_buffer_var;
 		buffer_precision = init_buffer_precision;
 		vars_valide = vars_valide_;
 		vars_non_valide = vars_non_valide_;
+		cache_match = cache_match_;
 	}
 
 	virtual double operator()(de::DVectorPtr args)
@@ -413,6 +415,7 @@ private:
 
 	boost::shared_array<int> buffer_num;
 	boost::shared_array<int> init_buffer_count_for_levels;
+	boost::shared_array<double> cache_match;
 
 public:
 	individual_ptr best;
@@ -425,7 +428,10 @@ public:
 		model_points_vec_array = model_points_vec_array_;
 		buffer_num = init_buffer_num;
 		init_buffer_count_for_levels = init_buffer_count_for_levels_;
-
+		double* ptr = new double[init_buffer_count_for_levels_[0]];
+		std::fill_n(ptr, init_buffer_count_for_levels_[0], -1.0);
+		boost::shared_array<double> cache_match_(ptr);
+		cache_match = cache_match_;
 	}
 
 	void solve() {
@@ -459,7 +465,7 @@ public:
 			*/
 			objective_function_ptr ofArray[THREAD_NUM];
 			for (int ii = 0; ii < THREAD_NUM; ii++) {
-				ofArray[ii] = boost::make_shared< DE_factor_offline_modelCanny_camDT >(vars_valide, vars_non_valide, model_points_vec_array, init_var, buffer_precision, buffer_l_boundary, buffer_r_boundary, init_buffer_count_for_levels);
+				ofArray[ii] = boost::make_shared< DE_factor_offline_modelCanny_camDT >(vars_valide, vars_non_valide, model_points_vec_array, init_var, buffer_precision, buffer_l_boundary, buffer_r_boundary, init_buffer_count_for_levels,cache_match);
 			}
 
 

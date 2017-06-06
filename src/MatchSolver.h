@@ -179,8 +179,8 @@ public:
 	void setLevel(int level_) {
 		level = level_; //进入不同层优化阶段的时候需要调整level
 	}
-	CostFactorDT_Offline_modelCanny_camDT(const Mat &cam_img_input, boost::shared_array<std::vector<Point2i>>& model_points_vec_array, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_)
-		: MatchEdges(cam_img_input, model_points_vec_array, init_buffer_l_boundary_, init_buffer_r_boundary_, init_buffer_precision_, init_buffer_count_for_levels_) {
+	CostFactorDT_Offline_modelCanny_camDT(const Mat &cam_img_input, boost::shared_array<std::vector<Point2i>>& model_points_vec_array, boost::shared_array<int>& init_buffer_l_boundary_, boost::shared_array<int>& init_buffer_r_boundary_, boost::shared_array<int>& init_buffer_precision_, boost::shared_array<int>& init_buffer_count_for_levels_, boost::shared_array<double>& cache_match_)
+		: MatchEdges(cam_img_input, model_points_vec_array, init_buffer_l_boundary_, init_buffer_r_boundary_, init_buffer_precision_, init_buffer_count_for_levels_, cache_match_) {
 
 		cam_img = cam_img_input;
 		cam_src_color = imread("../model/sample.bmp");
