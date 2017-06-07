@@ -67,9 +67,10 @@ void test_camera() {
 }
 
 DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
-	
-	//test_camera();
-	//imshow("camera_img_src", camera_img_src);
+	DaHengCamera da_heng_cam;
+	da_heng_cam.captureCamera();
+	imshow("camera_img_src", cam_img_src);
+	waitKey();
 	cam_img_src = imread("../model/sample.jpg", CV_8UC1);
 	cam_img_color_src = imread("../model/sample.jpg", CV_8UC3);
 	//Canny(cam_img_src, cam_canny_img, 50, 200);
