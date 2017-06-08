@@ -41,9 +41,6 @@
     <ClInclude Include="..\src\MatchEdges.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MatchSolver.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\mesh.h">
       <Filter>头文件</Filter>
     </ClInclude>

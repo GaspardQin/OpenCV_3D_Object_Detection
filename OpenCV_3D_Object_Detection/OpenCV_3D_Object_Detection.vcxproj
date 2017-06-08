@@ -96,7 +96,6 @@
     <ClInclude Include="..\src\detectionMethodWithoutBuffer.h" />
     <ClInclude Include="..\src\loadModel.h" />
     <ClInclude Include="..\src\MatchEdges.h" />
-    <ClInclude Include="..\src\MatchSolver.h" />
     <ClInclude Include="..\src\mesh.h" />
     <ClInclude Include="..\src\model.h" />
     <ClInclude Include="..\src\objective_function.h" />

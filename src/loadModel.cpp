@@ -14,6 +14,19 @@ GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
 glm::mat4 projection;
 glm::mat4 view;
 glm::mat4 M_model;
+void getGLROIrect(double x, double y, double z, int* lower_left_corner){
+	//确定OpenGL左下角位置（对应opencv左上角）
+	int column_left_pixel = round(WINDOW_WIDTH / 2 + x / (CCD_WIDTH / 2 / FOCAL_DISTANCE*(-z))*WINDOW_WIDTH - ROI_WIDTH / 2);//z为负数
+	int row_top_pixel = round(WINDOW_HEIGHT / 2 - y / (CCD_WIDTH / 2 / FOCAL_DISTANCE*(-z) / WINDOW_WIDTH*WINDOW_HEIGHT)*WINDOW_HEIGHT - ROI_HEIGHT / 2);//y上下颠倒
+
+	//防止超出边界
+	if (column_left_pixel < 0) column_left_pixel = 0;
+	if (row_top_pixel < 0) row_top_pixel = 0;
+	lower_left_corner[0] = column_left_pixel;
+	lower_left_corner[1] = row_top_pixel; //OpenGL的左下角对应OpenCV的左上角
+	//lower_left_corner[2] = column_right_pixel;
+	//lower_left_corner[3] = row_bottom_pixel;
+}
 DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 {
 	
@@ -206,7 +219,6 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 			1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader_silhouette.programId, "model"),
 			1, GL_FALSE, glm::value_ptr(model));
-		// 这里填写场景绘制代码
 		//std::cout << glGetError() << std::endl;
 		objModel.offscreenDraw(shader_silhouette, fbo); // 绘制物体
 		
@@ -216,8 +228,18 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		
-		glReadBuffer(GL_COLOR_ATTACHMENT0);
-		glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
+		glReadBuffer(GL_COLOR_ATTACHMENT0);//指定glReadPixels读取GL_COLOR_ATTACHMENT0内容
+
+		if (option == MODEL_DT_CAM_CANNY_ONLINE_ROI) {
+			//直接读取ROI部分
+			int lower_left_corner[2];
+			getGLROIrect(pos_model_set[0], pos_model_set[1], pos_model_set[2], lower_left_corner);
+			glReadPixels(lower_left_corner[0], lower_left_corner[1], ROI_WIDTH, ROI_HEIGHT, GL_GREEN, GL_UNSIGNED_BYTE, readSrcImgROI.data); //从下往上读取，因此需要反转
+			
+			//debug use
+			//glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_GREEN, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
+		}
+		else glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_GREEN, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
 		//主要消耗用于在显存与内存中的传输数据，受限于PCIE的速度
 		//因此使用共享内存的intel 核心显卡 可以显著降低此步骤消耗
 

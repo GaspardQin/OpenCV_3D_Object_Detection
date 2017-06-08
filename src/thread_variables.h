@@ -43,12 +43,19 @@ extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables
 #include <boost/thread/thread.hpp>
 #include <boost/shared_array.hpp>
 
-#define WINDOW_WIDTH 1920.0
-#define WINDOW_HEIGHT 1080.0 //pixel
-#define ROI_WIDTH 400.0
-#define ROI_HEIGHT 400.0  //pixel
-#define FOCAL_DISTANCE 16.0 //mm
-#define CCD_WIDTH 13.0 //mm
+#define WINDOW_WIDTH 2592.0
+#define WINDOW_HEIGHT 1944.0 //pixel
+#define ROI_WIDTH 1200.0
+#define ROI_HEIGHT 1400.0  //pixel
+#define FOCAL_DISTANCE 8.0 //mm
+#define CCD_WIDTH 5.709 //mm
+
+#define DAHENG_CAMERA_INPUT 0
+#define DISK_IMG_INPUT 1
+#define MODEL_CANNY_CAM_DT_ONLINE 0
+#define MODEL_CANNY_CAM_DT_OFFLINE 1
+#define MODEL_DT_CAM_CANNY_ONLINE 2
+#define MODEL_DT_CAM_CANNY_ONLINE_ROI 3
 
 class DiscreteInfo {
 public:
@@ -186,7 +193,7 @@ extern Camera camera;
 extern float rotate_degree_set[3];
 extern glm::quat quat_set;
 
-extern cv::Mat readSrcImg;
+extern cv::Mat readSrcImg, readSrcImgROI;
 extern GLfloat camera_z;
 extern GLfloat pos_model_set[3];
 extern glm::mat4 projection;
@@ -203,4 +210,5 @@ extern std::vector<cv::Mat> model_offline_DT_imgs;
 extern std::vector<std::vector<cv::Point2i>> model_offline_canny_points;
 extern DiscreteInfo discrete_info;
 extern std::vector<double> cache_match; //访问需要上读写锁
+extern int option;
 #endif

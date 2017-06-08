@@ -3,7 +3,7 @@
 
 int iteral_count = 0;
 
-void DetectionMethod::arrayVecOfPointsWrite(const string& filename, const vector<Point2i>* points_vector_array, const int array_size)
+void DetectionMethod::arrayVecOfPointsWrite(const string& filename, const vector<vector<Point2i>>& points_vector_array, const int& array_size)
 {
 	ofstream fs(filename, fstream::binary);
 	const size_t point2i_size =  sizeof(Point2i);
@@ -25,8 +25,9 @@ void DetectionMethod::arrayVecOfPointsWrite(const string& filename, const vector
 		std::cout << "Writing ... " << double(i) / double(array_size) * 100 << "%" << endl;
 	}
 }
-void DetectionMethod::arrayVecOfPointsRead(const string& filename, int array_size)
+void DetectionMethod::arrayVecOfPointsRead(const string& filename, int& array_size)
 {
+	model_offline_canny_points.shrink_to_fit();
 	model_offline_canny_points.resize(array_size);
 	ifstream fs(filename, fstream::binary);
 	if (!fs)
@@ -46,18 +47,24 @@ void DetectionMethod::arrayVecOfPointsRead(const string& filename, int array_siz
 	vector<int> vectors_size(array_size);
 
 	fs.read(reinterpret_cast<char*>(&vectors_size[0]), array_size*sizeof(vectors_size[0]));
-	__int64 debug0 = *(__int64*)(((char*)&(fs.tellg())) + 8);
+	//__int64 debug0 = *(__int64*)(((char*)&(fs.tellg())) + 8);
+
+	for (int i = 0; i < array_size;i++) {
+		model_offline_canny_points[i].shrink_to_fit();
+		model_offline_canny_points[i].resize(vectors_size[i]);
+	}
+	std::cout.setf(ios::fixed);
 	while (*(__int64*)(((char*)&(fs.tellg())) + 8) < length)
 	{
 		// Data
-		vector<Point2i> vec_point_temp(vectors_size[count]);
-		fs.read((char*)&vec_point_temp[0], point2i_size*vectors_size[count]);
-		model_offline_canny_points[count] = vec_point_temp;
-		vec_point_temp.~vector();
+		//vector<Point2i> vec_point_temp(vectors_size[count]);
+		fs.read((char*)&model_offline_canny_points[count][0], point2i_size*vectors_size[count]);
+		//model_offline_canny_points[count] = vec_point_temp;
+		//vec_point_temp.~vector();
 		count++;
-		cout.setf(ios::fixed);
-		std::cout << "Reading... " << double(count)/ double(array_size)*100<<" %" << endl;
-		__int64 debug1 = *(__int64*)(((char*)&(fs.tellg())) + 8);
+		
+		std::cout << "Reading... " <<setprecision(2)<< double(count)/ double(array_size)*100<<" %" << endl;
+		//__int64 debug1 = *(__int64*)(((char*)&(fs.tellg())) + 8);
 	}
 	if (count != array_size) {
 		std::cout << "Error: array_size is not correct! " << std::endl;
@@ -65,8 +72,12 @@ void DetectionMethod::arrayVecOfPointsRead(const string& filename, int array_siz
 	
 }
 void DetectionMethod::creatBuffer_ModelPoints() {
-	vector<Point2i>* points_array_buffer = new vector<Point2i>[discrete_info.count_for_levels[0]];
-
+	vector<vector<Point2i>> points_vector_buffer;
+	points_vector_buffer.shrink_to_fit();
+	points_vector_buffer.resize(discrete_info.count_for_levels[0]);
+	for (vector<vector<Point2i>>::iterator iter = points_vector_buffer.begin(); iter < points_vector_buffer.end(); iter++) {
+		iter->shrink_to_fit();
+	}
 
 
 	int* debug_array;
@@ -76,9 +87,9 @@ void DetectionMethod::creatBuffer_ModelPoints() {
 
 	MatchEdges creatMatchImgs;
 	int var[6];
-	Mat temp_mat;
 	double count = 0;
 	double count_total = discrete_info.count_for_levels[0];
+	std::cout.setf(ios::fixed);
 	for (var[0] = discrete_info.l_boundary[0]; var[0] <= discrete_info.r_boundary[0]; var[0] += discrete_info.precision[0]) {
 		for (var[1] = discrete_info.l_boundary[1]; var[1] <= discrete_info.r_boundary[1]; var[1] += discrete_info.precision[1]) {
 			for (var[2] = discrete_info.l_boundary[2]; var[2] <= discrete_info.r_boundary[2]; var[2] += discrete_info.precision[2]) {
@@ -87,10 +98,10 @@ void DetectionMethod::creatBuffer_ModelPoints() {
 						for (var[5] = discrete_info.l_boundary[5]; var[5] <= discrete_info.r_boundary[5]; var[5] += discrete_info.precision[5]) {
 
 
-							creatMatchImgs.getModelImgUchar(var, temp_mat);
-							cv::findNonZero(temp_mat, points_array_buffer[discrete_info.getIndex(var)]);
+							creatMatchImgs.getModelImgUchar(var);
+							cv::findNonZero(readSrcImg, points_vector_buffer[discrete_info.getIndex(var)]);
 							count++;
-							std::cout.setf(ios::fixed);
+							
 							std::cout << "Creating model DT imgs' buffer  " << setprecision(2) << count / count_total * 100 << " % " << std::endl;
 							/////////////////////////////////////////////////////////////////
 							//for debug
@@ -111,32 +122,40 @@ void DetectionMethod::creatBuffer_ModelPoints() {
 		}
 	}
 
-	arrayVecOfPointsWrite("../model/buffer.bin", points_array_buffer, discrete_info.count_for_levels[0]);
+	arrayVecOfPointsWrite("../model/buffer.bin", points_vector_buffer, discrete_info.count_for_levels[0]);
 }
 void DetectionMethod::readBuffer_ModelPoints() {
 	arrayVecOfPointsRead("../model/buffer.bin", discrete_info.count_for_levels[0]);
 }
 
 void DetectionMethod::initialization() {
-	Mat temp;
-	bitwise_not(cam_canny_img, temp);
-	distanceTransform(temp, cam_DT, CV_DIST_L2, 3, CV_32FC1);
+
+
+	if (option == MODEL_CANNY_CAM_DT_ONLINE || option == MODEL_CANNY_CAM_DT_OFFLINE) {
+		Mat temp;
+		bitwise_not(cam_canny_img, temp);
+		distanceTransform(temp, cam_DT, CV_DIST_L2, 3, CV_32FC1);
+	}
+	else {//MODEL_DT_CAM_CANNY_ONLINE
+		cv::findNonZero(cam_canny_img, cam_canny_points);
+	}
+
+
 	cache_match.resize(discrete_info.count_for_levels[0]);
 	cache_match.assign(discrete_info.count_for_levels[0], -1);
 }
 
-void DetectionMethod::debugShowMatch(double* var) {
+void DetectionMethod::debugShowMatch(int* var) {
 	// var 是位置、姿态参数，是一个大小为6的数组
 	Mat back_ground = cam_img_src.clone();
 	MatchEdges matchEdgesForShow;
 
-	Mat model_canny_img_src;
-	matchEdgesForShow.getModelImg<double>(var, model_canny_img_src);
+	matchEdgesForShow.getModelImgUchar(var);
 	for (int i = 0; i < back_ground.rows; i++)
 	{
 		for (int j = 0; j < back_ground.cols; j++)
 		{
-			if (model_canny_img_src.at<float>(i, j)>0) {
+			if (readSrcImg.at<uchar>(i, j)>0) {
 				back_ground.at<uchar>(i, j) = 200; //Blue;
 			//	back_ground.at<Vec3b>(i, j)[0] = 200; //Blue;
 			//	back_ground.at<Vec3b>(i, j)[1] = 100; //g;
@@ -144,6 +163,7 @@ void DetectionMethod::debugShowMatch(double* var) {
 			}
 		}
 	}
+	namedWindow("debugShowMatchImgs_FINAL", WINDOW_NORMAL);
 	imshow("debugShowMatchImgs_FINAL", back_ground);
 }
 void DetectionMethod::debugShowMatch_offline_points(int* var) {
@@ -161,15 +181,16 @@ void DetectionMethod::debugShowMatch_offline_points(int* var) {
 	
 	imshow("debugShowMatchImgs", back_ground);
 }
-void DetectionMethod::drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color) {
+void DetectionMethod::drawPoints(Mat &img, std::vector<Point2f>& points, const Scalar& color) {
 	int i;
 	for (i = 0; i < points.size(); i++) {
 		circle(img, points[i], 5, color);
 	}
 }
+void DetectionMethod::DT_solve_with_DE(int * output_best) {
 
-void DetectionMethod::DT_solve_with_DE(double * output_best) {
-	DE_OnlineSolver DE_solver;
+	DE_Solver DE_solver;
+	
 	double score_best;
 	DE_solver.solve();
 	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
@@ -189,47 +210,4 @@ void DetectionMethod::DT_solve_with_DE(double * output_best) {
 	cout << "Best Rotation of offlineSolver is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
 	cout << "Final score is : " << score_best << endl;
 }
-/*
-void DetectionMethod::DT_solve_with_DE_offline(double * output_best) {
-	DE_Offline_Solver deOfflineSolver( init_buffer_var,  init_buffer_precision,  init_buffer_num, init_buffer_l_boundary, init_buffer_r_boundary, model_DT_imgs, init_buffer_count_for_levels);
-	double score_best;
-	deOfflineSolver.solve();
-	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
-	for (int i = 0; i < VARS_COUNT; i++) {
-		if (init_buffer_num[i] > 1) vars_valide.push_back(i);
-		else vars_non_valide.push_back(i);
-	}
-	for (int i = 0; i < vars_valide.size(); i++) {
-		output_best[vars_valide[i]] = init_buffer_var[vars_valide[i]] + (*(deOfflineSolver.best)->vars())[vars_valide[i]]* init_buffer_precision[vars_valide[i]];
-	}
-	for (int i = 0; i < vars_non_valide.size(); i++) {
-		output_best[vars_non_valide[i]] = init_buffer_var[vars_non_valide[i]];
-	}
-	
-	score_best = deOfflineSolver.best->cost();
-	cout << "Best Position of offlineSolver is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
-	cout << "Best Rotation of offlineSolver is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
-	cout << "Final score is : " << score_best << endl;
-}
-*/
-void DetectionMethod::DT_solve_with_DE_offline_modelCanny_camDT(double * output_best) {
-	DE_Offline_Solver_modelCanny_camDT deOfflineSolver;
-	double score_best;
-	deOfflineSolver.solve();
-	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
-	for (int i = 0; i < VARS_COUNT; i++) {
-		if (discrete_info.num[i] > 1) vars_valide.push_back(i);
-		else vars_non_valide.push_back(i);
-	}
-	for (int i = 0; i < vars_valide.size(); i++) {
-		output_best[vars_valide[i]] = discrete_info.init_var[vars_valide[i]] + (*(deOfflineSolver.best)->vars())[vars_valide[i]] * discrete_info.precision[vars_valide[i]];
-	}
-	for (int i = 0; i < vars_non_valide.size(); i++) {
-		output_best[vars_non_valide[i]] = discrete_info.init_var[vars_non_valide[i]];
-	}
 
-	score_best = deOfflineSolver.best->cost();
-	cout << "Best Position of offlineSolver is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
-	cout << "Best Rotation of offlineSolver is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;
-	cout << "Final score is : " << score_best << endl;
-}

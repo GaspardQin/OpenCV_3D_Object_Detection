@@ -1,5 +1,7 @@
 #include "openCV.h"
-cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC3); //CV_8UC3);//the raw img got from the screenshot of OpenGL;
+cv::Mat readSrcImg = cv::Mat::zeros(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC1); //CV_8UC3);//the raw img got from the buffer of OpenGL;
+cv::Mat readSrcImgROI = cv::Mat::zeros(ROI_HEIGHT, ROI_WIDTH, CV_8UC1); //CV_8UC3);//the raw img of ROI got from the buffer of OpenGL;
+
 DiscreteInfo discrete_info; //全局变量
 std::vector<cv::Mat> model_offline_DT_imgs;//全局变量
 std::vector<std::vector<cv::Point2i>> model_offline_canny_points;//全局变量
@@ -8,6 +10,9 @@ std::vector<Point2i> cam_canny_points;//全局变量
 Mat cam_DT;//全局变量
 std::vector<double> cache_match;//全局变量
 Mat cam_img_src,cam_img_color_src;
+int option;
+
+
 void creatSample() {
 	//OpenGL 生成的图上下颠倒，y,x_degree,z_degree应取相反数
 	rotate_degree_set[0] = -20;
@@ -19,6 +24,7 @@ void creatSample() {
 	//quat_set = glm::quat(glm::vec3(glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[2])));
 	SetEvent(readModelEvent);
 	WaitForSingleObject(sentModelEvent, INFINITE);
+	namedWindow("creatSample", WINDOW_NORMAL);
 	imshow("creatSample", readSrcImg);
 	//cv::flip(readSrcImg, readSrcImg, 0);
 	waitKey();
@@ -66,35 +72,49 @@ void test_camera() {
 
 }
 
+
+
 DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
-	DaHengCamera da_heng_cam;
-	da_heng_cam.captureCamera();
-	imshow("camera_img_src", cam_img_src);
-	waitKey();
-	cam_img_src = imread("../model/sample.jpg", CV_8UC1);
-	cam_img_color_src = imread("../model/sample.jpg", CV_8UC3);
-	//Canny(cam_img_src, cam_canny_img, 50, 200);
-	cam_canny_img = cam_img_src;
+	creatSample();
+	int input_option = DISK_IMG_INPUT;
+	if (input_option == DAHENG_CAMERA_INPUT) {
+		DaHengCamera da_heng_cam;
+		da_heng_cam.captureCamera();
+		//Canny(cam_img_src, cam_canny_img, 50, 200);
+		imshow("camera_img_src", cam_img_src);
+		waitKey();
+	}
+	else if (input_option == DISK_IMG_INPUT) {
+		cam_img_src = imread("../model/sample.bmp", CV_8UC1);
+		cam_img_color_src = imread("../model/sample.bmp", CV_8UC3);
+		cam_canny_img = cam_img_src;
+	}
+
 
 	discrete_info.setInitValue(5, 20, -700, -20, 16, 4);
-	discrete_info.setPrecision(1, 1, 1, 1, 1, 1);
-	discrete_info.setBoundary(20, 20, 10, 4, 1, 1);
+	discrete_info.setPrecision(5, 5, 5, 2, 1, 1);
+	discrete_info.setBoundary(10, 10, 10, 4, 1, 1);
+
+	option = MODEL_DT_CAM_CANNY_ONLINE_ROI;
+	// Option could be MODEL_CANNY_CAM_DT_ONLINE, MODEL_CANNY_CAM_DT_OFFLINE, MODEL_DT_CAM_CANNY_ONLINE, or MODEL_DT_CAM_CANNY_ONLINE_ROI.
+	//MODEL_DT_CAM_CANNY_OFFLINE is not supported (Using too much RAM space)
+	if (option != MODEL_CANNY_CAM_DT_ONLINE && option != MODEL_CANNY_CAM_DT_OFFLINE && option != MODEL_DT_CAM_CANNY_ONLINE && option != MODEL_DT_CAM_CANNY_ONLINE_ROI) {
+		cout << "error: DE_option input is not valide" << endl;
+	}
+
 
 
 	DetectionMethod pos_detector;
-	pos_detector.initialization();//读取sample.jpg作为cam得到的图像
-	
-	//生成buffer，仅第一次运行需要
+	pos_detector.initialization();
 	
 
 
 	//pos_detector.creatBuffer_ModelPoints();
 	//pos_detector.readBuffer_ModelPoints();
 
-	double output_best[6];
-	//pos_detector.DT_solve_with_powell(output_best);
+	int output_best[6];
+	//pos_detector.DT_solve_with_DE(output_best, MODEL_CANNY_CAM_DT_ONLINE);
 	pos_detector.DT_solve_with_DE(output_best);
-	//pos_detector.DT_solve_with_DE_offline_modelCanny_camDT(output_best);
 	//可视化
 	pos_detector.debugShowMatch(output_best);
 
