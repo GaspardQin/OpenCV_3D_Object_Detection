@@ -22,7 +22,7 @@ void creatSample() {
 	pos_model_set[1] = 20;
 	pos_model_set[2] = -700;
 	//quat_set = glm::quat(glm::vec3(glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[2])));
-	SetEvent(readModelEvent);
+	SetEvent(nextModelEvent);
 	WaitForSingleObject(sentModelEvent, INFINITE);
 	namedWindow("creatSample", WINDOW_NORMAL);
 	imshow("creatSample", readSrcImg);
@@ -30,7 +30,7 @@ void creatSample() {
 	waitKey();
 	imwrite("../model/sample.jpg", readSrcImg);
 	imwrite("../model/sample.bmp", readSrcImg);
-	SetEvent(readModelEvent);
+	SetEvent(nextModelEvent);
 }
 void test_camera() {
 	VideoCapture cap(CV_CAP_PVAPI);

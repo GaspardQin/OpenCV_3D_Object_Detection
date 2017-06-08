@@ -40,7 +40,7 @@ void MatchEdges::getModelImgUchar(const int* var) const {
 	//quat_set.z = var[5];
 	//quat_set.w = sqrt(1 - quat_set.x * quat_set.x - quat_set.y * quat_set.y - quat_set.z* quat_set.z);
 	ResetEvent(sentModelEvent);
-	SetEvent(readModelEvent);
+	SetEvent(nextModelEvent);
 
 	WaitForSingleObject(sentModelEvent, INFINITE);
 	//cvtColor(readSrcImg, model_canny_img, CV_RGB2GRAY);
@@ -106,6 +106,10 @@ double MatchEdges::MatchOnline_modelCannycamDT(const int* var, double k_l, doubl
 
 	getModelImgUchar(var);
 	cv::findNonZero(readSrcImg, point_vec);
+	
+	ResetEvent(readImgEvent);
+	SetEvent(readImgEvent);
+
 
 	for (std::vector<Point2i>::iterator iter = point_vec.begin(); iter < point_vec.end(); iter++) {
 		temp = row_camDT_ptrs[iter->y][iter->x];//findNonZero得到的Point x,y与Mat中的坐标相反
@@ -141,10 +145,14 @@ double MatchEdges::MatchOnline_modelDTcamCanny(const int* var, double k_l, doubl
 	Mat model_DT;
 	vector<double> dist;
 	double temp;
-
+	Mat bit_not_src;
 	getModelImgUchar(var);
-	bitwise_not(readSrcImg, readSrcImg);
-	distanceTransform(readSrcImg, model_DT, CV_DIST_L2, 3, CV_32FC1);
+	bitwise_not(readSrcImg, bit_not_src);
+
+	ResetEvent(readImgEvent);
+	SetEvent(readImgEvent);
+
+	distanceTransform(bit_not_src, model_DT, CV_DIST_L2, 3, CV_32FC1);
 
 	float* row_modelDT_ptrs[int(WINDOW_HEIGHT)];
 	for (int i = 0; i < model_DT.rows; i++) {
@@ -198,10 +206,14 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI(const int* var, double k_l, do
 	Mat model_DT;
 	vector<double> dist;
 	double temp;
-
+	Mat bit_not_src;
 	getModelImgUchar(var);
-	bitwise_not(readSrcImgROI, readSrcImgROI);
-	distanceTransform(readSrcImgROI, model_DT, CV_DIST_L2, 3, CV_32FC1);
+	bitwise_not(readSrcImgROI, bit_not_src);
+
+	ResetEvent(readImgEvent);
+	SetEvent(readImgEvent);
+
+	distanceTransform(bit_not_src, model_DT, CV_DIST_L2, 3, CV_32FC1);
 
 	float* row_modelDT_ptrs[int(WINDOW_HEIGHT)];
 	for (int i = 0; i < model_DT.rows; i++) {
@@ -210,8 +222,8 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI(const int* var, double k_l, do
 	int rect_pixel[4];//column_left_pixel,row_top_pixel,,column_right_pixel,row_bottom_pixel
 	getROIrect(double(var[0]), double(var[1]), double(var[2]), rect_pixel);
 
-	Mat temp_debug;
-	getROI(readSrcImg, temp_debug, double(var[0]), double(var[1]), double(var[2]));
+	//Mat temp_debug;
+	//getROI(readSrcImg, temp_debug, double(var[0]), double(var[1]), double(var[2]));
 	for (std::vector<Point2i>::iterator iter = cam_canny_points.begin(); iter < cam_canny_points.end(); iter++) {
 		int row_temp = iter->y;
 	    int col_temp = iter->x;

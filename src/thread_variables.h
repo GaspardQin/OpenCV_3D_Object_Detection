@@ -6,8 +6,8 @@
 #include <iostream>
 //extern HANDLE sentImgEvent;
 extern HANDLE sentModelEvent;
-extern HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables.h中声明extern
-//extern HANDLE readImgEvent;
+extern HANDLE nextModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables.h中声明extern
+extern HANDLE readImgEvent;
 
 #include <opencv2\opencv.hpp>
 #include <opencv2\core\opengl.hpp>

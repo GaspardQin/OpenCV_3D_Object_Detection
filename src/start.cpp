@@ -6,8 +6,8 @@
 //DWORD WINAPI glThreadFun(LPVOID lpParmeter);
 //HANDLE sentImgEvent;
 HANDLE sentModelEvent;
-HANDLE readModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables.h中声明extern
-//HANDLE readImgEvent;
+HANDLE nextModelEvent;//全局变量应在相应cpp下先声明，再在thread_variables.h中声明extern
+HANDLE readImgEvent;
 boost::mutex gl_mutex;
 boost::shared_mutex cv_cache_mutex;
 int main() {
@@ -16,13 +16,13 @@ int main() {
 	//HANDLE h_cvImgThread = INVALID_HANDLE_VALUE;
 	//sentImgEvent = CreateEvent(NULL, false, false, (LPTSTR)"sendingImgEvent");
 	sentModelEvent = CreateEvent(NULL, false, false, (LPTSTR)"sendingModelEvent");
-	readModelEvent = CreateEvent(NULL, false, false, (LPTSTR)"readingModelEvent");
+	nextModelEvent = CreateEvent(NULL, false, false, (LPTSTR)"readingModelEvent");
 	//readImgEvent = CreateEvent(NULL, false, false, (LPTSTR)"readingImgEvent");
 	ResetEvent(sentModelEvent);
 	//ResetEvent(sentImgEvent);
-	ResetEvent(readModelEvent);
+	ResetEvent(nextModelEvent);
 	//ResetEvent(readImgEvent);
-	if ((!sentModelEvent) || (!readModelEvent))
+	if ((!sentModelEvent) || (!nextModelEvent))
 	{
 		std::cout << "Failed to CreateEvent !" << std::endl;
 		return 0;

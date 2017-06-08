@@ -173,7 +173,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	{
 
 		
-		WaitForSingleObject(readModelEvent, INFINITE);
+		WaitForSingleObject(nextModelEvent, INFINITE);
 		
 		//GLfloat currentFrame = (GLfloat)glfwGetTime();
 	//	deltaTime = currentFrame - lastFrame;
@@ -230,6 +230,8 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		
 		glReadBuffer(GL_COLOR_ATTACHMENT0);//指定glReadPixels读取GL_COLOR_ATTACHMENT0内容
 
+		WaitForSingleObject(readImgEvent, INFINITE);//上一个渲染图像需要读取完毕
+
 		if (option == MODEL_DT_CAM_CANNY_ONLINE_ROI) {
 			//直接读取ROI部分
 			int lower_left_corner[2];
@@ -252,7 +254,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		}
 
 
-		ResetEvent(readModelEvent);
+		ResetEvent(nextModelEvent);
 		SetEvent(sentModelEvent);
 		
 		
