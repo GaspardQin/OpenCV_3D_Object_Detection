@@ -8,31 +8,27 @@
 #include "DE.h"
 using namespace cv;
 using namespace std;
+
 class DetectionMethod {
+private:
 public:
-	std::vector<cv::Mat> model_ini_Canny_imgs;//存储预先生成的模型2D边缘图
-	double pixel_pos_estimated[2];
-	double pos_estimated[3]; double quat_estimated[3];
-	cv::Mat cam_canny_img, cam_src, cam_src_color;
-	bool buffer_is_created = false;
-	int min_index;
-	template<typename T> int findMinIndex(std::vector<T>& src);
-	template<typename T> int findMaxIndex(std::vector<T>& src);
-	template<typename T> int maxElement(T* src, int size);
-	template<typename T> int minElement(T* src, int size);
+	
 
-	void arrayMatWrite(const string& filename, const Mat* matrices, const int array_size);
-	void arrayMatRead(const string& filename, int array_size, boost::shared_array<Mat> model_DT_mats_output);
+	void creatBuffer_ModelPoints();
+	void readBuffer_ModelPoints();
+	void arrayVecOfPointsWrite(const string & filename, const vector<vector<Point2i>>& points_vector_array, const int& array_size);
+	void arrayVecOfPointsRead(const string& filename, int& array_size);
+
 	void initialization();
+	void DT_solve_with_DE(int * output_best);
 
-	void DT_solve_with_powell(double* output_best);
+	void debugShowMatch(int* var);
+	void debugShowMatch_offline_points(int * var);
+	void drawPoints(Mat &img, std::vector<Point2f>& points, const Scalar& color);
 
-	void DetectionMethod::DT_solve_with_DE(double * output_best);
-	void debugShowContours(int canny_index, std::vector<std::vector<Point>> *cam_contours, int cam_index, std::vector<std::vector<Point>> *model_contours, int model_index);
-	void debugShowMatch(double* var);
-	void drawPoints(Mat &img,std::vector<Point2f> points, const Scalar& color);
 
-	DetectionMethod() {};
+	DetectionMethod() {
+	};
 	
 
 };

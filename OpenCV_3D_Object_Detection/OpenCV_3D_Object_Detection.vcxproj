@@ -91,11 +91,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\camera.h" />
+    <ClInclude Include="..\src\CaptureCameraImage.h" />
     <ClInclude Include="..\src\DE.h" />
     <ClInclude Include="..\src\detectionMethodWithoutBuffer.h" />
     <ClInclude Include="..\src\loadModel.h" />
     <ClInclude Include="..\src\MatchEdges.h" />
-    <ClInclude Include="..\src\MatchSolver.h" />
     <ClInclude Include="..\src\mesh.h" />
     <ClInclude Include="..\src\model.h" />
     <ClInclude Include="..\src\objective_function.h" />
@@ -109,7 +109,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\model.frag" />
+    <None Include="..\src\model.geometry" />
     <None Include="..\src\model.vertex" />
+    <None Include="..\src\model_object.frag" />
+    <None Include="..\src\model_object.geometry" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

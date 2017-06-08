@@ -41,9 +41,6 @@
     <ClInclude Include="..\src\MatchEdges.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\MatchSolver.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\mesh.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -71,6 +68,9 @@
     <ClInclude Include="..\src\DE.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\CaptureCameraImage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\src\modelPath.txt">
@@ -82,6 +82,15 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="..\src\model.vertex">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\src\model.geometry">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\src\model_object.frag">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="..\src\model_object.geometry">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

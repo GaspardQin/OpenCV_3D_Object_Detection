@@ -1,4 +1,4 @@
-#ifndef _MESH_H_
+ï»¿#ifndef _MESH_H_
 #define _MESH_H_
 
 #include <GL/glew.h>
@@ -15,7 +15,7 @@
 #include <assimp/postprocess.h>
 #include "shader.h"
 
-// ±íÊ¾Ò»¸ö¶¥µãÊôĞÔ
+// è¡¨ç¤ºä¸€ä¸ªé¡¶ç‚¹å±æ€§
 struct Vertex
 {
 	glm::vec3 position;
@@ -23,7 +23,7 @@ struct Vertex
 	glm::vec3 normal;
 };
 
-// ±íÊ¾Ò»¸öTexture
+// è¡¨ç¤ºä¸€ä¸ªTexture
 struct Texture
 {
 	GLuint id;
@@ -31,11 +31,70 @@ struct Texture
 	std::string path;
 };
 
-// ±íÊ¾Ò»¸öÓÃÓÚäÖÈ¾µÄ×îĞ¡ÊµÌå
+// è¡¨ç¤ºä¸€ä¸ªç”¨äºæ¸²æŸ“çš„æœ€å°å®ä½“
 class Mesh
 {
 public:
-	void draw(const Shader& shader) const// »æÖÆMesh
+
+	void offscreenDraw(const Shader& shader, const GLint fbo) const //å¿«é€Ÿç»˜åˆ¶
+	{
+
+
+
+
+		if (VAOId == 0
+			|| VBOId == 0
+			|| EBOId == 0)
+		{
+			return;
+		}
+		shader.use();
+		glBindVertexArray(this->VAOId);
+		int diffuseCnt = 0, specularCnt = 0, texUnitCnt = 0;
+		for (std::vector<Texture>::const_iterator it = this->textures.begin();
+			this->textures.end() != it; ++it)
+		{
+			switch (it->type)
+			{
+			case aiTextureType_DIFFUSE:
+			{
+				glActiveTexture(GL_TEXTURE0 + texUnitCnt);
+				glBindTexture(GL_TEXTURE_2D, it->id);
+				std::stringstream samplerNameStr;
+				samplerNameStr << "texture_diffuse" << diffuseCnt++;
+				glUniform1i(glGetUniformLocation(shader.programId,
+					samplerNameStr.str().c_str()), texUnitCnt++);
+			}
+			break;
+			case aiTextureType_SPECULAR:
+			{
+				glActiveTexture(GL_TEXTURE0 + texUnitCnt);
+				glBindTexture(GL_TEXTURE_2D, it->id);
+				std::stringstream samplerNameStr;
+				samplerNameStr << "texture_specular" << specularCnt++;
+				glUniform1i(glGetUniformLocation(shader.programId,
+					samplerNameStr.str().c_str()), texUnitCnt++);
+			}
+			break;
+			default:
+				std::cerr << "Warning::Mesh::draw, texture type" << it->type
+					<< " current not supported." << std::endl;
+				break;
+			}
+		}
+		//glGetError();
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+		//std::cout << glGetError() << std::endl;
+		//glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES_ADJACENCY, this->indices.size(), GL_UNSIGNED_INT, 0);
+		glBindVertexArray(0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glUseProgram(0);
+
+
+	
+	};
+	void draw(const Shader& shader) const// ç»˜åˆ¶Mesh
 	{
 		if (VAOId == 0 
 			||VBOId == 0 
@@ -83,12 +142,14 @@ public:
 		glUseProgram(0);
 	}
 	Mesh():VAOId(0), VBOId(0), EBOId(0){}
+	/*
 	Mesh(const std::vector<Vertex>& vertData, 
 		const std::vector<Texture> & textures,
-		const std::vector<GLuint>& indices):VAOId(0), VBOId(0), EBOId(0) // ¹¹ÔìÒ»¸öMesh
+		const std::vector<GLuint>& indices):VAOId(0), VBOId(0), EBOId(0) // æ„é€ ä¸€ä¸ªMesh
 	{
 		setData(vertData, textures, indices);
 	}
+	*/
 	void setData(const std::vector<Vertex>& vertData,
 		const std::vector<Texture> & textures,
 		const std::vector<GLuint>& indices)
@@ -101,6 +162,7 @@ public:
 			this->setupMesh();
 		}
 	}
+	
 	void final() const
 	{
 		glDeleteVertexArrays(1, &this->VAOId);
@@ -109,9 +171,10 @@ public:
 	}
 	~Mesh()
 	{
-		// ²»ÒªÔÙÕâÀïÊÍ·ÅVBOµÈ¿Õ¼ä ÒòÎªMesh¶ÔÏó´«µİÊ± ÁÙÊ±¶ÔÏóÏú»ÙºóÕâÀï»áÇåÀíVBOµÈ¿Õ¼ä
+		// ä¸è¦å†è¿™é‡Œé‡Šæ”¾VBOç­‰ç©ºé—´ å› ä¸ºMeshå¯¹è±¡ä¼ é€’æ—¶ ä¸´æ—¶å¯¹è±¡é”€æ¯åè¿™é‡Œä¼šæ¸…ç†VBOç­‰ç©ºé—´
 	}
-	void draw_line(const Shader& shader) const// »æÖÆMesh
+	/*
+	void draw_line(const Shader& shader) const// ç»˜åˆ¶Mesh
 	{
 		if (VAOId == 0
 			|| VBOId == 0
@@ -127,13 +190,14 @@ public:
 		glBindVertexArray(0);
 		glUseProgram(0);
 	}
+	*/
 private:
 	std::vector<Vertex> vertData;
 	std::vector<GLuint> indices;
 	std::vector<Texture> textures;
 	GLuint VAOId, VBOId, EBOId;
-
-	void setupMesh()  // ½¨Á¢VAO,VBOµÈ»º³åÇø
+	
+	void setupMesh()  // å»ºç«‹VAO,VBOç­‰ç¼“å†²åŒº
 	{
 		glGenVertexArrays(1, &this->VAOId);
 		glGenBuffers(1, &this->VBOId);
@@ -143,25 +207,26 @@ private:
 		glBindBuffer(GL_ARRAY_BUFFER, this->VBOId);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * this->vertData.size(),
 			&this->vertData[0], GL_STATIC_DRAW);
-		// ¶¥µãÎ»ÖÃÊôĞÔ
+		// é¡¶ç‚¹ä½ç½®å±æ€§
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
 			sizeof(Vertex), (GLvoid*)0);
 		glEnableVertexAttribArray(0);
-		// ¶¥µãÎÆÀí×ø±ê
+		// é¡¶ç‚¹çº¹ç†åæ ‡
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
 			sizeof(Vertex), (GLvoid*)(3 * sizeof(GL_FLOAT)));
 		glEnableVertexAttribArray(1);
-		// ¶¥µã·¨ÏòÁ¿ÊôĞÔ
+		// é¡¶ç‚¹æ³•å‘é‡å±æ€§
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
 			sizeof(Vertex), (GLvoid*)(5 * sizeof(GL_FLOAT)));
 		glEnableVertexAttribArray(2);
-		// Ë÷ÒıÊı¾İ
+		// ç´¢å¼•æ•°æ®
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBOId);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint)* this->indices.size(),
 			&this->indices[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glBindVertexArray(0);
 	}
+	
 };
 
 #endif 

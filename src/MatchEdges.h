@@ -3,28 +3,35 @@
 using namespace std;
 using namespace cv;
 class MatchEdges {
-public:
-	Mat cam_img, cam_img_pyramid_1, cam_img_pyramid_2, cam_DT, cam_DT_pyramid_1, cam_DT_pyramid_2;
-	std::vector<Mat> cam_DT_pyramid;
-	int levelMax;
+private:
+	float* row_camDT_ptrs[int(WINDOW_HEIGHT)]; //cam_DT矩阵每一行第一个值的地址（为了取代at函数，做到对元素的快速访问）
 
-	int dim = 6;//总共六维
-	MatchEdges(const Mat &cam_img_input,int levelMax_input) {
-		cam_img = cam_img_input;
-		levelMax = levelMax_input;
-		for (int i = 0; i <= levelMax; i ++) {
-			Mat cam_img_pyramid;
-			Mat cam_DT;
-			binaryZoomOut(cam_img, cam_img_pyramid, 1/std::pow(2,i));
-			DT(cam_img_pyramid, cam_DT);
-			cam_DT_pyramid.push_back(cam_DT);
+
+
+public:
+	Mat cam_img_debug;
+
+	MatchEdges() {
+		for (int i = 0; i < cam_DT.rows; i++) {
+			row_camDT_ptrs[i] = cam_DT.ptr<float>(i);
 		}
 	};
-	void getModelImg(const double *var, Mat& model_canny_img) const;
-	const void debugShowMatch(std::vector<Point2f> model_corners, std::vector<Point2f> cam_corners)const;
-	const void drawPoints(Mat &img, std::vector<Point2f> points, const Scalar& color)const;
-	double MatchEdges::DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, double k_u) const;
-	double MatchEdges::DTmatchPyramid(double *var,int level, double k_l, double k_u) const;
-	void MatchEdges::DT(Mat cam_img, Mat &cam_DT) const;
-	void MatchEdges::binaryZoomOut(Mat input_img, Mat &output_img, double f)const;
+	void getModelImgUchar(const int* var) const;
+	double DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, double k_u) const;
+
+	double MatchOnline_modelDTcamCanny(const int* var, double k_l, double k_u) const;
+	double MatchOnline_modelCannycamDT(const int * var, double k_l, double k_u) const;
+	double MatchOffline_modelCannycamDT(const int* var, double k_l, double k_u) const;
+	double MatchOnline_modelDTcamCannyROI(const int* var, double k_l, double k_u) const;
+	void DT(Mat cam_img, Mat &cam_DT) const;
+	void MatchEdges::DT_L1(Mat cam_img_, Mat &cam_DT_) const;
+	
+	void binaryZoomOut(Mat input_img, Mat &output_img, double f)const;
+	void getROI(Mat img_input, Mat& ROI_output, double x, double y, double z)const;
+	void getROIrect(double x, double y, double z, int* output_array) const;
+	
 };
+
+
+
+

@@ -35,3 +35,4 @@ ipch/
 3D_Object_Detection/3D_Object_Detection/x64/*
 x64/*
 *.vspx
+model/*.bin
