@@ -1,13 +1,15 @@
-//¸ÃÀà·â×°ÁË dlib Ìá¹©µÄ·ÇÏßĞÔ×îÓÅ»¯·½·¨
+//è¯¥ç±»å°è£…äº† dlib æä¾›çš„éçº¿æ€§æœ€ä¼˜åŒ–æ–¹æ³•
 #pragma once
 #ifndef MATCH_SOLVER
 #define MATCH_SOLVER
 //#include "LM.cpp"
 #include "MatchEdges.h"
 
+
 class  CostFactor :public MatchEdges {
 private:
 	int option;
+
 public:
 	CostFactor(int option_)
 		: MatchEdges() {
@@ -50,7 +52,7 @@ public:
 		}
 	}
 	const void debugShowMatch(const int* var)const {
-		// var ÊÇÎ»ÖÃ¡¢×ËÌ¬²ÎÊı£¬ÊÇÒ»¸ö´óĞ¡Îª6µÄÊı×é
+		// var æ˜¯ä½ç½®ã€å§¿æ€å‚æ•°ï¼Œæ˜¯ä¸€ä¸ªå¤§å°ä¸º6çš„æ•°ç»„
 
 		Mat back_ground = cam_img_src.clone();
 

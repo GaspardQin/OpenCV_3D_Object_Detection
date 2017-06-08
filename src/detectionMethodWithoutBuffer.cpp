@@ -127,7 +127,71 @@ void DetectionMethod::creatBuffer_ModelPoints() {
 void DetectionMethod::readBuffer_ModelPoints() {
 	arrayVecOfPointsRead("../model/buffer.bin", discrete_info.count_for_levels[0]);
 }
+void DetectionMethod::arrayMatWrite(const string& filename, const Mat* matrices, const int array_size)
+{
+	ofstream fs(filename, fstream::binary);
 
+	for (size_t i = 0; i < array_size; ++i)
+	{
+		const Mat& mat = matrices[i];
+
+		// Header
+		int type = mat.type();
+		int channels = mat.channels();
+		fs.write((char*)&mat.rows, sizeof(int));    // rows
+		fs.write((char*)&mat.cols, sizeof(int));    // cols
+		fs.write((char*)&type, sizeof(int));        // type
+		fs.write((char*)&channels, sizeof(int));    // channels
+
+													// Data
+		if (mat.isContinuous())
+		{
+			fs.write(mat.ptr<char>(0), (mat.dataend - mat.datastart));
+		}
+		else
+		{
+			int rowsz = CV_ELEM_SIZE(type) * mat.cols;
+			for (int r = 0; r < mat.rows; ++r)
+			{
+				fs.write(mat.ptr<char>(r), rowsz);
+			}
+		}
+	}
+}
+void DetectionMethod::arrayMatRead(const string& filename, int array_size, boost::shared_array<Mat> model_DT_mats_output)
+{
+	Mat *p = new Mat[array_size];
+	boost::shared_array<Mat> model_DT_mats(p);
+	ifstream fs(filename, fstream::binary);
+
+	// Get length of file
+	fs.seekg(0, fs.end);
+	int length = fs.tellg();
+	fs.seekg(0, fs.beg);
+
+	int count=0;
+	while (fs.tellg() < length)
+	{
+		// Header
+		int rows, cols, type, channels;
+		fs.read((char*)&rows, sizeof(int));         // rows
+		fs.read((char*)&cols, sizeof(int));         // cols
+		fs.read((char*)&type, sizeof(int));         // type
+		fs.read((char*)&channels, sizeof(int));     // channels
+
+													// Data
+		Mat mat(rows, cols, type);
+		fs.read((char*)mat.data, CV_ELEM_SIZE(type) * rows * cols);
+
+		model_DT_mats[count] = mat;
+		count++;
+	}
+	if (count != array_size) {
+		std::cout << "Error: array_size is not correct! " << std::endl;
+	}
+
+	model_DT_mats_output = model_DT_mats;
+}
 void DetectionMethod::initialization() {
 
 

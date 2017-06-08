@@ -9,9 +9,11 @@
 using namespace de;
 #define THREAD_NUM 1
 #define VARS_COUNT 6
+
 #define POPULATION_SIZE 30
 #define THRESHOLD_FINAL 1000
 #define GEN_MAX 50
+
 /**
 * Objective function to optimize is "sumDT" 
 */
@@ -61,7 +63,7 @@ private:
 		}
 	}
 	const void debugShowMatch(const int* var)const {
-		// var ÊÇÎ»ÖÃ¡¢×ËÌ¬²ÎÊý£¬ÊÇÒ»¸ö´óÐ¡Îª6µÄÊý×é
+		// var ï¿½ï¿½Î»ï¿½Ã¡ï¿½ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ð¡Îª6ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 		Mat back_ground = cam_img_src.clone();
 
@@ -138,6 +140,7 @@ public:
 			* -1.0e6, max 1.0e6) then set the first two elements to be of
 			*  type real with x between -10, 10 and y between -100, 100.
 			*/
+
 			std::vector<int> vars_valide; std::vector<int> vars_non_valide;
 			for (int i = 0; i < VARS_COUNT; i++) {
 				if (discrete_info.num[i] > 1) vars_valide.push_back(i);
