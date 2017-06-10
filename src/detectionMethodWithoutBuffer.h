@@ -18,7 +18,8 @@ public:
 	void readBuffer_ModelPoints();
 	void arrayVecOfPointsWrite(const string & filename, const vector<vector<Point2i>>& points_vector_array, const int& array_size);
 	void arrayVecOfPointsRead(const string& filename, int& array_size);
-
+	void DetectionMethod::arrayMatRead(const string& filename, int array_size, boost::shared_array<Mat> model_DT_mats_output);
+	void DetectionMethod::arrayMatWrite(const string& filename, const Mat* matrices, const int array_size);
 	void initialization();
 	void DT_solve_with_DE(int * output_best);
 
