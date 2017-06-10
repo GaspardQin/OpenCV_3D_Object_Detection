@@ -5,6 +5,10 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenCV_3D_Object_Detection", "OpenCV_3D_Object_Detection\OpenCV_3D_Object_Detection.vcxproj", "{F0E604BD-32FD-4ABE-82BF-D3B3461A1190}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ObjectDetection", "creat_DLL\creat_DLL.vcxproj", "{82C854CD-38C8-4E1C-8985-98D26F2C9015}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample", "Sample\Sample.vcxproj", "{CFDD6069-8F21-4626-812D-2312185B5F72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -19,6 +23,22 @@ Global
 		{F0E604BD-32FD-4ABE-82BF-D3B3461A1190}.Release|x64.ActiveCfg = Release|x64
 		{F0E604BD-32FD-4ABE-82BF-D3B3461A1190}.Release|x64.Build.0 = Release|x64
 		{F0E604BD-32FD-4ABE-82BF-D3B3461A1190}.Release|x86.ActiveCfg = Release|x64
+		{82C854CD-38C8-4E1C-8985-98D26F2C9015}.Debug|x64.ActiveCfg = Debug|x64
+		{82C854CD-38C8-4E1C-8985-98D26F2C9015}.Debug|x64.Build.0 = Debug|x64
+		{82C854CD-38C8-4E1C-8985-98D26F2C9015}.Debug|x86.ActiveCfg = Debug|Win32
+		{82C854CD-38C8-4E1C-8985-98D26F2C9015}.Debug|x86.Build.0 = Debug|Win32
+		{82C854CD-38C8-4E1C-8985-98D26F2C9015}.Release|x64.ActiveCfg = Release|x64
+		{82C854CD-38C8-4E1C-8985-98D26F2C9015}.Release|x64.Build.0 = Release|x64
+		{82C854CD-38C8-4E1C-8985-98D26F2C9015}.Release|x86.ActiveCfg = Release|Win32
+		{82C854CD-38C8-4E1C-8985-98D26F2C9015}.Release|x86.Build.0 = Release|Win32
+		{CFDD6069-8F21-4626-812D-2312185B5F72}.Debug|x64.ActiveCfg = Debug|x64
+		{CFDD6069-8F21-4626-812D-2312185B5F72}.Debug|x64.Build.0 = Debug|x64
+		{CFDD6069-8F21-4626-812D-2312185B5F72}.Debug|x86.ActiveCfg = Debug|Win32
+		{CFDD6069-8F21-4626-812D-2312185B5F72}.Debug|x86.Build.0 = Debug|Win32
+		{CFDD6069-8F21-4626-812D-2312185B5F72}.Release|x64.ActiveCfg = Release|x64
+		{CFDD6069-8F21-4626-812D-2312185B5F72}.Release|x64.Build.0 = Release|x64
+		{CFDD6069-8F21-4626-812D-2312185B5F72}.Release|x86.ActiveCfg = Release|Win32
+		{CFDD6069-8F21-4626-812D-2312185B5F72}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
