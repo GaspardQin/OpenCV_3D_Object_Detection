@@ -1,16 +1,10 @@
 // 引入GLEW库 定义静态链接
 //#define GLEW_STATIC
 #include "loadModel.h"
-GLfloat deltaTime = 0.0f; // 当前帧和上一帧的时间差
-GLfloat lastFrame = 0.0f; // 上一帧时间
-GLfloat camera_z = 0.0f;
+
 GLfloat pos_model_set[3] = { 0.0f, 0.0f, -100.0f };
 Camera camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float rotate_degree_set[3] = { 0.0f };
-glm::quat quat_set = glm::quat(glm::vec3(0,0,0));
-bool firstMouseMove = true;
-GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
-//glm::vec3 vec_scale = glm::vec3(1.f, 1.f, 1.f);
 glm::mat4 projection;
 glm::mat4 view;
 glm::mat4 M_model;

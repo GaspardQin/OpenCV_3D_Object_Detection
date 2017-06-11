@@ -6,13 +6,10 @@ namespace Object_Detection {
 	GLfloat deltaTime = 0.0f; // 当前帧和上一帧的时间差
 	GLfloat lastFrame = 0.0f; // 上一帧时间
 	GLfloat camera_z = 0.0f;
-	GLfloat pos_model_set[3] = { 0.0f, 0.0f, -100.0f };
+	GLfloat pos_model_set[3];
 	Camera camera = Camera(glm::vec3(0.0f, 0.0f, 0.0f));
 	float rotate_degree_set[3] = { 0.0f };
-	glm::quat quat_set = glm::quat(glm::vec3(0, 0, 0));
-	bool firstMouseMove = true;
-	GLfloat lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
-	//glm::vec3 vec_scale = glm::vec3(1.f, 1.f, 1.f);
+
 	glm::mat4 projection;
 	glm::mat4 view;
 	glm::mat4 M_model;
@@ -231,6 +228,9 @@ namespace Object_Detection {
 			WaitForSingleObject(readImgEvent, 50);//上一个渲染图像需要读取完毕
 
 			if (option == MODEL_DT_CAM_CANNY_ONLINE_ROI) {
+				cv::Mat debug_mat(WINDOW_HEIGHT, WINDOW_WIDTH, CV_8UC1);
+				glReadPixels(0,0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_GREEN, GL_UNSIGNED_BYTE, debug_mat.data); //从下往上读取，因此需要反转
+
 				//直接读取ROI部分
 				int lower_left_corner[2]; int modified_window_width; int modified_window_height;
 				getGLROIrect(pos_model_set[0], pos_model_set[1], pos_model_set[2], lower_left_corner, modified_window_width,modified_window_height);
@@ -239,7 +239,7 @@ namespace Object_Detection {
 				if(is_create_sample == true) glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_GREEN, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
 			
 				glReadPixels(lower_left_corner[0], lower_left_corner[1], modified_window_width, modified_window_height, GL_GREEN, GL_UNSIGNED_BYTE, readSrcImgROI.data); //从下往上读取，因此需要反转
-
+				
 			}
 			else glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_GREEN, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
 			//主要消耗用于在显存与内存中的传输数据，受限于PCIE的速度
