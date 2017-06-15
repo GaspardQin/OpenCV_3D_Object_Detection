@@ -13,7 +13,7 @@ extern HANDLE readImgEvent;
 #include <opencv2\core\opengl.hpp>
 #include <opencv2\core\core.hpp>
 #include <opencv2\highgui\highgui.hpp>
-
+#include <boost\atomic.hpp>
 #include <GL/glew.h>
 //#include <GL/freeglut.h>
 // 引入GLFW库
@@ -57,6 +57,8 @@ extern HANDLE readImgEvent;
 #define MODEL_DT_CAM_CANNY_ONLINE 2
 #define MODEL_DT_CAM_CANNY_ONLINE_ROI 3
 
+#define DISCRETE_MATCH 0
+#define CONTINUOUS_MATCH 1
 class DiscreteInfo {
 public:
 	std::vector<int> init_var;
@@ -182,9 +184,55 @@ public:
 
 	}
 };
+class ContinuousInfo {
+public:
+	std::vector<double> init_var;
+	std::vector<double> l_boundary;
+	std::vector<double> r_boundary;
+	std::vector<double> precision;
+	std::vector<double> delta;
+	ContinuousInfo(){
+		init_var.resize(6);
+		l_boundary.resize(6);
+		r_boundary.resize(6);
+		precision.resize(6);
+		delta.resize(6);
+	}
+	void setInitValue(double x_init, double y_init, double z_init, double deg_x, double deg_y, double deg_z) {
+		init_var[0] = x_init;
+		init_var[1] = y_init;
+		init_var[2] = z_init;
+		init_var[3] = deg_x;
+		init_var[4] = deg_y;
+		init_var[5] = deg_z;
+	}
+	void setBoundary(int delta_x, int delta_y, int delta_z, int delta_x_deg, int delta_y_deg, int delta_z_deg) {
+		//边界与中心值差值，上下边界关于中心值对称
+		delta[0] = delta_x;
+		delta[1] = delta_y;
+		delta[2] = delta_z;
+		delta[3] = delta_x_deg;
+		delta[4] = delta_y_deg;
+		delta[5] = delta_z_deg;
+		l_boundary[0] = init_var[0] - delta[0];
+		l_boundary[1] = init_var[1] - delta[1];
+		l_boundary[2] = init_var[2] - delta[2];
+		l_boundary[3] = init_var[3] - delta[3];
+		l_boundary[4] = init_var[4] - delta[4];
+		l_boundary[5] = init_var[5] - delta[5];
 
+		r_boundary[0] = init_var[0] + delta[0];
+		r_boundary[1] = init_var[1] + delta[1];
+		r_boundary[2] = init_var[2] + delta[2];
+		r_boundary[3] = init_var[3] + delta[3];
+		r_boundary[4] = init_var[4] + delta[4];
+		r_boundary[5] = init_var[5] + delta[5];
+	}
+
+};
 
 extern boost::mutex gl_mutex;
+extern boost::mutex terminal_mutex;
 extern boost::shared_mutex cv_cache_mutex;
 
 extern GLfloat deltaTime; // 当前帧和上一帧的时间差
@@ -199,8 +247,8 @@ extern GLfloat pos_model_set[3];
 extern glm::mat4 projection;
 extern glm::mat4 view;
 extern glm::mat4 M_model;
-extern int iteral_count;
 
+extern boost::atomic<int> iteral_count;
 extern cv::Mat cam_img_src, cam_img_color_src;
 extern cv::Mat cam_canny_img;
 extern std::vector<cv::Point2i> cam_canny_points;
@@ -209,6 +257,9 @@ extern cv::Mat cam_DT; // float
 extern std::vector<cv::Mat> model_offline_DT_imgs;
 extern std::vector<std::vector<cv::Point2i>> model_offline_canny_points;
 extern DiscreteInfo discrete_info;
+extern ContinuousInfo continuous_info;
 extern std::vector<double> cache_match; //访问需要上读写锁
 extern int option;
+extern int discrete_option;
+extern std::vector<int> vars_valide; extern std::vector<int> vars_non_valide;
 #endif

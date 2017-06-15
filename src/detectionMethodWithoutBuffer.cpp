@@ -1,8 +1,8 @@
 
 #include "detectionMethodWithoutBuffer.h"
 
-int iteral_count = 0;
-
+boost::atomic<int> iteral_count(0);
+std::vector<int> vars_valide; std::vector<int> vars_non_valide;
 void DetectionMethod::arrayVecOfPointsWrite(const string& filename, const vector<vector<Point2i>>& points_vector_array, const int& array_size)
 {
 	ofstream fs(filename, fstream::binary);
@@ -209,7 +209,7 @@ void DetectionMethod::initialization() {
 	cache_match.assign(discrete_info.count_for_levels[0], -1);
 }
 
-void DetectionMethod::debugShowMatch(int* var) {
+void DetectionMethod::debugShowMatch(double* var) {
 	// var 是位置、姿态参数，是一个大小为6的数组
 	Mat back_ground = cam_img_src.clone();
 	MatchEdges matchEdgesForShow;
@@ -251,24 +251,37 @@ void DetectionMethod::drawPoints(Mat &img, std::vector<Point2f>& points, const S
 		circle(img, points[i], 5, color);
 	}
 }
-void DetectionMethod::DT_solve_with_DE(int * output_best) {
+void DetectionMethod::DT_solve_with_DE(double * output_best) {
 
 	DE_Solver DE_solver;
 	
 	double score_best;
 	DE_solver.solve();
-	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
-	for (int i = 0; i < VARS_COUNT; i++) {
-		if (discrete_info.num[i] > 1) vars_valide.push_back(i);
-		else vars_non_valide.push_back(i);
+	
+	if (discrete_option == DISCRETE_MATCH) {
+		for (int i = 0; i < VARS_COUNT; i++) {
+			if (discrete_info.num[i] > 1) vars_valide.push_back(i);
+			else vars_non_valide.push_back(i);
+		}
+		for (int i = 0; i < vars_valide.size(); i++) {
+			output_best[vars_valide[i]] = discrete_info.init_var[vars_valide[i]] + (*(DE_solver.best)->vars())[vars_valide[i]] * discrete_info.precision[vars_valide[i]];
+		}
+		for (int i = 0; i < vars_non_valide.size(); i++) {
+			output_best[vars_non_valide[i]] = discrete_info.init_var[vars_non_valide[i]];
+		}
 	}
-	for (int i = 0; i < vars_valide.size(); i++) {
-		output_best[vars_valide[i]] = discrete_info.init_var[vars_valide[i]] + (*(DE_solver.best)->vars())[vars_valide[i]] * discrete_info.precision[vars_valide[i]];
+	else {
+		for (int i = 0; i < VARS_COUNT; i++) {
+			if (continuous_info.r_boundary[i] - continuous_info.l_boundary[i] > 0) vars_valide.push_back(i);
+			else vars_non_valide.push_back(i);
+		}
+		for (int i = 0; i < vars_valide.size(); i++) {
+			output_best[vars_valide[i]] = (*(DE_solver.best)->vars())[vars_valide[i]];
+		}
+		for (int i = 0; i < vars_non_valide.size(); i++) {
+			output_best[vars_non_valide[i]] = continuous_info.init_var[vars_non_valide[i]];
+		}
 	}
-	for (int i = 0; i < vars_non_valide.size(); i++) {
-		output_best[vars_non_valide[i]] = discrete_info.init_var[vars_non_valide[i]];
-	}
-
 	score_best = DE_solver.best->cost();
 	cout << "Best Position of offlineSolver is: x:" << output_best[0] << ", y:" << output_best[1] << ", z:" << output_best[2] << endl;
 	cout << "Best Rotation of offlineSolver is: x:" << output_best[3] << ", y:" << output_best[4] << ", z:" << output_best[5] << endl;

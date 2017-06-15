@@ -11,16 +11,17 @@ Mat cam_DT;//全局变量
 std::vector<double> cache_match;//全局变量
 Mat cam_img_src,cam_img_color_src;
 int option;
-
-
+int discrete_option;
+boost::mutex terminal_mutex;
+ContinuousInfo continuous_info;
 void creatSample() {
 	//OpenGL 生成的图上下颠倒，y,x_degree,z_degree应取相反数
-	rotate_degree_set[0] = -20;
-	rotate_degree_set[1] =16;
-	rotate_degree_set[2] = 4;
-	pos_model_set[0] = 5;
-	pos_model_set[1] = 20;
-	pos_model_set[2] = -700;
+	rotate_degree_set[0] = -21;
+	rotate_degree_set[1] =18;
+	rotate_degree_set[2] = 5;
+	pos_model_set[0] = 5.5;
+	pos_model_set[1] = 20.5;
+	pos_model_set[2] = -701;
 	//quat_set = glm::quat(glm::vec3(glm::radians(rotate_degree_set[0]), glm::radians(rotate_degree_set[1]), glm::radians(rotate_degree_set[2])));
 	SetEvent(nextModelEvent);
 	WaitForSingleObject(sentModelEvent, INFINITE);
@@ -33,7 +34,7 @@ void creatSample() {
 	SetEvent(nextModelEvent);
 }
 void test_camera() {
-	VideoCapture cap(CV_CAP_PVAPI);
+	VideoCapture cap(1);
 
 	if (!cap.isOpened())  // if not success, exit program
 	{
@@ -76,6 +77,7 @@ void test_camera() {
 
 DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	creatSample();
+	test_camera();
 	int input_option = DISK_IMG_INPUT;
 	if (input_option == DAHENG_CAMERA_INPUT) {
 		DaHengCamera da_heng_cam;
@@ -92,10 +94,14 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 
 
 	discrete_info.setInitValue(5, 20, -700, -20, 16, 4);
-	discrete_info.setPrecision(5, 5, 5, 2, 1, 1);
-	discrete_info.setBoundary(10, 10, 10, 4, 1, 1);
+	discrete_info.setPrecision(1, 1, 1, 1, 1, 1);
+	discrete_info.setBoundary(20, 20, 20, 4, 1, 1);
 
+	continuous_info.setInitValue(5, 20, -700, -20, 16, 4);
+	continuous_info.setBoundary(20, 20, 20, 5, 5, 5);
+	discrete_option = CONTINUOUS_MATCH;
 	option = MODEL_DT_CAM_CANNY_ONLINE_ROI;
+	
 	// Option could be MODEL_CANNY_CAM_DT_ONLINE, MODEL_CANNY_CAM_DT_OFFLINE, MODEL_DT_CAM_CANNY_ONLINE, or MODEL_DT_CAM_CANNY_ONLINE_ROI.
 	//MODEL_DT_CAM_CANNY_OFFLINE is not supported (Using too much RAM space)
 	if (option != MODEL_CANNY_CAM_DT_ONLINE && option != MODEL_CANNY_CAM_DT_OFFLINE && option != MODEL_DT_CAM_CANNY_ONLINE && option != MODEL_DT_CAM_CANNY_ONLINE_ROI) {
@@ -112,7 +118,7 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 	//pos_detector.creatBuffer_ModelPoints();
 	//pos_detector.readBuffer_ModelPoints();
 
-	int output_best[6];
+	double output_best[6];
 	//pos_detector.DT_solve_with_DE(output_best, MODEL_CANNY_CAM_DT_ONLINE);
 	pos_detector.DT_solve_with_DE(output_best);
 	//可视化

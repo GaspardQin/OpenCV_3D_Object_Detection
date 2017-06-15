@@ -21,9 +21,9 @@ public:
 	void DetectionMethod::arrayMatRead(const string& filename, int array_size, boost::shared_array<Mat> model_DT_mats_output);
 	void DetectionMethod::arrayMatWrite(const string& filename, const Mat* matrices, const int array_size);
 	void initialization();
-	void DT_solve_with_DE(int * output_best);
+	void DT_solve_with_DE(double * output_best);
 
-	void debugShowMatch(int* var);
+	void debugShowMatch(double* var);
 	void debugShowMatch_offline_points(int * var);
 	void drawPoints(Mat &img, std::vector<Point2f>& points, const Scalar& color);
 
