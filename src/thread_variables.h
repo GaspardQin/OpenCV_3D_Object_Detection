@@ -43,12 +43,12 @@ extern HANDLE readImgEvent;
 #include <boost/thread/thread.hpp>
 #include <boost/shared_array.hpp>
 
-#define WINDOW_WIDTH 2592.0
-#define WINDOW_HEIGHT 1944.0 //pixel
-#define ROI_WIDTH 1200.0
-#define ROI_HEIGHT 1400.0  //pixel
-#define FOCAL_DISTANCE 8.0 //mm
-#define CCD_WIDTH 5.709 //mm
+#define WINDOW_WIDTH 2058.0
+#define WINDOW_HEIGHT 1536.0 //pixel
+#define ROI_WIDTH 800.0
+#define ROI_HEIGHT 800.0  //pixel
+#define FOCAL_DISTANCE 6.0 //mm
+#define CCD_WIDTH 6.5536 //mm
 
 #define DAHENG_CAMERA_INPUT 0
 #define DISK_IMG_INPUT 1

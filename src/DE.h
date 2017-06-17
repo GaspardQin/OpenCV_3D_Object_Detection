@@ -7,12 +7,13 @@
 #include "objective_function.h"
 #include "thread_variables.h"
 using namespace de;
-#define THREAD_NUM 5
+#define THREAD_NUM 1
 #define VARS_COUNT 6
 #define VARS_THRESHOLD 1
-#define POPULATION_SIZE 30
+#define SAME_GEN_MAX 200000
+#define POPULATION_SIZE 50
 #define THRESHOLD_FINAL 0.00000001
-#define GEN_MAX 50
+#define GEN_MAX 100
 
 /**
 * Objective function to optimize is "sumDT" 
@@ -36,8 +37,8 @@ private:
 		//	dist = MatchOnline_modelCannycamDT(params_array, 0.3, 0.8); break;
 		//case MODEL_CANNY_CAM_DT_OFFLINE:
 		//	dist = MatchOffline_modelCannycamDT(params_array, 0.3, 0.8); break;
-		//case MODEL_DT_CAM_CANNY_ONLINE:
-		//	dist = MatchOnline_modelDTcamCanny(params_array, 0.3, 0.8); break;
+		case MODEL_DT_CAM_CANNY_ONLINE:
+			dist = MatchOnline_modelDTcamCanny_continuous(params_array, 0.3, 0.8); break;
 		case MODEL_DT_CAM_CANNY_ONLINE_ROI:
 			dist = MatchOnline_modelDTcamCannyROI_continuous(params_array, 0.3, 0.8); break;
 		default:
@@ -179,9 +180,9 @@ public:
 		else {
 			terminal_iteral_count++;
 		}
-		
+
 		std::cout << "genCount : " << genCount << std::endl;
-		return (genCount < maxGen) && (best->cost() > threshold && (terminal_iteral_count < POPULATION_SIZE));
+		return (genCount < maxGen) && (best->cost() > threshold && (terminal_iteral_count < SAME_GEN_MAX));
 	}
 };
 

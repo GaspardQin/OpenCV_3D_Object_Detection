@@ -173,11 +173,11 @@ double MatchEdges::MatchOnline_modelDTcamCanny(const int* var, double k_l, doubl
 	ResetEvent(readImgEvent);
 	SetEvent(readImgEvent);
 
-	distanceTransform(bit_not_src, model_DT, CV_DIST_L1, 3, CV_8UC1);
+	distanceTransform(bit_not_src, model_DT, CV_DIST_L2, 5, CV_32FC1);
 
-	uchar* row_modelDT_ptrs[int(WINDOW_HEIGHT)];
+	float* row_modelDT_ptrs[int(WINDOW_HEIGHT)];
  	for (int i = 0; i < model_DT.rows; i++) {
-		row_modelDT_ptrs[i] = model_DT.ptr<uchar>(i);
+		row_modelDT_ptrs[i] = model_DT.ptr<float>(i);
 	}
 
 	for (std::vector<Point2i>::iterator iter = cam_canny_points.begin(); iter < cam_canny_points.end(); iter++) {
@@ -236,11 +236,11 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI(const int* var, double k_l, do
 	ResetEvent(readImgEvent);
 	SetEvent(readImgEvent);
 
-	distanceTransform(bit_not_src, model_DT, CV_DIST_L2, 3, CV_32FC1);
+	distanceTransform(bit_not_src, model_DT, CV_DIST_L2, 5, CV_8UC1);
 
-	float* row_modelDT_ptrs[int(WINDOW_HEIGHT)];
+	uchar* row_modelDT_ptrs[int(WINDOW_HEIGHT)];
 	for (int i = 0; i < model_DT.rows; i++) {
-		row_modelDT_ptrs[i] = model_DT.ptr<float>(i);
+		row_modelDT_ptrs[i] = model_DT.ptr<uchar>(i);
 	}
 	int rect_pixel[4];//column_left_pixel,row_top_pixel,,column_right_pixel,row_bottom_pixel
 	getROIrect(double(var[0]), double(var[1]), double(var[2]), rect_pixel);
@@ -253,10 +253,10 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI(const int* var, double k_l, do
 
 		//iter->y row, iter->x col
 		if (col_temp < rect_pixel[0]) col_temp = rect_pixel[0];
-		else if (col_temp > rect_pixel[2]) col_temp = rect_pixel[2];
+		else if (col_temp >= rect_pixel[2]) col_temp = rect_pixel[2] -1;
 
 		if (row_temp< rect_pixel[1]) row_temp = rect_pixel[1];
-		else if (row_temp > rect_pixel[3]) row_temp = rect_pixel[3];
+		else if (row_temp >= rect_pixel[3]) row_temp = rect_pixel[3] -1;
 		temp = row_modelDT_ptrs[row_temp - rect_pixel[1]][col_temp - rect_pixel[0]];//findNonZero得到的Point x,y与Mat中的坐标相反
 		if (temp > 0) dist.push_back(temp);
 	}
@@ -266,10 +266,10 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI(const int* var, double k_l, do
 	if (dist.size() == 0) dist.push_back(0);
 	else {
 		for (int i = floor(k_u*dist.size()); i > floor(k_l*dist.size()); i--) {
-			sum += dist[i];
+			sum += dist[i]* dist[i];
 		}
 	}
-
+	sum = sqrt(sum / double((floor(k_u*dist.size()) - floor(k_l*dist.size())))) / 3.0;
 	std::cout << "max distance :" << dist[floor(k_u*dist.size())] << std::endl;
 	boost::lock_guard<boost::shared_mutex> lock(cv_cache_mutex); //保证每个时刻只有一个线程能写入cache_match;
 	cache_match[index] = sum; //存入cache；
@@ -302,11 +302,11 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI_continuous(const double* var, 
 	ResetEvent(readImgEvent);
 	SetEvent(readImgEvent);
 
-	distanceTransform(bit_not_src, model_DT, CV_DIST_L2, 3, CV_32FC1);
+	distanceTransform(bit_not_src, model_DT, CV_DIST_L1, 3, CV_8UC1);
 
-	float* row_modelDT_ptrs[int(WINDOW_HEIGHT)];
+	uchar* row_modelDT_ptrs[int(ROI_HEIGHT)];
 	for (int i = 0; i < model_DT.rows; i++) {
-		row_modelDT_ptrs[i] = model_DT.ptr<float>(i);
+		row_modelDT_ptrs[i] = model_DT.ptr<uchar>(i);
 	}
 	int rect_pixel[4];//column_left_pixel,row_top_pixel,,column_right_pixel,row_bottom_pixel
 	getROIrect(double(var[0]), double(var[1]), double(var[2]), rect_pixel);
@@ -319,10 +319,10 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI_continuous(const double* var, 
 
 		//iter->y row, iter->x col
 		if (col_temp < rect_pixel[0]) col_temp = rect_pixel[0];
-		else if (col_temp > rect_pixel[2]) col_temp = rect_pixel[2];
+		else if (col_temp >= rect_pixel[2]) col_temp = rect_pixel[2]-1;
 
 		if (row_temp< rect_pixel[1]) row_temp = rect_pixel[1];
-		else if (row_temp > rect_pixel[3]) row_temp = rect_pixel[3];
+		else if (row_temp >= rect_pixel[3]) row_temp = rect_pixel[3]-1;
 		temp = row_modelDT_ptrs[row_temp - rect_pixel[1]][col_temp - rect_pixel[0]];//findNonZero得到的Point x,y与Mat中的坐标相反
 		//if (temp > 0) 
 		dist.push_back(temp);
@@ -336,7 +336,57 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI_continuous(const double* var, 
 			sum += dist[i]* dist[i];
 		}
 	}
-	sum = sqrt(sum * double((floor(k_u*dist.size()) - floor(k_l*dist.size())))) / 3.0;
+	sum = sqrt(sum / double((floor(k_u*dist.size()) - floor(k_l*dist.size())))) / 3.0;
+	std::cout << "max distance :" << dist[floor(k_u*dist.size())] << std::endl;
+	return sum;// *dist[floor(k_u*dist.size()) - 1];
+
+}
+double MatchEdges::MatchOnline_modelDTcamCanny_continuous(const double* var, double k_l, double k_u) const {
+	/*
+	//**************for debug
+	Mat model_canny_img,model_DT_img, model_ROI;
+	getModelImgUchar(var, model_canny_img);
+
+	DT_L1(model_canny_img, model_DT_img);
+	getROI(model_DT_img, model_ROI, var[0], var[1], var[2]);
+	Mat comp;
+	comp = (model_ROI == model_DT);
+
+	Mat cam_debug;
+	getROI(cam_img_debug, cam_debug, var[0], var[1], var[2]);
+	//***************
+	*/
+	Mat model_DT;
+	vector<double> dist(cam_canny_points.size());
+	double temp;
+	Mat bit_not_src;
+	getModelImgUchar(var);
+	bitwise_not(readSrcImgROI, bit_not_src);
+
+	ResetEvent(readImgEvent);
+	SetEvent(readImgEvent);
+
+	distanceTransform(bit_not_src, model_DT, CV_DIST_L1, 3, CV_8UC1);
+
+	uchar* row_modelDT_ptrs[int(ROI_HEIGHT)];
+	for (int i = 0; i < model_DT.rows; i++) {
+		row_modelDT_ptrs[i] = model_DT.ptr<uchar>(i);
+	}
+	for (std::vector<Point2i>::iterator iter = cam_canny_points.begin(); iter < cam_canny_points.end(); iter++) {
+		temp = row_modelDT_ptrs[iter->y][iter->x];//findNonZero得到的Point x,y与Mat中的坐标相反
+																//if (temp > 0) 
+		dist.push_back(temp);
+	}
+	sort(dist.begin(), dist.end());
+
+	double sum = 0;
+	if (dist.size() == 0) dist.push_back(0);
+	else {
+		for (int i = floor(k_u*dist.size()); i > floor(k_l*dist.size()); i--) {
+			sum += dist[i] * dist[i];
+		}
+	}
+	sum = sqrt(sum / double((floor(k_u*dist.size()) - floor(k_l*dist.size())))) / 3.0;
 	std::cout << "max distance :" << dist[floor(k_u*dist.size())] << std::endl;
 	return sum;// *dist[floor(k_u*dist.size()) - 1];
 
