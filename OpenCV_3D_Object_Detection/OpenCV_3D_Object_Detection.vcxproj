@@ -83,6 +83,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\calibrate.cpp" />
     <ClCompile Include="..\src\detectionMethodWithoutBuffer.cpp" />
     <ClCompile Include="..\src\loadModel.cpp" />
     <ClCompile Include="..\src\MatchEdges.cpp" />
@@ -90,6 +91,7 @@
     <ClCompile Include="..\src\start.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\calibrate.h" />
     <ClInclude Include="..\src\camera.h" />
     <ClInclude Include="..\src\CaptureCameraImage.h" />
     <ClInclude Include="..\src\DE.h" />

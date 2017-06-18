@@ -198,7 +198,7 @@ void DetectionMethod::initialization() {
 	if (option == MODEL_CANNY_CAM_DT_ONLINE || option == MODEL_CANNY_CAM_DT_OFFLINE) {
 		Mat temp;
 		bitwise_not(cam_canny_img, temp);
-		distanceTransform(temp, cam_DT, CV_DIST_L2, 3, CV_32FC1);
+		distanceTransform(temp, cam_DT, CV_DIST_L2, 5, CV_32FC1);
 	}
 	else {//MODEL_DT_CAM_CANNY_ONLINE
 		cv::findNonZero(cam_canny_img, cam_canny_points);

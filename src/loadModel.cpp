@@ -47,6 +47,10 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	GLFWwindow* window = glfwCreateWindow(1, 1,
 		"Loading model with AssImp", NULL, NULL);
 	glfwHideWindow(window);
+
+
+
+
 	if (!window)
 	{
 		std::cout << "Error::GLFW could not create winddow!" << std::endl;
@@ -117,7 +121,7 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 
 
 	// 设置视口参数
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, WINDOW_WIDTH,WINDOW_HEIGHT);
 	//std::cout << glGetError() << std::endl;
 	//Section1 加载模型数据 为了方便更换模型 我们从文件读取模型文件路径
 	Model objModel;
@@ -169,6 +173,11 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	
 	glm::mat4 model;
 	glDepthFunc(GL_LEQUAL);
+
+
+	char* temp = (char *)(glGetString(GL_VENDOR));
+	std::cout << "Using graphic card of " << temp << std::endl;
+
 	while (!glfwWindowShouldClose(window))
 	{
 
@@ -241,7 +250,11 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 			//debug use
 			//glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_GREEN, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
 		}
+		
 		else glReadPixels(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, GL_GREEN, GL_UNSIGNED_BYTE, readSrcImg.data); //从下往上读取，因此需要反转
+		
+
+		
 		//主要消耗用于在显存与内存中的传输数据，受限于PCIE的速度
 		//因此使用共享内存的intel 核心显卡 可以显著降低此步骤消耗
 

@@ -43,12 +43,12 @@ extern HANDLE readImgEvent;
 #include <boost/thread/thread.hpp>
 #include <boost/shared_array.hpp>
 
-#define WINDOW_WIDTH 2592.0
-#define WINDOW_HEIGHT 1944.0 //pixel
-#define ROI_WIDTH 1200.0
-#define ROI_HEIGHT 1400.0  //pixel
-#define FOCAL_DISTANCE 8.0 //mm
-#define CCD_WIDTH 5.709 //mm
+#define WINDOW_WIDTH 2048.0 //对于64位系统，因显存中每行每列数据需要以8byte对齐，为了避免OpenGL与OpenCV线程的内存交互因数据对齐出现问题，必须设置为8的倍数
+#define WINDOW_HEIGHT 1536.0 //pixel  //对于64位系统，因内存中每行每列数据需要以8byte对齐，所以必须为8的倍数
+#define ROI_WIDTH 800.0
+#define ROI_HEIGHT 800.0  //pixel
+#define FOCAL_DISTANCE 6.0 //mm
+#define CCD_WIDTH 6.5536 //mm
 
 #define DAHENG_CAMERA_INPUT 0
 #define DISK_IMG_INPUT 1

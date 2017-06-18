@@ -1,1 +1,1 @@
-../model/plug_with_bottom.STL
+../model/T_aligned.STL
