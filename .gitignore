@@ -36,5 +36,6 @@ ipch/
 x64/*
 *.vspx
 model/*.bin
-model/calibreation_photos
-model/cam_photos
+model/calibreation_photos/*
+model/cam_photos/*
+model/checkerboard*.bmp
