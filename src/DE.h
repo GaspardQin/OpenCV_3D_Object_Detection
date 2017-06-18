@@ -11,9 +11,9 @@ using namespace de;
 #define VARS_COUNT 6
 #define VARS_THRESHOLD 1
 #define SAME_GEN_MAX 200000
-#define POPULATION_SIZE 50
+#define POPULATION_SIZE 30
 #define THRESHOLD_FINAL 0.00000001
-#define GEN_MAX 100
+#define GEN_MAX 30
 
 /**
 * Objective function to optimize is "sumDT" 
@@ -38,9 +38,9 @@ private:
 		//case MODEL_CANNY_CAM_DT_OFFLINE:
 		//	dist = MatchOffline_modelCannycamDT(params_array, 0.3, 0.8); break;
 		case MODEL_DT_CAM_CANNY_ONLINE:
-			dist = MatchOnline_modelDTcamCanny_continuous(params_array, 0.3, 0.8); break;
+			dist = MatchOnline_modelDTcamCanny_continuous(params_array, 0.0, 0.1); break;
 		case MODEL_DT_CAM_CANNY_ONLINE_ROI:
-			dist = MatchOnline_modelDTcamCannyROI_continuous(params_array, 0.3, 0.8); break;
+			dist = MatchOnline_modelDTcamCannyROI_continuous(params_array, 0.0, 0.1); break;
 		default:
 			cout << "option input is not valide" << endl;
 			break;
@@ -89,24 +89,27 @@ private:
 			circle(img, points[i], 5, color);
 		}
 	}
-	const void debugShowMatch(const int* var)const {
-		// var ��λ�á���̬������һ���СΪ6������
+	const void debugShowMatch(const double* var)const {
+		Mat back_ground = cam_img_color_src.clone();
 
-		Mat back_ground = cam_img_src.clone();
 
+
+		std::vector<Point2i> contours_points;
 		getModelImgUchar(var);
-		for (int i = 0; i < back_ground.rows; i++)
+		cv::findNonZero(readSrcImg, contours_points);
+		ResetEvent(readImgEvent);
+		SetEvent(readImgEvent);
+		Vec3b * temp;
+		for(std::vector<Point2i>::iterator i =contours_points.begin();i < contours_points.end();i++)
 		{
-			for (int j = 0; j < back_ground.cols; j++)
-			{
-				if (readSrcImg.at<uchar>(i, j)>0) {
-					back_ground.at<Vec3b>(i, j)[0] = 200; //Blue;
-					back_ground.at<Vec3b>(i, j)[1] = 100; //g;
-					back_ground.at<Vec3b>(i, j)[2] = 0; //r;
-				}
-			}
+			temp = &back_ground.at<Vec3b>(i->y,i->x);
+			temp[0] = 200; //Blue;
+			temp[1] = 100; //g;
+			temp[2] = 0; //r;
 		}
+		pyrDown(back_ground, back_ground);
 		imshow("debugShowMatchImgs", back_ground);
+		waitKey(20);
 	}
 
 public:
@@ -140,6 +143,8 @@ public:
 			for (int i = 0; i < vars_non_valide.size(); i++) {
 				double_params[vars_non_valide[i]] = continuous_info.init_var[vars_non_valide[i]];
 			}
+			namedWindow("debugShowMatchImgs", 1);
+			debugShowMatch(double_params);
 			return calculateDTfactor_double(double_params);
 		}
 

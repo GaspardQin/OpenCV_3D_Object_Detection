@@ -83,10 +83,16 @@ void calibrate_init() {
 	my_cam_calibrate.saveData("../model/calibrationData.bin");
 }
 ///////////
-	int threshold_l;
-	int threshold_u;
-	Mat findCannyParams_src;
-	void cannyTrackbar(int, void*)
+int threshold_l;
+int threshold_u;
+Mat findCannyParams_src;
+
+int params_manuel[6];
+int params_max[6]; //正负对称
+int params_manuel_init[6];
+int match_threshold_u10;
+int match_threshold_Ll0;
+void cannyTrackbar(int, void*)
 	{
 		//canny边缘检测  
 		Mat canny_img;
@@ -94,14 +100,103 @@ void calibrate_init() {
 
 		imshow("findCannyParams", canny_img);
 	};
-	void findCannyParams(Mat& src_) {
-		findCannyParams_src = src_;
-		namedWindow("findCannyParams", 1);
+void findPosManuelTrackbar(int, void*) {
+	Mat back_ground = cam_img_color_src.clone();
+	Mat back_ground2;
+	cvtColor(cam_canny_img, back_ground2, CV_GRAY2RGB);
+	std::vector<Point2i> contours_points;
 
-		createTrackbar("threshold_l", "findCannyParams", &threshold_l, 1000, cannyTrackbar);
-		createTrackbar("threshold_h", "findCannyParams", &threshold_u, 1000, cannyTrackbar);
-		waitKey();
-	}	
+	//boost::mutex::scoped_lock lock(gl_mutex); //保证每个时刻只有一个线程能与OpenGL通信
+	gl_mutex.lock();
+	pos_model_set[0] = params_manuel[0] - params_max[0]+ params_manuel_init[0];
+	pos_model_set[1] = params_manuel[1] - params_max[1] + params_manuel_init[1];
+	pos_model_set[2] = params_manuel[2] - params_max[2] + params_manuel_init[2]; //z为负值
+	rotate_degree_set[0] = params_manuel[3] - params_max[3] + params_manuel_init[3];
+	rotate_degree_set[1] = params_manuel[4] - params_max[4] + params_manuel_init[4];
+	rotate_degree_set[2] = params_manuel[5] - params_max[5] + params_manuel_init[5];
+
+	ResetEvent(sentModelEvent);
+	SetEvent(nextModelEvent);
+
+	WaitForSingleObject(sentModelEvent, INFINITE);
+	double params_array[6];
+	params_array[0] = pos_model_set[0];
+	params_array[1] = pos_model_set[1];
+	params_array[2] = pos_model_set[2]; //z为负值
+	params_array[3] = rotate_degree_set[0];
+	params_array[4] = rotate_degree_set[1];
+	params_array[5] = rotate_degree_set[2];
+
+	cv::findNonZero(readSrcImg, contours_points);
+	ResetEvent(readImgEvent);
+	SetEvent(readImgEvent);
+	gl_mutex.unlock();
+	Vec3b * temp;
+	Vec3b* temp2;
+	for (std::vector<Point2i>::iterator i = contours_points.begin(); i < contours_points.end(); i++)
+	{
+		temp = &back_ground.at<Vec3b>(i->y, i->x);
+		temp[0] = 200; //Blue;
+		temp[1] = 100; //g;
+		temp[2] = 0; //r;
+		temp2 = &back_ground2.at<Vec3b>(i->y, i->x);
+		temp2[0] = 200; //Blue;
+		temp2[1] = 100; //g;
+		temp2[2] = 0; //r;back_ground2.at<uchar>(i->y, i->x)=255;
+	}
+
+	MatchEdges matchEdgesforPrint;
+	double dist = matchEdgesforPrint.MatchOnline_modelDTcamCanny_continuous(params_array, match_threshold_Ll0/10.0, match_threshold_u10/10.0);
+	cout << "params input: x: " << params_array[0] << " y: " << params_array[1] << " z: " << params_array[2] << " x_deg: " << params_array[3] << " y_deg: " << params_array[4] << " z_deg: " << params_array[5] << endl;
+
+	cout << "DT score iteral " << dist << endl;
+
+	pyrDown(back_ground, back_ground);
+	imshow("findPosManuel", back_ground);
+	imshow("findPosManuel_canny", back_ground2);
+
+}
+void findCannyParams(Mat& src_) {
+	findCannyParams_src = src_;
+	namedWindow("findCannyParams", 1);
+
+	createTrackbar("threshold_l", "findCannyParams", &threshold_l, 100, cannyTrackbar);
+	createTrackbar("threshold_h", "findCannyParams", &threshold_u, 1000, cannyTrackbar);
+	waitKey();
+}	
+
+void findPosManuel() {
+	params_max[0] = 10;
+	params_max[1] = 20;
+	params_max[2] = 20;
+	params_max[3] = 10;
+	params_max[4] = 10;
+	params_max[5] = 10;
+	params_manuel_init[0] = -8;
+	params_manuel_init[1] = 13;
+	params_manuel_init[2] = -246;
+	params_manuel_init[3] = -8;
+	params_manuel_init[4] = 2;
+	params_manuel_init[5] = -27;
+	params_manuel[0] = 10;
+	params_manuel[1] = 20;
+	params_manuel[2] = 24;
+	params_manuel[3] = 12;
+	params_manuel[4] = 6;
+	params_manuel[5] = 10;
+	namedWindow("findPosManuel", 1);
+	namedWindow("findPosManuel_canny", 1);
+	createTrackbar("pos_x", "findPosManuel", &params_manuel[0], 2 * params_max[0], findPosManuelTrackbar);
+	createTrackbar("pos_y", "findPosManuel", &params_manuel[1], 2 * params_max[1], findPosManuelTrackbar);
+	createTrackbar("pos_z", "findPosManuel", &params_manuel[2], 2 * params_max[2], findPosManuelTrackbar);
+	createTrackbar("deg_x", "findPosManuel", &params_manuel[3], 2 * params_max[3], findPosManuelTrackbar);
+	createTrackbar("deg_y", "findPosManuel", &params_manuel[4], 2 * params_max[4], findPosManuelTrackbar);
+	createTrackbar("deg_z", "findPosManuel", &params_manuel[5], 2 * params_max[5], findPosManuelTrackbar);
+	createTrackbar("L", "findPosManuel", &match_threshold_Ll0, 10, findPosManuelTrackbar);
+	createTrackbar("U", "findPosManuel", &match_threshold_u10, 10, findPosManuelTrackbar);
+
+	waitKey();
+}
 //////////
 
 DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
@@ -118,22 +213,22 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 		waitKey();
 	}
 	else if (input_option == DISK_IMG_INPUT) {
-		cam_img_src = imread("../model/cam_photos/sample.bmp", IMREAD_GRAYSCALE);
+		cam_img_src=imread("../model/cam_photos/sample.bmp", IMREAD_GRAYSCALE);
 		cam_img_color_src = imread("../model/cam_photos/sample.bmp", IMREAD_COLOR);
 		my_cam_calibrate.calibrate(cam_img_src, cam_img_src);
 		my_cam_calibrate.calibrate(cam_img_color_src, cam_img_color_src);
 		//findCannyParams(cam_img_src);
-		
+		//cam_img_src = cam_img_src_(Range(1, WINDOW_WIDTH), Range(0, WINDOW_HEIGHT-1));
 		Canny(cam_img_src, cam_canny_img, 88, 30, 3);
 	}
-
+	
 
 	discrete_info.setInitValue(5, 20, -700, -20, 16, 4);
 	discrete_info.setPrecision(1, 1, 1, 1, 1, 1);
 	discrete_info.setBoundary(10, 10, 20, 4, 1, 1);
 
-	continuous_info.setInitValue(0, 0, -600, 0, 0, 0);
-	continuous_info.setBoundary(30, 30, 100, 89, 89, 89);
+	continuous_info.setInitValue(-8, 13, -242, -6, -3, -27);
+	continuous_info.setBoundary(5, 5, 5, 5,5, 5);
 	//discrete_option = CONTINUOUS_MATCH;
 	discrete_option = CONTINUOUS_MATCH;
 	option = MODEL_DT_CAM_CANNY_ONLINE;
@@ -145,12 +240,12 @@ DWORD WINAPI cvModelThreadFun(LPVOID lpParmeter) {
 		cout << "error: DE_option input is not valide" << endl;
 	}
 
-
+	//namedWindow("debugShowMatchImgs", 1);
 
 	DetectionMethod pos_detector;
 	pos_detector.initialization();
 	
-
+	//findPosManuel();
 
 	//pos_detector.creatBuffer_ModelPoints();
 	//pos_detector.readBuffer_ModelPoints();

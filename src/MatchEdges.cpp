@@ -68,6 +68,7 @@ void MatchEdges::getModelImgUchar(const double* var) const {
 	//cv::flip(readSrcImg, readSrcImg, 0);
 	//Mat model_canny_img_pre;
 	//Canny(readSrcImg, model_canny_img, 50, 200);
+	//lock.~lock_guard();
 }
 
 double MatchEdges::DTmatchHelp(Mat cam_DT, Mat model_canny_img, double k_l, double k_u) const {
@@ -164,7 +165,8 @@ double MatchEdges::MatchOnline_modelDTcamCanny(const int* var, double k_l, doubl
 	}
 
 	Mat model_DT;
-	vector<double> dist(cam_canny_points.size());
+	vector<double> dist;
+	dist.reserve(cam_canny_points.size());
 	double temp;
 	Mat bit_not_src;
 	getModelImgUchar(var);
@@ -293,7 +295,8 @@ double MatchEdges::MatchOnline_modelDTcamCannyROI_continuous(const double* var, 
 	//***************
 	*/
 	Mat model_DT;
-	vector<double> dist(cam_canny_points.size());
+	vector<double> dist;
+	dist.reserve(cam_canny_points.size());
 	double temp;
 	Mat bit_not_src;
 	getModelImgUchar(var);
@@ -357,20 +360,21 @@ double MatchEdges::MatchOnline_modelDTcamCanny_continuous(const double* var, dou
 	//***************
 	*/
 	Mat model_DT;
-	vector<double> dist(cam_canny_points.size());
+	vector<double> dist;
+	dist.reserve(cam_canny_points.size());
 	double temp;
 	Mat bit_not_src;
 	getModelImgUchar(var);
-	bitwise_not(readSrcImgROI, bit_not_src);
+	bitwise_not(readSrcImg, bit_not_src);
 
 	ResetEvent(readImgEvent);
 	SetEvent(readImgEvent);
 
-	distanceTransform(bit_not_src, model_DT, CV_DIST_L1, 3, CV_8UC1);
+	distanceTransform(bit_not_src, model_DT, CV_DIST_L2, 3, CV_32FC1);
 
-	uchar* row_modelDT_ptrs[int(ROI_HEIGHT)];
+	float* row_modelDT_ptrs[int(WINDOW_HEIGHT)];
 	for (int i = 0; i < model_DT.rows; i++) {
-		row_modelDT_ptrs[i] = model_DT.ptr<uchar>(i);
+		row_modelDT_ptrs[i] = model_DT.ptr<float>(i);
 	}
 	for (std::vector<Point2i>::iterator iter = cam_canny_points.begin(); iter < cam_canny_points.end(); iter++) {
 		temp = row_modelDT_ptrs[iter->y][iter->x];//findNonZero得到的Point x,y与Mat中的坐标相反
