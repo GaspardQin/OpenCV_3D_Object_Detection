@@ -3,6 +3,7 @@
 
 boost::atomic<int> iteral_count(0);
 std::vector<int> vars_valide; std::vector<int> vars_non_valide;
+int focal_distance_option;
 void DetectionMethod::arrayVecOfPointsWrite(const string& filename, const vector<vector<Point2i>>& points_vector_array, const int& array_size)
 {
 	ofstream fs(filename, fstream::binary);
@@ -193,6 +194,7 @@ void DetectionMethod::arrayMatRead(const string& filename, int array_size, boost
 	model_DT_mats_output = model_DT_mats;
 }
 void DetectionMethod::initialization() {
+
 
 
 	if (option == MODEL_CANNY_CAM_DT_ONLINE || option == MODEL_CANNY_CAM_DT_OFFLINE) {

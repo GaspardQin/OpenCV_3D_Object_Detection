@@ -47,9 +47,9 @@ extern HANDLE readImgEvent;
 #define WINDOW_HEIGHT 1536.0 //pixel  //对于64位系统，因内存中每行每列数据需要以8byte对齐，所以必须为8的倍数
 #define ROI_WIDTH 800.0
 #define ROI_HEIGHT 800.0  //pixel
-#define FOCAL_DISTANCE 6.0 //mm
+extern double FOCAL_DISTANCE; //mm
 #define CCD_WIDTH 6.5536 //mm
-
+extern int VARS_COUNT;
 #define DAHENG_CAMERA_INPUT 0
 #define DISK_IMG_INPUT 1
 #define MODEL_CANNY_CAM_DT_ONLINE 0
@@ -59,6 +59,10 @@ extern HANDLE readImgEvent;
 
 #define DISCRETE_MATCH 0
 #define CONTINUOUS_MATCH 1
+
+#define FOCAL_DISTANCE_UNKNOWN 1
+#define FOCAL_DISTANCE_KNOWN 0
+
 class DiscreteInfo {
 public:
 	std::vector<int> init_var;
@@ -191,12 +195,26 @@ public:
 	std::vector<double> r_boundary;
 	std::vector<double> precision;
 	std::vector<double> delta;
-	ContinuousInfo(){
-		init_var.resize(6);
-		l_boundary.resize(6);
-		r_boundary.resize(6);
-		precision.resize(6);
-		delta.resize(6);
+	int num=0;
+	void initContinuousInfo(int num_){
+		init_var.resize(num_);
+		l_boundary.resize(num_);
+		r_boundary.resize(num_);
+		precision.resize(num_);
+		delta.resize(num_);
+		num = num_;
+	}
+	bool setFocalDistance(double f_init, double f_precision, double f_delta) {
+		if(num == 7){
+			init_var[6] = f_init;
+			precision[6] = f_precision;
+			delta[6] = f_delta;
+			l_boundary[6] = init_var[6] - delta[6];
+			r_boundary[6] = init_var[6] + delta[6];
+			return true;
+		}
+		else return false;
+
 	}
 	void setInitValue(double x_init, double y_init, double z_init, double deg_x, double deg_y, double deg_z) {
 		init_var[0] = x_init;
@@ -261,5 +279,6 @@ extern ContinuousInfo continuous_info;
 extern std::vector<double> cache_match; //访问需要上读写锁
 extern int option;
 extern int discrete_option;
+extern int focal_distance_option;
 extern std::vector<int> vars_valide; extern std::vector<int> vars_non_valide;
 #endif

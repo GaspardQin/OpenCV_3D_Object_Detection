@@ -7,13 +7,15 @@
 #include "objective_function.h"
 #include "thread_variables.h"
 using namespace de;
-#define THREAD_NUM 1
-#define VARS_COUNT 6
+#define THREAD_NUM 6
+
 #define VARS_THRESHOLD 1
 #define SAME_GEN_MAX 200000
-#define POPULATION_SIZE 30
+#define POPULATION_SIZE 50
 #define THRESHOLD_FINAL 0.00000001
-#define GEN_MAX 30
+#define GEN_MAX 50
+
+
 
 /**
 * Objective function to optimize is "sumDT" 
@@ -24,30 +26,33 @@ class DE_Factor :public objective_function, public MatchEdges
 {
 private:
 	boost::shared_ptr<CostFactor> cost_factor_ptr;
-	int params[6]; double double_params[6];
+	int params[7]; double double_params[7];
 	std::vector<int> vars_valide; std::vector<int> vars_non_valide;
 	double calculateDTfactor_double(
 		const double* params_array
 	)const {
 
 		double dist;
+	
 		switch (option)
 		{
-		//case MODEL_CANNY_CAM_DT_ONLINE:
-		//	dist = MatchOnline_modelCannycamDT(params_array, 0.3, 0.8); break;
+		case MODEL_CANNY_CAM_DT_ONLINE:
+			dist = MatchOnline_modelCannycamDT_continuous(params_array, 0.3, 0.8); break;
 		//case MODEL_CANNY_CAM_DT_OFFLINE:
 		//	dist = MatchOffline_modelCannycamDT(params_array, 0.3, 0.8); break;
 		case MODEL_DT_CAM_CANNY_ONLINE:
-			dist = MatchOnline_modelDTcamCanny_continuous(params_array, 0.0, 0.1); break;
+			dist = MatchOnline_modelDTcamCanny_continuous(params_array, 0.0, 0.25); break;
 		case MODEL_DT_CAM_CANNY_ONLINE_ROI:
-			dist = MatchOnline_modelDTcamCannyROI_continuous(params_array, 0.0, 0.1); break;
+			dist = MatchOnline_modelDTcamCannyROI_continuous(params_array, 0.0, 0.25); break;
 		default:
 			cout << "option input is not valide" << endl;
 			break;
 		}
 
 		cout << "params input: x: " << params_array[0] << " y: " << params_array[1] << " z: " << params_array[2] << " x_deg: " << params_array[3] << " y_deg: " << params_array[4] << " z_deg: " << params_array[5] << endl;
+		if (focal_distance_option == FOCAL_DISTANCE_UNKNOWN) cout << "focal distance: " << params_array[6] << endl;
 		cout << "DT score iteral " << dist << endl;
+
 		//	debugShowMatch(params_array);
 		//	waitKey(10);
 		iteral_count = iteral_count + 1;
@@ -126,6 +131,7 @@ public:
 		* the argument vector, as defined by the constraints vector
 		* below
 		*/
+		
 		if (discrete_option == DISCRETE_MATCH) {
 			for (int i = 0; i < vars_valide.size(); i++) {
 				params[vars_valide[i]] = (*args)[vars_valide[i]] * discrete_info.precision[vars_valide[i]] + discrete_info.init_var[vars_valide[i]];

@@ -22,6 +22,7 @@ public:
 
 	double MatchOnline_modelDTcamCanny(const int* var, double k_l, double k_u) const;
 	double MatchOnline_modelCannycamDT(const int * var, double k_l, double k_u) const;
+	double MatchOnline_modelCannycamDT_continuous(const double * var, double k_l, double k_u) const;
 	double MatchOffline_modelCannycamDT(const int* var, double k_l, double k_u) const;
 	double MatchOnline_modelDTcamCannyROI(const int* var, double k_l, double k_u) const;
 	double MatchOnline_modelDTcamCannyROI_continuous(const double * var, double k_l, double k_u) const;

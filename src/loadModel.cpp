@@ -1,6 +1,10 @@
 // 引入GLEW库 定义静态链接
 //#define GLEW_STATIC
 #include "loadModel.h"
+double FOCAL_DISTANCE;
+
+
+
 GLfloat deltaTime = 0.0f; // 当前帧和上一帧的时间差
 GLfloat lastFrame = 0.0f; // 上一帧时间
 GLfloat camera_z = 0.0f;
@@ -160,10 +164,10 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 	glEnable(GL_POLYGON_OFFSET_POINT);
 	glEnable(GL_CULL_FACE);
 	
+
+	view = camera.getViewMatrix(); // 视变换矩阵
 	projection = glm::perspective(GLfloat(glm::atan(CCD_WIDTH / 2.0 / FOCAL_DISTANCE)),
 		(GLfloat)(WINDOW_WIDTH / WINDOW_HEIGHT), 20.0f, 1000.0f); // 投影矩阵
-	view = camera.getViewMatrix(); // 视变换矩阵
-
 	//******************* 
 	//从OpenGL读取图片的时候会上下颠倒，因此在渲染的时候即颠倒图片可避免使用cv::flip()函数，该函数开销过大
 	projection = glm::scale(projection, glm::vec3(1.0, -1.0, 1.0));//投影矩阵上下颠倒
@@ -189,6 +193,15 @@ DWORD WINAPI glThreadFun(LPVOID lpParmeter)
 		//if (deltaTime < 1/20) continue;
 	//	lastFrame = currentFrame;
 		glfwPollEvents(); // 处理例如鼠标 键盘等事件
+
+		if (focal_distance_option == FOCAL_DISTANCE_UNKNOWN) {
+			//更新透视矩阵
+			projection = glm::perspective(GLfloat(glm::atan(CCD_WIDTH / 2.0 / FOCAL_DISTANCE)),
+				(GLfloat)(WINDOW_WIDTH / WINDOW_HEIGHT), 20.0f, 1000.0f); 	
+			projection = glm::scale(projection, glm::vec3(1.0, -1.0, 1.0));
+							
+		}
+
 
 		print_model_info();//print the model info;
 		// 清除颜色缓冲区 重置为指定颜色

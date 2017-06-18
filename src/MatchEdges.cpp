@@ -50,6 +50,7 @@ void MatchEdges::getModelImgUchar(const int* var) const {
 }
 void MatchEdges::getModelImgUchar(const double* var) const {
 	boost::lock_guard<boost::mutex> lock(gl_mutex); //保证每个时刻只有一个线程能与OpenGL通信
+	if (focal_distance_option == FOCAL_DISTANCE_UNKNOWN) FOCAL_DISTANCE = var[6];
 	pos_model_set[0] = var[0];
 	pos_model_set[1] = var[1];
 	pos_model_set[2] = var[2]; //z为负值
@@ -144,14 +145,49 @@ double MatchEdges::MatchOnline_modelCannycamDT(const int* var, double k_l, doubl
 	if (dist.size() == 0) dist.push_back(0);
 	else {
 		for (int i = floor(k_u*dist.size()); i > floor(k_l*dist.size()); i--) {
-			sum += dist[i];
+			sum += dist[i]* dist[i];
 		}
 	}
+	sum = sqrt(sum / double((floor(k_u*dist.size()) - floor(k_l*dist.size())))) / 3.0;
 
 	std::cout << "max distance :" << dist[floor(k_u*dist.size())] << std::endl;
 	boost::lock_guard<boost::shared_mutex> lock(cv_cache_mutex); //保证每个时刻只有一个线程能写入cache_match;
 	cache_match[index] = sum; //存入cache；
 
+	return sum;// *dist[floor(k_u*dist.size()) - 1];
+
+}
+double MatchEdges::MatchOnline_modelCannycamDT_continuous(const double* var, double k_l, double k_u) const {
+
+
+	vector<Point2i> point_vec;
+	vector<double> dist;
+	double temp;
+
+	getModelImgUchar(var);
+	cv::findNonZero(readSrcImg, point_vec);
+
+	ResetEvent(readImgEvent);
+	SetEvent(readImgEvent);
+
+
+	for (std::vector<Point2i>::iterator iter = point_vec.begin(); iter < point_vec.end(); iter++) {
+		temp = row_camDT_ptrs[iter->y][iter->x];//findNonZero得到的Point x,y与Mat中的坐标相反
+		if (temp > 0) dist.push_back(temp);
+	}
+
+	sort(dist.begin(), dist.end());
+
+	double sum = 0;
+	if (dist.size() == 0) dist.push_back(0);
+	else {
+		for (int i = floor(k_u*dist.size()); i > floor(k_l*dist.size()); i--) {
+			sum += dist[i] * dist[i];
+		}
+	}
+	sum = sqrt(sum / double((floor(k_u*point_vec.size()) - floor(k_l*point_vec.size())))) / 3.0;
+
+	std::cout << "max distance :" << dist[floor(k_u*dist.size())] << std::endl;	
 	return sum;// *dist[floor(k_u*dist.size()) - 1];
 
 }
@@ -379,6 +415,7 @@ double MatchEdges::MatchOnline_modelDTcamCanny_continuous(const double* var, dou
 	for (std::vector<Point2i>::iterator iter = cam_canny_points.begin(); iter < cam_canny_points.end(); iter++) {
 		temp = row_modelDT_ptrs[iter->y][iter->x];//findNonZero得到的Point x,y与Mat中的坐标相反
 																//if (temp > 0) 
+	//	if (temp > 10) temp = 10;
 		dist.push_back(temp);
 	}
 	sort(dist.begin(), dist.end());
